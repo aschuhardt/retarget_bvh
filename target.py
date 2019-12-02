@@ -78,7 +78,7 @@ def getTargetArmature(rig, context):
     putInRestPose(rig, True)
     bones = rig.data.bones.keys()
 
-    if scn.McpAutoTargetRig:
+    if scn.McpTargetRig == "Automatic":
         name = guessTargetArmatureFromList(rig, bones, scn)
     else:
         try:
@@ -101,7 +101,7 @@ def getTargetArmature(rig, context):
 
         _ikBones = []
         rig.McpTPoseFile = ""
-        _targetInfo[name] = (boneAssoc, _ikBones, rig.McpTPoseFile, _bendTwist)
+        _targetInfo[name] = (boneAssoc, _ikBones, _bendTwist)
         clearCategory()
         return boneAssoc
 
@@ -109,7 +109,7 @@ def getTargetArmature(rig, context):
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
         _target = name
-        (boneAssoc, _ikBones, rig.McpTPoseFile, _bendTwist) = _targetInfo[name]
+        (boneAssoc, _ikBones, _bendTwist) = _targetInfo[name]
         if not testTargetRig(name, rig, boneAssoc):
             print("WARNING:\nTarget armature %s does not match armature %s.\nBones:" % (rig.name, name))
             for pair in boneAssoc:
@@ -152,7 +152,7 @@ def guessTargetArmatureFromList(rig, bones, scn):
     elif False:
         for name in _targetInfo.keys():
             if name not in ["MHX", "MH-Official", "Rigify", "Rigify2", "MH-alpha7", "Genesis", "Genesis3"]:
-                (boneAssoc, _ikBones, _tpose, _bendTwist) = _targetInfo[name]
+                (boneAssoc, _ikBones, _bendTwist) = _targetInfo[name]
                 if testTargetRig(name, rig, boneAssoc):
                     return name
     else:
@@ -229,51 +229,6 @@ TargetBoneNames = [
 ###############################################################################
 
 
-def initTargets(scn):
-    global _targetArmatures, _targetInfo, _trgArmatureEnums
-    _targetInfo = { "Automatic" : ([], [], "", {}) }
-    _targetArmatures = { "Automatic" : CArmature() }
-    path = os.path.join(os.path.dirname(__file__), "target_rigs")
-    for fname in os.listdir(path):
-        file = os.path.join(path, fname)
-        (name, ext) = os.path.splitext(fname)
-        if ext == ".json" and os.path.isfile(file):
-            (name, stuff) = readTrgArmature(file, name)
-            _targetInfo[name] = stuff
-
-    _trgArmatureEnums =[("Automatic", "Automatic", "Automatic")]
-    keys = list(_targetInfo.keys())
-    keys.sort()
-    for key in keys:
-        _trgArmatureEnums.append((key,key,key))
-
-    bpy.types.Scene.McpTargetRig = EnumProperty(
-        items = _trgArmatureEnums,
-        name = "Target rig",
-        default = 'Automatic')
-    print("Defined McpTargetRig")
-    return
-
-
-def readTrgArmature(filepath, name):
-    import json
-    print("Read target file", filepath)
-    with open(filepath, "r") as fp:
-        struct = json.load(fp)
-    name = struct["name"]
-    bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
-    ikbones = []    
-    if "ikbones" in struct.keys():
-        ikbones = [(key, nameOrNone(value)) for key,value in struct["ikbones"].items()]
-    if "t-pose" in struct.keys():
-        tpose = filepath
-    else:
-        tpose = ""
-    bendtwist = []    
-    if "bendtwist" in struct.keys():
-        bendtwist = [(key, nameOrNone(value)) for key,value in struct["bendtwist"].items()]
-    return (name, (bones,ikbones,tpose,bendtwist))
-
 
 class MCP_OT_InitTargets(bpy.types.Operator):
     bl_idname = "mcp.init_targets"
@@ -282,11 +237,55 @@ class MCP_OT_InitTargets(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        from .t_pose import initTPoses, initTargetTPose
         try:
-            initTargets(context.scene)
+            initTPoses()
+            initTargetTPose(context.scene)
+            self.initTargets(context.scene)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
+
+
+    def initTargets(self, scn):
+        global _targetArmatures, _targetInfo, _trgArmatureEnums
+        _targetInfo = { "Automatic" : ([], [], {}) }
+        _targetArmatures = { "Automatic" : CArmature() }
+        path = os.path.join(os.path.dirname(__file__), "target_rigs")
+        for fname in os.listdir(path):
+            file = os.path.join(path, fname)
+            (name, ext) = os.path.splitext(fname)
+            if ext == ".json" and os.path.isfile(file):
+                (name, stuff) = self.readTrgArmature(file, name)
+                _targetInfo[name] = stuff
+
+        _trgArmatureEnums =[]
+        keys = list(_targetInfo.keys())
+        keys.sort()
+        for key in keys:
+            _trgArmatureEnums.append((key,key,key))
+
+        bpy.types.Scene.McpTargetRig = EnumProperty(
+            items = _trgArmatureEnums,
+            name = "Target rig",
+            default = 'Automatic')
+        print("Defined McpTargetRig")
+
+
+    def readTrgArmature(self, filepath, name):
+        import json
+        print("Read target file", filepath)
+        with open(filepath, "r") as fp:
+            struct = json.load(fp)
+        name = struct["name"]
+        bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
+        ikbones = []    
+        if "ikbones" in struct.keys():
+            ikbones = [(key, nameOrNone(value)) for key,value in struct["ikbones"].items()]
+        bendtwist = []    
+        if "bendtwist" in struct.keys():
+            bendtwist = [(key, nameOrNone(value)) for key,value in struct["bendtwist"].items()]
+        return (name, (bones, ikbones, bendtwist))
 
 
 class MCP_OT_GetTargetRig(bpy.types.Operator):
@@ -365,6 +364,16 @@ classes = [
 ]
 
 def initialize():
+    bpy.types.Scene.McpTargetRig = EnumProperty(
+        items = [("Automatic", "Automatic", "Automatic")],
+        name = "Target rig",
+        default = "Automatic")    
+        
+    bpy.types.Scene.McpTargetTPose = EnumProperty(
+        items = [("Default", "Default", "Default")],
+        name = "Target T-pose",
+        default = "Default")              
+
     for cls in classes:
         bpy.utils.register_class(cls)
 

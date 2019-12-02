@@ -111,6 +111,13 @@ class MCP_PT_Main(bpy.types.Panel):
         layout.separator()
         layout.prop(scn, "McpStartFrame")
         layout.prop(scn, "McpEndFrame")
+        
+        layout.separator()
+        layout.prop(scn, "McpSourceRig")
+        layout.prop(scn, "McpSourceTPose")
+        layout.prop(scn, "McpTargetRig")
+        layout.prop(scn, "McpTargetTPose")
+        
         layout.separator()
         layout.prop(scn, "McpShowDetailSteps")
         if scn.McpShowDetailSteps:
@@ -153,8 +160,6 @@ class MCP_PT_Options(bpy.types.Panel):
         layout.prop(scn, "McpBvhScale")
         layout.prop(scn, "McpUseLimits")
         layout.prop(scn, "McpClearLocks")
-        layout.prop(scn, 'McpAutoSourceRig')
-        layout.prop(scn, 'McpAutoTargetRig')
         layout.prop(scn, "McpIgnoreHiddenLayers")
         layout.prop(scn, "McpDoBendPositive")
 
@@ -345,9 +350,9 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel):
             layout.operator("mcp.init_sources", text="Init Source Panel")
             return
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
-        layout.prop(scn, 'McpAutoSourceRig')
         layout.prop(scn, "McpSourceRig")
-
+        layout.prop(scn, "McpSourceTPose")
+        
         if scn.McpSourceRig:
             from .source import getSourceArmature
 
@@ -393,7 +398,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
         layout.separator()
         layout.prop(scn, "McpTargetRig")
-        layout.prop(scn, 'McpAutoTargetRig')
+        layout.prop(scn, "McpTargetTPose")
 
         layout.separator()
         layout.prop(scn, "McpIgnoreHiddenLayers")
@@ -408,7 +413,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
         if scn.McpTargetRig:
             from .target import getTargetInfo, TargetBoneNames, findTargetKeys
 
-            (bones, ikBones, tpose, bendTwist) = getTargetInfo(scn.McpTargetRig)
+            (bones, ikBones, bendTwist) = getTargetInfo(scn.McpTargetRig)
 
             layout.label(text="FK bones")
             box = layout.box()
@@ -454,6 +459,41 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
 #   class MCP_PT_Utility(bpy.types.Panel):
 #
 
+class MCP_PT_Poses(bpy.types.Panel):
+    bl_category = "Retarget BVH"
+    bl_label = "Poses"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        if context.object and context.object.type == 'ARMATURE':
+            return True
+
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+        rig = context.object
+
+        layout.prop(scn, "McpSourceTPose")
+        layout.prop(scn, "McpTargetTPose")
+        layout.separator()
+        layout.operator("mcp.put_in_t_pose")
+        layout.separator()
+        layout.operator("mcp.define_t_pose")
+        layout.operator("mcp.undefine_t_pose")
+        layout.separator()
+        layout.operator("mcp.load_pose")
+        layout.operator("mcp.save_pose")
+        layout.separator()
+        layout.operator("mcp.rest_current_pose")
+
+########################################################################
+#
+#   class MCP_PT_Utility(bpy.types.Panel):
+#
+
 class MCP_PT_Utility(bpy.types.Panel):
     bl_category = "Retarget BVH"
     bl_label = "Utilities"
@@ -488,21 +528,6 @@ class MCP_PT_Utility(bpy.types.Panel):
             ins.operator("mcp.delete")
             ins.operator("mcp.delete_hash")
 
-        layout.separator()
-        layout.prop(scn, "McpShowPosing")
-        if scn.McpShowPosing:
-            ins = inset(layout)
-            if not rig.McpTPoseDefined:
-                ins.prop(scn, "McpMakeHumanTPose")
-            ins.operator("mcp.set_t_pose")
-            ins.separator()
-            ins.operator("mcp.define_t_pose")
-            ins.operator("mcp.undefine_t_pose")
-            ins.separator()
-            ins.operator("mcp.load_pose")
-            ins.operator("mcp.save_pose")
-            ins.separator()
-            ins.operator("mcp.rest_current_pose")
 
         layout.separator()
         layout.operator("mcp.clear_temp_props")
@@ -526,6 +551,7 @@ classes = [
     MCP_PT_Edit,
     MCP_PT_MhxSourceBones,
     MCP_PT_MhxTargetBones,
+    MCP_PT_Poses,
     MCP_PT_Utility,
 
     utils.ErrorOperator

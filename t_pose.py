@@ -28,7 +28,7 @@
 
 import bpy
 from bpy.props import *
-from bpy_extras.io_utils import ImportHelper
+from bpy_extras.io_utils import ImportHelper, ExportHelper
 
 import os
 import math
@@ -37,7 +37,7 @@ from .utils import *
 from .io_json import *
 
 
-class LoadJson(ImportHelper):
+class JsonFile:
     filename_ext = ".json"
     filter_glob : StringProperty(default="*.json", options={'HIDDEN'})
     filepath : StringProperty(name="File Path", description="Filepath to json file", maxlen=1024, default="")
@@ -118,10 +118,12 @@ class MCP_OT_RestCurrentPose(bpy.types.Operator):
 #------------------------------------------------------------------
 
 TPose = {
+    "shoulder.L" : (0, 0, -pi/2, 'XYZ'),
     "upper_arm.L" : (0, 0, -pi/2, 'XYZ'),
     "forearm.L" :   (0, 0, -pi/2, 'XYZ'),
     #"hand.L" :      (0, 0, -pi/2, 'XYZ'),
 
+    "shoulder.R" : (0, 0, pi/2, 'XYZ'),
     "upper_arm.R" : (0, 0, pi/2, 'XYZ'),
     "forearm.R" :   (0, 0, pi/2, 'XYZ'),
     #"hand.R" :      (0, 0, pi/2, 'XYZ'),
@@ -172,8 +174,11 @@ def autoTPose(rig, context):
 #   Set current pose to T-Pose
 #------------------------------------------------------------------
 
-def setTPose(rig, context, filename=None, reload=False):
-    if reload or not rig.McpTPoseDefined:
+def setTPose(rig, context, filename=None):
+    print("RR", rig.McpTPoseDefined)
+    if rig.McpTPoseDefined:
+        getStoredTPose(rig)
+    else:
         if isMakeHumanRig(rig) and scn.McpMakeHumanTPose:
             if isMhOfficialRig(rig):
                 filename = "target_rigs/mh_official_tpose.json"
@@ -185,21 +190,19 @@ def setTPose(rig, context, filename=None, reload=False):
         if not hasFile:
             autoTPose(rig, context)
         defineTPose(rig)
-    else:
-        getStoredTPose(rig)
 
 
-class MCP_OT_SetTPose(bpy.types.Operator):
-    bl_idname = "mcp.set_t_pose"
+class MCP_OT_PutInTPose(bpy.types.Operator):
+    bl_idname = "mcp.put_in_t_pose"
     bl_label = "Put In T-pose"
-    bl_description = "Set current pose to T-pose"
+    bl_description = "Put the character into T-pose"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         try:
             rig = initRig(context)
             isdefined = rig.McpTPoseDefined
-            setTPose(rig, context, reload=True)
+            setTPose(rig, context)
             rig.McpTPoseDefined = isdefined
             print("Pose set to T-pose")
         except MocapError:
@@ -217,7 +220,7 @@ def getStoredTPose(rig):
 
 def getStoredBonePose(pb):
         try:
-            quat = Quaternion((pb.McpQuatW, pb.McpQuatX, pb.McpQuatY, pb.McpQuatZ))
+            quat = Quaternion(pb.McpQuat)
         except KeyError:
             quat = Quaternion()
         return quat.to_matrix().to_4x4()
@@ -248,11 +251,8 @@ def addTPoseAtFrame0(rig, scn):
 
 def defineTPose(rig):
     for pb in rig.pose.bones:
-        quat = pb.matrix_basis.to_quaternion()
-        pb.McpQuatW = quat.w
-        pb.McpQuatX = quat.x
-        pb.McpQuatY = quat.y
-        pb.McpQuatZ = quat.z
+        pb.McpQuat = pb.matrix_basis.to_quaternion()
+        print("PP", pb.name, list(pb.McpQuat))
     rig.McpTPoseDefined = True
 
 
@@ -345,7 +345,7 @@ def getBoneName(rig, name):
             return ""
 
 
-class MCP_OT_LoadPose(bpy.types.Operator, LoadJson):
+class MCP_OT_LoadPose(bpy.types.Operator, ExportHelper, JsonFile):
     bl_idname = "mcp.load_pose"
     bl_label = "Load Pose"
     bl_description = "Load pose from file"
@@ -392,7 +392,7 @@ def savePose(context, filepath):
     saveJson(struct, filepath)
 
 
-class MCP_OT_SavePose(bpy.types.Operator, LoadJson):
+class MCP_OT_SavePose(bpy.types.Operator, ExportHelper, JsonFile):
     bl_idname = "mcp.save_pose"
     bl_label = "Save Pose"
     bl_description = "Save current pose as .json file"
@@ -438,12 +438,59 @@ def initRig(context):
     return rig
 
 #----------------------------------------------------------
+#   T-pose initialization
+#----------------------------------------------------------
+
+def initTPoses():
+    global _tposeEnums
+
+    keys = []
+    path = os.path.join(os.path.dirname(__file__), "t_poses")
+    for fname in os.listdir(path):
+        file = os.path.join(path, fname)
+        (name, ext) = os.path.splitext(fname)
+        if ext == ".json" and os.path.isfile(file):
+            key = name.capitalize()
+            keys.append((key,key,key))
+    keys.sort()
+    _tposeEnums = [("Default", "Default", "Default")] + keys
+
+
+def initSourceTPose(scn):
+    bpy.types.Scene.McpSourceTPose = EnumProperty(
+        items = _tposeEnums,
+        name = "Source T-Pose",
+        default = 'Default')
+    scn.McpSourceTPose = 'Default'
+
+
+def initTargetTPose(scn):
+    bpy.types.Scene.McpTargetTPose = EnumProperty(
+        items = _tposeEnums,
+        name = "Target T-Pose",
+        default = 'Default')
+    scn.McpTargetTPose = 'Default'
+
+
+class MCP_OT_InitTPoses(bpy.types.Operator):
+    bl_idname = "mcp.init_t_poses"
+    bl_label = "Init T-poses"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        initTPoses()
+        initSourceTPose(context.scene)
+        initTargetTPose(context.scene)
+        print("T-poses initialized")
+        return{'FINISHED'}
+
+#----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
 classes = [
     MCP_OT_RestCurrentPose,
-    MCP_OT_SetTPose,
+    MCP_OT_PutInTPose,
     MCP_OT_DefineTPose,
     MCP_OT_UndefineTPose,
     MCP_OT_LoadPose,

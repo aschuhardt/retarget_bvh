@@ -49,11 +49,12 @@ import time
 from collections import OrderedDict
 from mathutils import *
 from bpy.props import *
+from bpy_extras.io_utils import ImportHelper
 
 from .simplify import simplifyFCurves, rescaleFCurves
 from .utils import *
 from . import t_pose
-from .load import LoadBVH
+from .load import BVHFile
 
 
 class CAnimation:
@@ -503,11 +504,13 @@ def loadRetargetSimplify(context, filepath):
 #   Buttons
 #
 
-class MCP_OT_RetargetMhx(bpy.types.Operator, ProblemsString):
+class MCP_OT_RetargetMhx(bpy.types.Operator):
     bl_idname = "mcp.retarget_mhx"
     bl_label = "Retarget Selected To Active"
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armature"
     bl_options = {'UNDO'}
+
+    problems = ""
 
     def execute(self, context):
         from . import target
@@ -538,11 +541,13 @@ class MCP_OT_RetargetMhx(bpy.types.Operator, ProblemsString):
         drawObjectProblems(self)
 
 
-class MCP_OT_LoadAndRetarget(bpy.types.Operator, ProblemsString, LoadBVH):
+class MCP_OT_LoadAndRetarget(bpy.types.Operator, ImportHelper, BVHFile):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
     bl_options = {'UNDO'}
+
+    problems = ""
 
     @classmethod
     def poll(self, context):

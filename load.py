@@ -36,7 +36,7 @@ from . import props
 from . import simplify
 from .utils import *
 
-class LoadBVH(ImportHelper):
+class BVHFile:
     filename_ext = ".bvh"
     filter_glob : StringProperty(default="*.bvh", options={'HIDDEN'})
     filepath : StringProperty(name="File Path", description="Filepath used for importing the BVH file", maxlen=1024, default="")
@@ -522,10 +522,10 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
 
 ########################################################################
 #
-#   class MCP_OT_LoadBvh(bpy.types.Operator, LoadBVH):
+#   class MCP_OT_LoadBvh(bpy.types.Operator, ImportHelper, BVHFile):
 #
 
-class MCP_OT_LoadBvh(bpy.types.Operator, LoadBVH):
+class MCP_OT_LoadBvh(bpy.types.Operator, ImportHelper, BVHFile):
     bl_idname = "mcp.load_bvh"
     bl_label = "Load BVH File (.bvh)"
     bl_description = "Load an armature from a bvh file"
@@ -572,14 +572,16 @@ class MCP_OT_RenameBvh(bpy.types.Operator):
         return{'FINISHED'}
 
 #
-#   class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ProblemsString, LoadBVH):
+#   class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ImportHelper, BVHFile):
 #
 
-class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ProblemsString, LoadBVH):
+class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ImportHelper, BVHFile):
     bl_idname = "mcp.load_and_rename_bvh"
     bl_label = "Load And Rename BVH File (.bvh)"
     bl_description = "Load armature from bvh file and rename bones"
     bl_options = {'UNDO'}
+    
+    problems = ""
 
     def execute(self, context):
         from .retarget import changeTargetData, restoreTargetData

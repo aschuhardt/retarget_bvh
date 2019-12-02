@@ -529,29 +529,9 @@ def initialize():
     bpy.types.Object.McpArmatureModifier = StringProperty(
         default = "")
 
-    bpy.types.PoseBone.McpQuatW = FloatProperty(
-        default = 1.0 )
-
-    bpy.types.PoseBone.McpQuatX = FloatProperty(
-        default = 0.0 )
-
-    bpy.types.PoseBone.McpQuatY = FloatProperty(
-        default = 0.0 )
-
-    bpy.types.PoseBone.McpQuatZ = FloatProperty(
-        default = 0.0 )
+    bpy.types.PoseBone.McpQuat = FloatVectorProperty(size=4, default=(1,0,0,0))
 
     # Source and Target
-
-    bpy.types.Scene.McpAutoSourceRig = BoolProperty(
-        name = "Auto Source Rig",
-        description = "Detect source rig automatically",
-        default = True)
-
-    bpy.types.Scene.McpAutoTargetRig = BoolProperty(
-        name = "Auto Target Rig",
-        description = "Detect target rig automatically",
-        default = True)
 
     bpy.types.Scene.McpMakeHumanTPose = BoolProperty(
         name = "MakeHuman T-pose",

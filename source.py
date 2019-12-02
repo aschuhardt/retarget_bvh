@@ -124,7 +124,7 @@ def findSrcArmature(context, rig):
 
     setCategory("Identify Source Rig")
     ensureSourceInited(scn)
-    if not scn.McpAutoSourceRig:
+    if scn.McpSourceRig != "Automatic":
         _srcArmature = _sourceArmatures[scn.McpSourceRig]
     else:
         amt = _srcArmature = CArmature()
@@ -169,64 +169,58 @@ def findSourceKey(bname, struct):
             return bone
     return None
 
-
-###############################################################################
-#
-#    Source initialization
-#
-###############################################################################
-
-
-def initSources(scn):
-    global _sourceArmatures, _srcArmatureEnums
-
-    _sourceArmatures = { "Automatic" : CArmature() }
-    path = os.path.join(os.path.dirname(__file__), "source_rigs")
-    for fname in os.listdir(path):
-        file = os.path.join(path, fname)
-        (name, ext) = os.path.splitext(fname)
-        if ext == ".json" and os.path.isfile(file):        
-            armature = readSrcArmature(file, name)
-            _sourceArmatures[armature.name] = armature
-    _srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
-    keys = list(_sourceArmatures.keys())
-    keys.sort()
-    for key in keys:
-        _srcArmatureEnums.append((key,key,key))
-
-    bpy.types.Scene.McpSourceRig = EnumProperty(
-        items = _srcArmatureEnums,
-        name = "Source rig",
-        default = 'Automatic')
-    scn.McpSourceRig = 'Automatic'
-    print("Defined McpSourceRig")
-
-
-def readSrcArmature(filepath, name):
-    import json
-    print("Read source file", filepath)
-    with open(filepath, "r") as fp:
-        struct = json.load(fp)
-    armature = CArmature()
-    armature.name = struct["name"]
-    tpose = struct["t-pose"]
-    if isinstance(tpose, str):
-        armature.tposeFile = tpose
-    else:
-        armature.tposeFile = filepath
-    bones = armature.boneNames
-    for key,value in struct["armature"].items():
-        bones[canonicalName(key)] = nameOrNone(value)
-    return armature
-
+#----------------------------------------------------------
+#   Source initialization
+#----------------------------------------------------------
 
 class MCP_OT_InitSources(bpy.types.Operator):
     bl_idname = "mcp.init_sources"
     bl_label = "Init Source Panel"
     bl_options = {'UNDO'}
 
+    def initSources(self, scn):
+        global _sourceArmatures, _srcArmatureEnums
+
+        _sourceArmatures = { "Automatic" : CArmature() }
+        path = os.path.join(os.path.dirname(__file__), "source_rigs")
+        for fname in os.listdir(path):
+            file = os.path.join(path, fname)
+            (name, ext) = os.path.splitext(fname)
+            if ext == ".json" and os.path.isfile(file):        
+                armature = self.readSrcArmature(file, name)
+                _sourceArmatures[armature.name] = armature
+        _srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
+        keys = list(_sourceArmatures.keys())
+        keys.sort()
+        for key in keys:
+            _srcArmatureEnums.append((key,key,key))
+
+        bpy.types.Scene.McpSourceRig = EnumProperty(
+            items = _srcArmatureEnums,
+            name = "Source rig",
+            default = 'Automatic')
+        scn.McpSourceRig = 'Automatic'
+        print("Defined McpSourceRig")
+
+
+    def readSrcArmature(self, filepath, name):
+        import json
+        print("Read source file", filepath)
+        with open(filepath, "r") as fp:
+            struct = json.load(fp)
+        armature = CArmature()
+        armature.name = struct["name"]
+        bones = armature.boneNames
+        for key,value in struct["armature"].items():
+            bones[canonicalName(key)] = nameOrNone(value)
+        return armature
+
+
     def execute(self, context):
-        initSources(context.scene)
+        from .t_pose import initTPoses, initSourceTPose
+        self.initSources(context.scene)
+        initTPoses()
+        initSourceTPose(context.scene)
         return{'FINISHED'}
 
 #----------------------------------------------------------
@@ -238,6 +232,16 @@ classes = [
 ]
 
 def initialize():
+    bpy.types.Scene.McpSourceRig = EnumProperty(
+        items = [("Automatic", "Automatic", "Automatic")],
+        name = "Source rig",
+        default = "Automatic")  
+        
+    bpy.types.Scene.McpSourceTPose = EnumProperty(
+        items = [("Default", "Default", "Default")],
+        name = "Source T-pose",
+        default = "Default")              
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
