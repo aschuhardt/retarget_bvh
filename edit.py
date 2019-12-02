@@ -26,8 +26,6 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-
-
 import bpy
 from bpy.props import *
 from math import pi, sqrt
@@ -35,11 +33,6 @@ from mathutils import *
 from . import load, simplify, props, action
 #from .target_rigs import rig_mhx
 from .utils import *
-if bpy.app.version < (2,80,0):
-    from .buttons27 import AnswerString, LocRotDel, LeftLast
-else:
-    from .buttons28 import AnswerString, LocRotDel, LeftLast
-
 
 _Markers = []
 _EditLoc = None
@@ -179,10 +172,12 @@ def undoEdit(context):
     return
 
 
-class MCP_OT_UndoEdit(bpy.types.Operator, AnswerString):
+class MCP_OT_UndoEdit(bpy.types.Operator):
     bl_idname = "mcp.undo_edit"
     bl_label = "Undo Edit"
     bl_options = {'UNDO'}
+
+    answer : StringProperty()
 
     @classmethod
     def poll(self, context):
@@ -363,10 +358,14 @@ def insertKey(context, useLoc, useRot, delete):
                     displaceFCurve(fcu, ofcu, _EditLoc[fcu.array_index][name])
 
 
-class MCP_OT_InsertKey(bpy.types.Operator, LocRotDel):
+class MCP_OT_InsertKey(bpy.types.Operator):
     bl_idname = "mcp.insert_key"
     bl_label = "Key"
     bl_options = {'UNDO'}
+
+    loc : BoolProperty("Loc", default=False)
+    rot : BoolProperty("Rot", default=False)
+    delete : BoolProperty("Del", default=False)
 
     @classmethod
     def poll(self, context):
@@ -405,11 +404,14 @@ def move2marker(context, left, last):
                     break
 
 
-class MCP_OT_MoveToMarker(bpy.types.Operator, LeftLast):
+class MCP_OT_MoveToMarker(bpy.types.Operator):
     bl_idname = "mcp.move_to_marker"
     bl_label = "Move"
     bl_description = "Move to time marker"
     bl_options = {'UNDO'}
+
+    left : BoolProperty("Loc", default=False)
+    last : BoolProperty("Rot", default=False)
 
     @classmethod
     def poll(self, context):

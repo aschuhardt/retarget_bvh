@@ -26,8 +26,6 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-
-
 #
 #   M_b = global bone matrix, relative world (PoseBone.matrix)
 #   L_b = local bone matrix, relative parent and rest (PoseBone.matrix_local)
@@ -55,10 +53,7 @@ from bpy.props import *
 from .simplify import simplifyFCurves, rescaleFCurves
 from .utils import *
 from . import t_pose
-if bpy.app.version < (2,80,0):
-    from .buttons27 import ProblemsString, LoadBVH
-else:
-    from .buttons28 import ProblemsString, LoadBVH
+from .load import LoadBVH
 
 
 class CAnimation:
@@ -126,7 +121,7 @@ class CBoneAnim:
         if self.parent:
             self.trgBone.McpParent = self.parent.trgBone.name
             trgParent = self.parent.trgBone
-            self.bMatrix = Mult2(trgBone.bone.matrix_local.inverted(), trgParent.bone.matrix_local)
+            self.bMatrix = trgBone.bone.matrix_local.inverted() @ trgParent.bone.matrix_local
         else:
             self.bMatrix = trgBone.bone.matrix_local.inverted()
         self.useLimits = anim.scene.McpUseLimits
@@ -151,7 +146,7 @@ class CBoneAnim:
             "Retarget %s => %s\n" % (self.srcBone.name, self.trgBone.name) +
             "S %s\n" % self.srcBone.matrix +
             "T %s\n" % self.trgBone.matrix +
-            "R %s\n" % Mult2(self.trgBone.matrix, self.srcBone.matrix.inverted())
+            "R %s\n" % self.trgBone.matrix @ self.srcBone.matrix.inverted()
             )
 
 
@@ -192,7 +187,7 @@ class CBoneAnim:
 
 
     def getTPoseMatrix(self):
-        self.aMatrix = Mult2(self.srcBone.matrix.inverted(), self.trgBone.matrix)
+        self.aMatrix = self.srcBone.matrix.inverted() @ self.trgBone.matrix
         if not isRotationMatrix(self.trgBone.matrix):
             raise RuntimeError("Target %s not rotation matrix %s" % (self.trgBone.name, self.trgBone.matrix))
         if not isRotationMatrix(self.srcBone.matrix):
@@ -203,20 +198,20 @@ class CBoneAnim:
 
     def retarget(self, frame):
         self.srcMatrix = self.srcBone.matrix.copy()
-        self.trgMatrix = Mult2(self.srcMatrix, self.aMatrix)
+        self.trgMatrix = self.srcMatrix @ self.aMatrix
         self.trgMatrix.col[3] = self.srcMatrix.col[3]
         if self.parent:
-            mat1 = Mult2(self.parent.trgMatrix.inverted(), self.trgMatrix)
+            mat1 = self.parent.trgMatrix.inverted() @ self.trgMatrix
         else:
             mat1 = self.trgMatrix
-        mat2 = Mult2(self.bMatrix, mat1)
+        mat2 = self.bMatrix @ mat1
         mat3 = correctMatrixForLocks(mat2, self.order, self.locks, self.trgBone, self.useLimits)
         self.insertKeyFrame(mat3, frame)
 
         self.srcMatrices[frame] = self.srcMatrix
-        mat1 = Mult2(self.bMatrix.inverted(), mat3)
+        mat1 = self.bMatrix.inverted() @ mat3
         if self.parent:
-            self.trgMatrix = Mult2(self.parent.trgMatrix, mat1)
+            self.trgMatrix = self.parent.trgMatrix @ mat1
         else:
             self.trgMatrix = mat1
         self.trgMatrices[frame] = self.trgMatrix
@@ -304,7 +299,7 @@ def hideObjects(context, rig):
     if bpy.app.version >= (2,80,0):
         return None
     objects = []
-    for ob in getSceneObjects(context):
+    for ob in context.view_layer.objects:
         if ob != rig:
             objects.append((ob, list(ob.layers)))
             ob.layers = 20*[False]

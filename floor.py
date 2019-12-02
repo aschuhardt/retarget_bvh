@@ -26,8 +26,6 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-
-
 import bpy
 from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
@@ -41,8 +39,8 @@ from . import fkik
 def getRigAndPlane(context):
     rig = None
     plane = None
-    for ob in getSceneObjects(context):
-        if getSelected(ob):
+    for ob in context.view_layer.objects:
+        if ob.select_get():
             if ob.type == 'ARMATURE':
                 if rig:
                     raise MocapError("Two armatures selected: %s and %s" % (rig.name, ob.name))
@@ -249,7 +247,7 @@ def floorFkFoot(rig, plane, scn, frames):
     nFrames = len(frames)
     for n,frame in enumerate(frames):
         scn.frame_set(frame)
-        fkik.updateScene()
+        updateScene()
         offset = 0
         if scn.McpFloorLeft:
             offset = getFkOffset(rig, ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)

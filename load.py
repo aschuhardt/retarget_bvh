@@ -26,9 +26,8 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-
-
 import bpy, os, mathutils, math, time
+from bpy_extras.io_utils import ImportHelper
 from math import sin, cos
 from mathutils import *
 from bpy.props import *
@@ -37,10 +36,10 @@ from . import props
 from . import simplify
 from .utils import *
 
-if bpy.app.version < (2,80,0):
-    from .buttons27 import ProblemsString, LoadBVH
-else:
-    from .buttons28 import ProblemsString, LoadBVH
+class LoadBVH(ImportHelper):
+    filename_ext = ".bvh"
+    filter_glob : StringProperty(default="*.bvh", options={'HIDDEN'})
+    filepath : StringProperty(name="File Path", description="Filepath used for importing the BVH file", maxlen=1024, default="")
 
 ###################################################################################
 #    BVH importer.
@@ -131,11 +130,11 @@ def readBvhFile(context, filepath, scn, scan):
     endFrame = scn.McpEndFrame
     frameno = 1
     if scn.McpFlipYAxis:
-        flipMatrix = Mult2(Matrix.Rotation(math.pi, 3, 'X'), Matrix.Rotation(math.pi, 3, 'Y'))
+        flipMatrix = Matrix.Rotation(math.pi, 3, 'X') @ Matrix.Rotation(math.pi, 3, 'Y')
     else:
         flipMatrix = Matrix.Rotation(0, 3, 'X')
     if True or scn.McpRot90Anim:
-        flipMatrix = Mult2(Matrix.Rotation(math.pi/2, 3, 'X'), flipMatrix)
+        flipMatrix = Matrix.Rotation(math.pi/2, 3, 'X') @ flipMatrix
     if (scn.McpSubsample):
         ssFactor = scn.McpSSFactor
     else:
@@ -151,7 +150,7 @@ def readBvhFile(context, filepath, scn, scan):
     time1 = time.clock()
     level = 0
     nErrors = 0
-    coll = getCollection(context)
+    coll = context.scene.collection
     rig = None
 
     fp = open(fileName, "rU")
@@ -194,7 +193,7 @@ def readBvhFile(context, filepath, scn, scan):
                 ended = False
             elif key == 'OFFSET':
                 (x,y,z) = (float(words[1]), float(words[2]), float(words[3]))
-                node.offset = scale * Mult2(flipMatrix, Vector((x,y,z)))
+                node.offset = scale * flipMatrix @ Vector((x,y,z))
             elif key == 'END':
                 node = CNode(words, node)
                 ended = True
@@ -212,7 +211,7 @@ def readBvhFile(context, filepath, scn, scan):
             elif key == '}':
                 if not ended:
                     node = CNode(["End", "Site"], node)
-                    node.offset = scale * Mult2(flipMatrix, Vector((0,1,0)))
+                    node.offset = scale * flipMatrix @ Vector((0,1,0))
                     node = node.parent
                     ended = True
                 level -= 1
@@ -283,7 +282,7 @@ def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
                         vec[index] = sign*float(words[m])
                         m += 1
                     if first:
-                        pb.location = Mult2(node.inverse, scale * Mult2(flipMatrix, vec) - node.head)
+                        pb.location = node.inverse @ (scale * flipMatrix @ vec) - node.head
                         pb.keyframe_insert('location', frame=frame, group=name)
                     first = False
                 elif mode == Rotation:
@@ -292,7 +291,7 @@ def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
                         angle = sign*float(words[m])*Deg2Rad
                         mats.append(Matrix.Rotation(angle, 3, axis))
                         m += 1
-                    mat = Mult3(Mult2(node.inverse, flipMatrix),  Mult3(mats[0], mats[1], mats[2]), Mult2(flipInv, node.matrix))
+                    mat = (node.inverse @ flipMatrix) @ mats[0] @ mats[1] @ mats[2] @ (flipInv @ node.matrix)
                     setRotation(pb, mat, frame, name)
 
     return
@@ -557,8 +556,8 @@ class MCP_OT_RenameBvh(bpy.types.Operator):
         scn = context.scene
         srcRig = context.object
         trgRig = None
-        for ob in getSceneObjects(context):
-            if ob.type == 'ARMATURE' and getSelected(ob) and ob != srcRig:
+        for ob in context.view_layer.objects:
+            if ob.type == 'ARMATURE' and ob.select_get() and ob != srcRig:
                 trgRig = ob
                 break
         try:

@@ -110,7 +110,7 @@ def loopFCurves(context):
                 scn.frame_set(frame)
                 head = heads[frame] - (frame-minTime)*offs
                 diff = head - pb.bone.head_local
-                pb.location = Mult2(restInv, diff)
+                pb.location = restInv @ diff
                 pb.keyframe_insert("location", group=pb.name)
 
     return
@@ -411,7 +411,7 @@ def getBaseMatrices(act, frames, rig, useAll):
             mats = []
             for n,rmat in enumerate(rmats):
                 tmat = tmats[n]
-                mats.append( Mult2(tmat, rmat) )
+                mats.append( tmat @ rmat )
             basemats[bname] = mats
 
     return basemats, useLoc
@@ -434,7 +434,7 @@ def shiftBoneFCurves(rig, context):
     for bname,bmats in basemats.items():
         pb = rig.pose.bones[bname]
         bmat = bmats[0]
-        deltaMat[pb.name] = Mult2(pb.matrix_basis, bmat.inverted())
+        deltaMat[pb.name] = pb.matrix_basis @ bmat.inverted()
         orders[pb.name], locks[pb.name] = getLocks(pb, context)
 
     for n,frame in enumerate(frames[1:]):
@@ -442,7 +442,7 @@ def shiftBoneFCurves(rig, context):
         showProgress(n, frame, nFrames)
         for bname,bmats in basemats.items():
             pb = rig.pose.bones[bname]
-            mat = Mult2(deltaMat[pb.name], bmats[n+1])
+            mat = deltaMat[pb.name] @ bmats[n+1]
             mat = correctMatrixForLocks(mat, orders[bname], locks[bname], pb, scn.McpUseLimits)
             if useLoc[bname]:
                 insertLocation(pb, mat)

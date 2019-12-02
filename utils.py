@@ -41,151 +41,19 @@ Rad2Deg = 180/pi
 #   Blender 2.8 compatibility
 #-------------------------------------------------------------
 
-if bpy.app.version < (2,80,0):
+def setActiveObject(context, ob):
+    vly = context.view_layer
+    vly.objects.active = ob
+    vly.update()
 
-    HideViewport = "hide"
-    DrawType = "draw_type"
-    ShowXRay = "show_x_ray"
 
-    def getCollection(context):
-        return context.scene
-
-    def getSceneObjects(context):
-        return context.scene.objects
-
-    def getSelected(ob):
-        return ob.select
-
-    def setSelected(ob, value):
-        ob.select = value
-
-    def setActiveObject(context, ob):
-        scn = context.scene
-        scn.objects.active = ob
-        scn.update()
-
-    def putOnHiddenLayer(ob, coll=None, hidden=None):
-        ob.layers = 19*[False] + [True]
-
-    def createHiddenCollection(context):
-        return context.scene
-
-    def inSceneLayer(context, ob):
-        scn = context.scene
-        for n in range(len(scn.layers)):
-            if (ob.layers[n] and scn.layers[n]):
-                return True
-        return False
-
-    def activateObject(context, ob):
-        scn = context.scene
-        for ob1 in scn.objects:
-            ob1.select = False
-        ob.select = True
-        scn.objects.active = ob
-
-    def Mult2(x, y):
-        return x * y
-
-    def Mult3(x, y, z):
-        return x * y * z
-
-    def Mult4(x, y, z, u):
-        return x * y * z * u
-
-    def splitLayout(layout, factor):
-        return layout.split(factor)
-
-    def deleteObject(context, ob):
-        for scn in bpy.data.scenes:
-            if ob in scn.objects.values():
-                scn.objects.unlink(ob)
-        if ob.users == 0:
-            bpy.data.objects.remove(ob)
-            del ob
-
-else:
-
-    HideViewport = "hide_viewport"
-    DrawType = "display_type"
-    ShowXRay = "show_in_front"
-
-    def getCollection(context):
-        return context.scene.collection
-
-    def getSceneObjects(context):
-        return context.view_layer.objects
-
-    def getSelected(ob):
-        return ob.select_get()
-
-    def setSelected(ob, value):
-        ob.select_set(value)
-
-    def setActiveObject(context, ob):
-        vly = context.view_layer
-        vly.objects.active = ob
-        vly.update()
-
-    def putOnHiddenLayer(ob, coll=None, hidden=None):
-        if coll:
-            coll.objects.unlink(ob)
-        if hidden:
-            hidden.objects.link(ob)
-
-    def createHiddenCollection(context):
-        coll = bpy.data.collections.new(name="Hidden")
-        context.scene.collection.children.link(coll)
-        coll.hide_viewport = True
-        coll.hide_render = True
-        return coll
-
-    def inSceneLayer(context, ob):
-        coll = context.scene.collection
-        return (ob in coll.objects.values())
-
-    def activateObject(context, ob):
-        scn = context.scene
-        for ob1 in scn.collection.objects:
-            ob1.select_set(False)
-        ob.select_set(True)
-        context.view_layer.objects.active = ob
-
-    def printActive(name, context):
-        coll = context.scene.collection
-        print(name, context.object, coll)
-        sel = [ob for ob in coll.objects if ob.select_get()]
-        print("  ", sel)
-
-    def Mult2(x, y):
-        return x @ y
-
-    def Mult3(x, y, z):
-        return x @ y @ z
-
-    def Mult4(x, y, z, u):
-        return x @ y @ z @ u
-
-    def splitLayout(layout, factor):
-        return layout.split(factor=factor)
-
-    def deleteObject(context, ob):
-        for coll in bpy.data.collections:
-            if ob in coll.objects.values():
-                coll.objects.unlink(ob)
-        if True or ob.users == 0:
-            bpy.data.objects.remove(ob)
-            del ob
-
-#-------------------------------------------------------------
-#
-#-------------------------------------------------------------
-
-def updateScene(context, updateDepsGraph=False):
+def updateScene(context=None, updateDepsGraph=True):
+    if context is None:
+        context = bpy.context
     scn = context.scene
     if hasattr(scn, "update"):
         scn.update()
-    if updateDepsGraph and bpy.app.version >= (2,80,0):
+    if updateDepsGraph:
         depth = context.evaluated_depsgraph_get()
         depth.update()
     scn.frame_current = scn.frame_current

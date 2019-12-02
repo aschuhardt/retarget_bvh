@@ -29,35 +29,24 @@
 import bpy
 from mathutils import Vector, Matrix
 from bpy.props import *
-
 from .utils import *
-if bpy.app.version < (2,80,0):
-    from .buttons27 import TypeString
-else:
-    from .buttons28 import TypeString
-
-
-def updateScene():
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
-
 
 def getPoseMatrix(gmat, pb):
     restInv = pb.bone.matrix_local.inverted()
     if pb.parent:
         parInv = pb.parent.matrix.inverted()
         parRest = pb.parent.bone.matrix_local
-        return Mult4(restInv, parRest, parInv, gmat)
+        return restInv @ parRest @ parInv @ gmat
     else:
-        return Mult2(restInv, gmat)
+        return restInv @ gmat
 
 
 def getGlobalMatrix(mat, pb):
-    gmat = Mult2(pb.bone.matrix_local, mat)
+    gmat = pb.bone.matrix_local @ mat
     if pb.parent:
         parMat = pb.parent.matrix
         parRest = pb.parent.bone.matrix_local
-        return Mult3(parMat, parRest.inverted(), gmat)
+        return parMat @ parRest.inverted() @ gmat
     else:
         return gmat
 
@@ -723,11 +712,13 @@ class MCP_OT_TransferToIk(bpy.types.Operator):
         return{'FINISHED'}
 
 
-class MCP_OT_ClearAnimation(bpy.types.Operator, TypeString):
+class MCP_OT_ClearAnimation(bpy.types.Operator):
     bl_idname = "mcp.clear_animation"
     bl_label = "Clear Animation"
     bl_description = "Clear Animation For FK or IK Bones"
     bl_options = {'UNDO'}
+
+    type : StringProperty()
 
     def execute(self, context):
         use_global_undo = context.user_preferences.edit.use_global_undo

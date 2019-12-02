@@ -26,10 +26,9 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-
-
 import bpy
 from bpy.props import *
+from bpy_extras.io_utils import ExportHelper
 import math
 import os
 
@@ -37,10 +36,6 @@ from . import utils
 from . import t_pose
 from .utils import *
 from .armature import CArmature
-if bpy.app.version < (2,80,0):
-    from .buttons27 import SaveTargetExport
-else:
-    from .buttons28 import SaveTargetExport
 
 #
 #   Global variables
@@ -338,11 +333,15 @@ def saveTargetFile(filepath, context):
         saveTPose(context, tposePath)
 
 
-class MCP_OT_SaveTargetFile(bpy.types.Operator, SaveTargetExport):
+class MCP_OT_SaveTargetFile(bpy.types.Operator, ExportHelper):
     bl_idname = "mcp.save_target_file"
     bl_label = "Save Target File"
     bl_description = "Save a .trg file for this character"
     bl_options = {'UNDO'}
+
+    filename_ext = ".trg"
+    filter_glob : StringProperty(default="*.trg", options={'HIDDEN'})
+    filepath : StringProperty(name="File Path", description="Filepath to target file", maxlen=1024, default="")
 
     def execute(self, context):
         try:

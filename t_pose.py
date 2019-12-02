@@ -26,20 +26,21 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-
-
 import bpy
 from bpy.props import *
+from bpy_extras.io_utils import ImportHelper
 
 import os
 import math
 from mathutils import Quaternion, Matrix
 from .utils import *
 from .io_json import *
-if bpy.app.version < (2,80,0):
-    from .buttons27 import ProblemsString, LoadJson
-else:
-    from .buttons28 import ProblemsString, LoadJson
+
+
+class LoadJson(ImportHelper):
+    filename_ext = ".json"
+    filter_glob : StringProperty(default="*.json", options={'HIDDEN'})
+    filepath : StringProperty(name="File Path", description="Filepath to json file", maxlen=1024, default="")
 
 #------------------------------------------------------------------
 #   Define current pose as rest pose
@@ -48,7 +49,7 @@ else:
 def applyRestPose(context, value):
     rig = context.object
     children = []
-    for ob in getSceneObjects(context):
+    for ob in context.view_layer.objects:
         if ob.type != 'MESH':
             continue
 
@@ -158,9 +159,9 @@ def autoTPose(rig, context):
 
         loc = pb.bone.matrix_local
         if pb.parent:
-            mat = Mult2(pb.parent.matrix.inverted(), mat)
-            loc = Mult2(pb.parent.bone.matrix_local.inverted(), loc)
-        mat =  Mult2(loc.inverted(), mat)
+            mat = pb.parent.matrix.inverted() @ mat
+            loc = pb.parent.bone.matrix_local.inverted() @ loc
+        mat =  loc.inverted() @ mat
         euler = mat.to_euler('YZX')
         euler.y = 0
         pb.matrix_basis = euler.to_matrix().to_4x4()
@@ -255,11 +256,13 @@ def defineTPose(rig):
     rig.McpTPoseDefined = True
 
 
-class MCP_OT_DefineTPose(bpy.types.Operator, ProblemsString):
+class MCP_OT_DefineTPose(bpy.types.Operator):
     bl_idname = "mcp.define_t_pose"
     bl_label = "Define T-pose"
     bl_description = "Define T-pose as current pose"
     bl_options = {'UNDO'}
+
+    problems = ""
 
     def execute(self, context):
         if self.problems:
@@ -373,9 +376,9 @@ def savePose(context, filepath):
         bmat = pb.matrix
         rmat = pb.bone.matrix_local
         if pb.parent:
-            bmat = Mult2(pb.parent.matrix.inverted(), bmat)
-            rmat = Mult2(pb.parent.bone.matrix_local.inverted(), rmat)
-        mat = Mult2(rmat.inverted(), bmat)
+            bmat = pb.parent.matrix.inverted() @ bmat
+            rmat = pb.parent.bone.matrix_local.inverted() @ rmat
+        mat = rmat.inverted() @ bmat
         q = mat.to_quaternion()
         magn = math.sqrt( (q.w-1)*(q.w-1) + q.x*q.x + q.y*q.y + q.z*q.z )
         if magn > 1e-4:

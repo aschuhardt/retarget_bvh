@@ -31,10 +31,6 @@ from bpy.props import EnumProperty, StringProperty
 
 from . import utils
 from .utils import *
-if bpy.app.version < (2,80,0):
-    from .buttons27 import PropString
-else:
-    from .buttons28 import PropString
 
 #
 #   Global variables
@@ -206,11 +202,13 @@ def getAction(name):
     raise MocapError("Did not find action %s" % name)
 
 
-class MCP_OT_SetCurrentAction(bpy.types.Operator, PropString):
+class MCP_OT_SetCurrentAction(bpy.types.Operator):
     bl_idname = "mcp.set_current_action"
     bl_label = "Set Current Action"
     bl_description = "Set the action selected in the action list as the current action"
     bl_options = {'UNDO'}
+
+    prop : StringProperty()
 
     def execute(self, context):
         try:

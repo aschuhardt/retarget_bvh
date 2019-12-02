@@ -53,10 +53,6 @@ if "bpy" in locals():
     print("Reloading BVH Retargeter")
     import imp
     imp.reload(utils)
-    if bpy.app.version < (2,80,0):
-        imp.reload(buttons27)
-    else:
-        imp.reload(buttons28)
     imp.reload(io_json)
     imp.reload(props)
     imp.reload(t_pose)
@@ -76,10 +72,6 @@ else:
     import bpy
 
     from . import utils
-    if bpy.app.version < (2,80,0):
-        from . import buttons27
-    else:
-        from . import buttons28
     from . import io_json
     from . import props
     from . import t_pose
@@ -95,11 +87,6 @@ else:
     from . import edit
     from . import floor
 
-if bpy.app.version < (2,80,0):
-    Region = "TOOLS"
-else:
-    Region = "UI"
-
 def inset(layout):
     split = utils.splitLayout(layout, 0.05)
     split.label(text="")
@@ -114,7 +101,7 @@ class MCP_PT_Main(bpy.types.Panel):
     bl_category = "Retarget BVH"
     bl_label = "Retarget BVH v %d.%d: Main" % bl_info["version"]
     bl_space_type = "VIEW_3D"
-    bl_region_type = Region
+    bl_region_type = "UI"
 
     def draw(self, context):
         layout = self.layout
@@ -149,7 +136,7 @@ class MCP_PT_Options(bpy.types.Panel):
     bl_category = "Retarget BVH"
     bl_label = "Options"
     bl_space_type = "VIEW_3D"
-    bl_region_type = Region
+    bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -201,7 +188,7 @@ class MCP_PT_Edit(bpy.types.Panel):
     bl_category = "Retarget BVH"
     bl_label = "Edit Actions"
     bl_space_type = "VIEW_3D"
-    bl_region_type = Region
+    bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -342,7 +329,7 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel):
     bl_category = "Retarget BVH"
     bl_label = "Source armature"
     bl_space_type = "VIEW_3D"
-    bl_region_type = Region
+    bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -388,7 +375,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
     bl_category = "Retarget BVH"
     bl_label = "Target armature"
     bl_space_type = "VIEW_3D"
-    bl_region_type = Region
+    bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -471,7 +458,7 @@ class MCP_PT_Utility(bpy.types.Panel):
     bl_category = "Retarget BVH"
     bl_label = "Utilities"
     bl_space_type = "VIEW_3D"
-    bl_region_type = Region
+    bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
