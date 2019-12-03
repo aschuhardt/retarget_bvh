@@ -415,17 +415,17 @@ class MCP_OT_SavePose(bpy.types.Operator, ExportHelper, JsonFile):
 #------------------------------------------------------------------
 
 def initRig(context):
-    from . import target
-    from . import source
+    from .target import getTargetArmature
+    from .source import findSrcArmature
     from .fkik import setRigifyFKIK, setRigify2FKIK
 
     rig = context.object
     pose = [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
 
     if rig.McpIsSourceRig:
-        source.findSrcArmature(context, rig)
+        findSrcArmature(context, rig)
     else:
-        target.getTargetArmature(rig, context)
+        getTargetArmature(rig, context)
 
     for pb,mat in pose:
         pb.matrix_basis = mat

@@ -88,7 +88,7 @@ else:
     from . import floor
 
 def inset(layout):
-    split = utils.splitLayout(layout, 0.05)
+    split = layout.split(factor=0.05)
     split.label(text="")
     return split.column()
 

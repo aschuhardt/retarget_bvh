@@ -228,6 +228,45 @@ TargetBoneNames = [
 #
 ###############################################################################
 
+def initTargets(scn):
+    global _targetArmatures, _targetInfo, _trgArmatureEnums
+    _targetInfo = { "Automatic" : ([], [], {}) }
+    _targetArmatures = { "Automatic" : CArmature() }
+    path = os.path.join(os.path.dirname(__file__), "target_rigs")
+    for fname in os.listdir(path):
+        file = os.path.join(path, fname)
+        (name, ext) = os.path.splitext(fname)
+        if ext == ".json" and os.path.isfile(file):
+            (name, stuff) = readTrgArmature(file, name)
+            _targetInfo[name] = stuff
+
+    _trgArmatureEnums =[]
+    keys = list(_targetInfo.keys())
+    keys.sort()
+    for key in keys:
+        _trgArmatureEnums.append((key,key,key))
+
+    bpy.types.Scene.McpTargetRig = EnumProperty(
+        items = _trgArmatureEnums,
+        name = "Target rig",
+        default = 'Automatic')
+    print("Defined McpTargetRig")
+
+
+def readTrgArmature(filepath, name):
+    import json
+    print("Read target file", filepath)
+    with open(filepath, "r") as fp:
+        struct = json.load(fp)
+    name = struct["name"]
+    bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
+    ikbones = []    
+    if "ikbones" in struct.keys():
+        ikbones = [(key, nameOrNone(value)) for key,value in struct["ikbones"].items()]
+    bendtwist = []    
+    if "bendtwist" in struct.keys():
+        bendtwist = [(key, nameOrNone(value)) for key,value in struct["bendtwist"].items()]
+    return (name, (bones, ikbones, bendtwist))
 
 
 class MCP_OT_InitTargets(bpy.types.Operator):
@@ -241,52 +280,11 @@ class MCP_OT_InitTargets(bpy.types.Operator):
         try:
             initTPoses()
             initTargetTPose(context.scene)
-            self.initTargets(context.scene)
+            initTargets(context.scene)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
-
-
-    def initTargets(self, scn):
-        global _targetArmatures, _targetInfo, _trgArmatureEnums
-        _targetInfo = { "Automatic" : ([], [], {}) }
-        _targetArmatures = { "Automatic" : CArmature() }
-        path = os.path.join(os.path.dirname(__file__), "target_rigs")
-        for fname in os.listdir(path):
-            file = os.path.join(path, fname)
-            (name, ext) = os.path.splitext(fname)
-            if ext == ".json" and os.path.isfile(file):
-                (name, stuff) = self.readTrgArmature(file, name)
-                _targetInfo[name] = stuff
-
-        _trgArmatureEnums =[]
-        keys = list(_targetInfo.keys())
-        keys.sort()
-        for key in keys:
-            _trgArmatureEnums.append((key,key,key))
-
-        bpy.types.Scene.McpTargetRig = EnumProperty(
-            items = _trgArmatureEnums,
-            name = "Target rig",
-            default = 'Automatic')
-        print("Defined McpTargetRig")
-
-
-    def readTrgArmature(self, filepath, name):
-        import json
-        print("Read target file", filepath)
-        with open(filepath, "r") as fp:
-            struct = json.load(fp)
-        name = struct["name"]
-        bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
-        ikbones = []    
-        if "ikbones" in struct.keys():
-            ikbones = [(key, nameOrNone(value)) for key,value in struct["ikbones"].items()]
-        bendtwist = []    
-        if "bendtwist" in struct.keys():
-            bendtwist = [(key, nameOrNone(value)) for key,value in struct["bendtwist"].items()]
-        return (name, (bones, ikbones, bendtwist))
-
+        
 
 class MCP_OT_GetTargetRig(bpy.types.Operator):
     bl_idname = "mcp.get_target_rig"
