@@ -499,7 +499,6 @@ def rescaleRig(scn, trgRig, srcRig):
 #
 
 def renameAndRescaleBvh(context, srcRig, trgRig):
-    from . import source, target
     setCategory("Rename And Rescale")
     try:
         if srcRig["McpRenamed"]:
@@ -507,13 +506,16 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     except:
         pass
 
-    from . import t_pose
+    from .source import findSrcArmature
+    from .target import getTargetArmature
+    from .t_pose import addTPoseAtFrame0
+    
     scn = context.scene
     setActiveObject(context, srcRig)
     #(srcRig, srcBones, action) =  renameBvhRig(rig, filepath)
-    target.getTargetArmature(trgRig, context)
-    source.findSrcArmature(context, srcRig)
-    t_pose.addTPoseAtFrame0(srcRig, scn)
+    getTargetArmature(trgRig, context)
+    findSrcArmature(context, srcRig)
+    addTPoseAtFrame0(srcRig, scn)
     renameBones(srcRig, context)
     setInterpolation(srcRig)
     rescaleRig(context.scene, trgRig, srcRig)

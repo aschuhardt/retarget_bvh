@@ -174,22 +174,23 @@ def autoTPose(rig, context):
 #   Set current pose to T-Pose
 #------------------------------------------------------------------
 
-def setTPose(rig, context, filename=None):
-    print("RR", rig.McpTPoseDefined)
+_t_poses = {}
+
+def putInTPose(rig, context):
+    global _t_poses
+    scn = context.scene
     if rig.McpTPoseDefined:
         getStoredTPose(rig)
+    elif scn.McpTargetTPose == "Default":
+        autoTPose(rig, context)
     else:
-        if isMakeHumanRig(rig) and scn.McpMakeHumanTPose:
-            if isMhOfficialRig(rig):
-                filename = "target_rigs/mh_official_tpose.json"
-            else:
-                filename = "target_rigs/makehuman_tpose.json"
-        elif filename is None:
-            filename = rig.McpTPoseFile
-        hasFile = loadPose(rig, filename)
-        if not hasFile:
-            autoTPose(rig, context)
-        defineTPose(rig)
+        if scn.McpTargetTPose in _t_poses.keys():
+            struct = _t_poses[scn.McpTargetTPose]
+        else:
+            filepath = ("t_poses/%s.json" % scn.McpTargetTPose.lower())
+            struct = loadPose(rig, filepath)
+            _t_poses[scn.McpTargetTPose] = struct
+        setTPose(rig, struct)
 
 
 class MCP_OT_PutInTPose(bpy.types.Operator):
@@ -201,9 +202,7 @@ class MCP_OT_PutInTPose(bpy.types.Operator):
     def execute(self, context):
         try:
             rig = initRig(context)
-            isdefined = rig.McpTPoseDefined
-            setTPose(rig, context)
-            rig.McpTPoseDefined = isdefined
+            putInTPose(rig, context)
             print("Pose set to T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
@@ -219,10 +218,7 @@ def getStoredTPose(rig):
 
 
 def getStoredBonePose(pb):
-        try:
-            quat = Quaternion(pb.McpQuat)
-        except KeyError:
-            quat = Quaternion()
+        quat = Quaternion(pb.McpQuat)
         return quat.to_matrix().to_4x4()
 
 
@@ -301,6 +297,10 @@ class MCP_OT_UndefineTPose(bpy.types.Operator):
         try:
             rig = initRig(context)
             rig.McpTPoseDefined = False
+            quat = Quaternion()
+            for pb in rig.pose.bones:            
+                pb.McpQuat = quat    
+                print("UU", pb.name, list(pb.McpQuat))
             print("Undefined T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
@@ -317,21 +317,20 @@ def loadPose(rig, filename):
         print("Loading %s" % filepath)
         struct = loadJson(filepath)
         rig.McpTPoseFile = filename
+        setTPose(rig, struct)
+        return struct
     else:
-        return False
+        return None
+    
 
+def setTPose(rig, struct):
     setRestPose(rig)
-
     for name,value in struct:
         bname = getBoneName(rig, name)
-        try:
+        if bname in rig.pose.bones.keys():
             pb = rig.pose.bones[bname]
-        except KeyError:
-            continue
-        quat = Quaternion(value)
-        pb.matrix_basis = quat.to_matrix().to_4x4()
-
-    return True
+            quat = Quaternion(value)
+            pb.matrix_basis = quat.to_matrix().to_4x4()
 
 
 def getBoneName(rig, name):

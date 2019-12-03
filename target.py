@@ -145,10 +145,10 @@ def guessTargetArmatureFromList(rig, bones, scn):
         return "Rigify2"
     elif isMhx7Rig(rig):
         return "MH-alpha7"
-    elif isGenesis(rig):
-        return "Genesis"
-    elif isGenesis3(rig):
-        return "Genesis3"
+    elif isGenesis12(rig):
+        return "Genesis 1,2"
+    elif isGenesis38(rig):
+        return "Genesis 3,8"
     elif False:
         for name in _targetInfo.keys():
             if name not in ["MHX", "MH-Official", "Rigify", "Rigify2", "MH-alpha7", "Genesis", "Genesis3"]:

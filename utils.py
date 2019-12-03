@@ -58,6 +58,18 @@ def updateScene(context=None, updateDepsGraph=True):
         depth.update()
     scn.frame_current = scn.frame_current
     
+    
+def deleteObject(context, ob):
+    if context.object:
+        bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='DESELECT')
+    ob.select_set(True)
+    for coll in bpy.data.collections:
+        if ob in coll.objects.values():
+            coll.objects.unlink(ob)
+    bpy.ops.object.delete(use_global=False)
+    del ob
+    
 #
 #   printMat3(string, mat)
 #
@@ -126,11 +138,11 @@ def isRigify(rig):
 def isRigify2(rig):
     return hasAllBones(["MCH-upper_arm_ik.L"], rig)
 
-def isGenesis3(rig):
+def isGenesis38(rig):
     return (hasAllBones(["abdomenLower", "lShldrBend"], rig) and
-            not isGenesis(rig))
+            not isGenesis12(rig))
 
-def isGenesis(rig):
+def isGenesis12(rig):
     return hasAllBones(["abdomen2", "lShldr"], rig)
 
 def isMakeHumanRig(rig):
@@ -260,7 +272,7 @@ def insertRotation(pb, mat):
 
 def isRotationMatrix(mat):
     mat = mat.to_3x3()
-    prod = Mult2(mat, mat.transposed())
+    prod = mat @ mat.transposed()
     diff = prod - Matrix().to_3x3()
     for i in range(3):
         for j in range(3):

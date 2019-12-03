@@ -82,11 +82,12 @@ class CAnimation:
             banim.printResult(frame)
 
 
-    def setTPose(self, context):
+    def putInTPoses(self, context):
+        from .t_pose import putInTPose
         putInRestPose(self.srcRig, True)
-        t_pose.setTPose(self.srcRig, context)
+        putInTPose(self.srcRig, context)
         putInRestPose(self.trgRig, True)
-        t_pose.setTPose(self.trgRig, context)
+        putInTPose(self.trgRig, context)
         for banim in self.boneAnims.values():
             banim.insertTPoseFrame()
         context.scene.frame_set(0)
@@ -358,7 +359,7 @@ def retargetAnimation(context, srcRig, trgRig):
     target.ensureTargetInited(scn)
     boneAssoc = target.getTargetArmature(trgRig, context)
     anim = CAnimation(srcRig, trgRig, boneAssoc, context)
-    anim.setTPose(context)
+    anim.putInTPoses(context)
 
     setCategory("Retarget")
     frameBlock = frames[0:100]
@@ -469,8 +470,8 @@ def restoreTargetData(rig, data):
 #
 
 def loadRetargetSimplify(context, filepath):
-    from . import load
     from .fkik import limbsBendPositive
+    from .load import readBvhFile, renameAndRescaleBvh, deleteSourceRig
 
     print("\nLoad and retarget %s" % filepath)
     time1 = time.clock()
@@ -479,9 +480,9 @@ def loadRetargetSimplify(context, filepath):
     data = changeTargetData(trgRig, scn)
     try:
         #clearMcpProps(trgRig)
-        srcRig = load.readBvhFile(context, filepath, scn, False)
+        srcRig = readBvhFile(context, filepath, scn, False)
         try:
-            load.renameAndRescaleBvh(context, srcRig, trgRig)
+            renameAndRescaleBvh(context, srcRig, trgRig)
             retargetAnimation(context, srcRig, trgRig)
             scn = context.scene
             if scn.McpDoBendPositive:
@@ -491,7 +492,7 @@ def loadRetargetSimplify(context, filepath):
             if scn.McpRescale:
                 rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
         finally:
-            load.deleteSourceRig(context, srcRig, 'Y_')
+            deleteSourceRig(context, srcRig, 'Y_')
     finally:
         restoreTargetData(trgRig, data)
     time2 = time.clock()
