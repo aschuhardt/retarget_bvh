@@ -434,12 +434,16 @@ def setRotation(pb, rot, frame, group):
 def putInRestPose(rig, useSetKeys):
     for pb in rig.pose.bones:
         pb.matrix_basis = Matrix()
-        if useSetKeys:
-            if pb.rotation_mode == 'QUATERNION':
-                pb.keyframe_insert('rotation_quaternion')
-            else:
-                pb.keyframe_insert('rotation_euler')
-            pb.keyframe_insert('location')
+        setKeys(pb, useSetKeys)
+        
+        
+def setKeys(pb, useSetKeys):        
+    if useSetKeys:
+        if pb.rotation_mode == 'QUATERNION':
+            pb.keyframe_insert('rotation_quaternion')
+        else:
+            pb.keyframe_insert('rotation_euler')
+        pb.keyframe_insert('location')
 
 #
 #    setInterpolation(rig):

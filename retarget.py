@@ -88,6 +88,7 @@ class CAnimation:
         putInTPose(self.srcRig, context)
         putInRestPose(self.trgRig, True)
         putInTPose(self.trgRig, context)
+        updateScene(context, updateDepsGraph=True)
         for banim in self.boneAnims.values():
             banim.insertTPoseFrame()
         context.scene.frame_set(0)

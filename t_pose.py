@@ -331,6 +331,7 @@ def setTPose(rig, struct):
             pb = rig.pose.bones[bname]
             quat = Quaternion(value)
             pb.matrix_basis = quat.to_matrix().to_4x4()
+            setKeys(pb, True)
 
 
 def getBoneName(rig, name):
