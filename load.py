@@ -464,14 +464,13 @@ def deleteSourceRig(context, rig, prefix):
 def rescaleRig(scn, trgRig, srcRig):
     if not scn.McpAutoScale:
         return
-    if isMhOfficialRig(trgRig):
-        upleg1 = trgRig.data.bones["upperleg01.L"]
-        upleg2 = trgRig.data.bones["upperleg02.L"]
+    upleg1 = getTrgBone("thigh.L", trgRig)
+    upleg2 = getTrgBone("thigh_twist.L", trgRig)
+    if upleg2:
         trgScale = upleg1.length + upleg2.length
     else:
-        upleg = getTrgBone('thigh.L', trgRig)
-        trgScale = upleg.length
-    srcScale = srcRig.data.bones['thigh.L'].length
+        trgScale = upleg1.length
+    srcScale = srcRig.data.bones["thigh.L"].length
     scale = trgScale/srcScale
     print("Rescale %s with factor %f" % (srcRig.name, scale))
     scn.McpBvhScale = scale

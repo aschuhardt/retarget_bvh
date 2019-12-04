@@ -21,6 +21,7 @@
     	"rHand" : "hand.R",
 
 	    "lThighBend" : "thigh.L",
+	    "lThighTwist" : "thigh_twist.L",
     	"lShin" : "shin.L",
 	    "lFoot" : "foot.L", 
 	    "lToe" : "toe.L",

@@ -21,6 +21,7 @@
 	    "wrist.R" : "hand.R",
 
 	    "upperleg01.L" : "thigh.L",
+	    "upperleg02.L" : "thigh_twist.L",
     	"lowerleg01.L" : "shin.L",
 	    "foot.L" : "foot.L", 
 	    "toe1-1.L" : "toe.L",

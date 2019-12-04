@@ -178,7 +178,6 @@ _t_poses = {}
 
 def putInTPose(rig, tpname, context):
     global _t_poses
-    print("PIP", rig.name, rig.McpTPoseDefined, tpname)
     if rig.McpTPoseDefined:
         getStoredTPose(rig)
     elif tpname == "Default":
