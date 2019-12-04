@@ -37,6 +37,19 @@ from .utils import *
 from .io_json import *
 
 
+_t_poses = {}
+
+def isTPoseInited():
+    global _t_poses
+    return (_t_poses != {})
+
+def ensureTPoseInited(scn):
+    if not isTPoseInited():
+        initTPoses()
+        initSourceTPose(scn)
+        initTargetTPose(scn)
+
+
 class JsonFile:
     filename_ext = ".json"
     filter_glob : StringProperty(default="*.json", options={'HIDDEN'})
@@ -171,10 +184,8 @@ def autoTPose(rig, context):
         setKeys(pb, True)
 
 #------------------------------------------------------------------
-#   Set current pose to T-Pose
+#   Put in T-pose
 #------------------------------------------------------------------
-
-_t_poses = {}
 
 def putInTPose(rig, tpname, context):
     global _t_poses
@@ -429,6 +440,7 @@ def initTPoses():
             keys.append((key,key,key))
     keys.sort()
     _tposeEnums = [("Default", "Default", "Default")] + keys
+    print("INITT", _tposeEnums)
 
 
 def initSourceTPose(scn):

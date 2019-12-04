@@ -140,10 +140,10 @@ def findSrcArmature(context, rig):
     clearCategory()
 
 #
-#    setArmature(rig, scn)
+#    setSourceArmature(rig, scn)
 #
 
-def setArmature(rig, scn):
+def setSourceArmature(rig, scn):
     global _srcArmature, _sourceArmatures
     try:
         name = rig.McpArmature

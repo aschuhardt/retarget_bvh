@@ -53,7 +53,6 @@ from bpy_extras.io_utils import ImportHelper
 
 from .simplify import simplifyFCurves, rescaleFCurves
 from .utils import *
-from . import t_pose
 from .load import BVHFile
 
 
@@ -328,7 +327,9 @@ def clearMcpProps(rig):
 
 
 def retargetAnimation(context, srcRig, trgRig):
-    from . import source, target
+    from .t_pose import ensureTPoseInited
+    from .source import ensureSourceInited, setSourceArmature 
+    from .target import ensureTargetInited, getTargetArmature
     from .fkik import setMhxIk, setRigifyFKIK, setRigify2FKIK
 
     startProgress("Retargeting")
@@ -351,12 +352,13 @@ def retargetAnimation(context, srcRig, trgRig):
         raise MocapError("No frames found.")
     oldData = changeTargetData(trgRig, scn)
 
-    source.ensureSourceInited(scn)
-    source.setArmature(srcRig, scn)
+    ensureTPoseInited(scn)
+    ensureSourceInited(scn)
+    setSourceArmature(srcRig, scn)
     print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
-    target.ensureTargetInited(scn)
-    boneAssoc = target.getTargetArmature(trgRig, context)
+    ensureTargetInited(scn)
+    boneAssoc = getTargetArmature(trgRig, context)
     anim = CAnimation(srcRig, trgRig, boneAssoc, context)
     anim.putInTPoses(context)
 
