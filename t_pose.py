@@ -248,7 +248,6 @@ def addTPoseAtFrame0(rig, scn):
 def defineTPose(rig):
     for pb in rig.pose.bones:
         pb.McpQuat = pb.matrix_basis.to_quaternion()
-        print("PP", pb.name, list(pb.McpQuat))
     rig.McpTPoseDefined = True
 
 

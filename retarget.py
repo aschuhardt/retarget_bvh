@@ -84,14 +84,12 @@ class CAnimation:
 
     def putInTPoses(self, context):
         from .t_pose import putInTPose
+        context.scene.frame_set(0)
         putInRestPose(self.srcRig, True)
         putInTPose(self.srcRig, context)
         putInRestPose(self.trgRig, True)
         putInTPose(self.trgRig, context)
         updateScene(context, updateDepsGraph=True)
-        for banim in self.boneAnims.values():
-            banim.insertTPoseFrame()
-        context.scene.frame_set(0)
         for banim in self.boneAnims.values():
             banim.getTPoseMatrix()
 
@@ -136,10 +134,9 @@ class CBoneAnim:
         else:
             parname = None
         return (
-            "<CBoneAnim %s\n" % self.name +
-            "  src %s\n" % self.srcBone.name +
+            "<CBoneAnim %s" % self.name +
+            "  src %s" % self.srcBone.name +
             "  trg %s\n" % self.trgBone.name +
-            "  par %s\n" % parname +
             "  A %s\n" % self.aMatrix +
             "  B %s\n" % self.bMatrix)
 
@@ -184,11 +181,6 @@ class CBoneAnim:
             pb.keyframe_insert("location", frame=frame, group=pb.name)
 
 
-    def insertTPoseFrame(self):
-        mat = t_pose.getStoredBonePose(self.trgBone)
-        self.insertKeyFrame(mat, 0)
-
-
     def getTPoseMatrix(self):
         self.aMatrix = self.srcBone.matrix.inverted() @ self.trgBone.matrix
         if not isRotationMatrix(self.trgBone.matrix):
@@ -197,6 +189,11 @@ class CBoneAnim:
             raise RuntimeError("Source %s not rotation matrix %s" % (self.srcBone.name, self.srcBone.matrix))
         if not isRotationMatrix(self.aMatrix):
             raise RuntimeError("A %s not rotation matrix %s" % (self.trgBone.name, self.aMatrix.matrix))
+
+        return
+
+        if self.name == "upper_arm.L":
+            print("\nGTP", self)
 
 
     def retarget(self, frame):
