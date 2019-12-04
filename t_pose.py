@@ -167,8 +167,8 @@ def autoTPose(rig, context):
         euler = mat.to_euler('YZX')
         euler.y = 0
         pb.matrix_basis = euler.to_matrix().to_4x4()
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.mode_set(mode='POSE')
+        updateScene(context, updateDepsGraph=True)
+        setKeys(pb, True)
 
 #------------------------------------------------------------------
 #   Set current pose to T-Pose
@@ -176,20 +176,20 @@ def autoTPose(rig, context):
 
 _t_poses = {}
 
-def putInTPose(rig, context):
+def putInTPose(rig, tpname, context):
     global _t_poses
-    scn = context.scene
+    print("PIP", rig.name, rig.McpTPoseDefined, tpname)
     if rig.McpTPoseDefined:
         getStoredTPose(rig)
-    elif scn.McpTargetTPose == "Default":
+    elif tpname == "Default":
         autoTPose(rig, context)
     else:
-        if scn.McpTargetTPose in _t_poses.keys():
-            struct = _t_poses[scn.McpTargetTPose]
+        if tpname in _t_poses.keys():
+            struct = _t_poses[tpname]
         else:
-            filepath = ("t_poses/%s.json" % scn.McpTargetTPose.lower())
+            filepath = ("t_poses/%s.json" % tpname.lower())
             struct = loadPose(rig, filepath)
-            _t_poses[scn.McpTargetTPose] = struct
+            _t_poses[tpname] = struct
         setTPose(rig, struct)
 
 
@@ -202,7 +202,7 @@ class MCP_OT_PutInTPose(bpy.types.Operator):
     def execute(self, context):
         try:
             rig = initRig(context)
-            putInTPose(rig, context)
+            putInTPose(rig, context.scene.McpTargetTPose, context)
             print("Pose set to T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
@@ -218,32 +218,9 @@ def getStoredTPose(rig):
 
 
 def getStoredBonePose(pb):
-        quat = Quaternion(pb.McpQuat)
-        return quat.to_matrix().to_4x4()
+    quat = Quaternion(pb.McpQuat)
+    return quat.to_matrix().to_4x4()
 
-
-def addTPoseAtFrame0(rig, scn):
-    from .source import getSourceTPoseFile
-
-    scn.frame_current = 0
-    if rig.McpTPoseDefined:
-        getStoredTPose(rig)
-    elif getSourceTPoseFile():
-        rig.McpTPoseFile = getSourceTPoseFile()
-        defineTPose(rig)
-    else:
-        setRestPose(rig)
-        defineTPose(rig)
-
-    for pb in rig.pose.bones:
-        if pb.rotation_mode == 'QUATERNION':
-            pb.keyframe_insert('rotation_quaternion', group=pb.name)
-        else:
-            pb.keyframe_insert('rotation_euler', group=pb.name)
-
-#------------------------------------------------------------------
-#   Define current pose as T-Pose
-#------------------------------------------------------------------
 
 def defineTPose(rig):
     for pb in rig.pose.bones:

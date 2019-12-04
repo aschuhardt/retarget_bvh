@@ -113,8 +113,11 @@ class MCP_PT_Main(bpy.types.Panel):
         layout.prop(scn, "McpEndFrame")
         
         layout.separator()
-        layout.prop(scn, "McpSourceRig")
-        layout.prop(scn, "McpSourceTPose")
+        if target.isTargetInited(scn):
+            text = "Reinit Target Panel"
+        else:
+            text = "Init Target Panel"
+        layout.operator("mcp.init_targets", text=text)
         layout.prop(scn, "McpTargetRig")
         layout.prop(scn, "McpTargetTPose")
         

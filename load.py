@@ -508,17 +508,17 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
 
     from .source import findSrcArmature
     from .target import getTargetArmature
-    from .t_pose import addTPoseAtFrame0
+    from .t_pose import putInTPose
     
     scn = context.scene
     setActiveObject(context, srcRig)
     #(srcRig, srcBones, action) =  renameBvhRig(rig, filepath)
     getTargetArmature(trgRig, context)
     findSrcArmature(context, srcRig)
-    addTPoseAtFrame0(srcRig, scn)
     renameBones(srcRig, context)
+    putInTPose(srcRig, scn.McpSourceTPose, context)
     setInterpolation(srcRig)
-    rescaleRig(context.scene, trgRig, srcRig)
+    rescaleRig(scn, trgRig, srcRig)
     srcRig["McpRenamed"] = True
     clearCategory()
 

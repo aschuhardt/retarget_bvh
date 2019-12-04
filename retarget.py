@@ -84,11 +84,12 @@ class CAnimation:
 
     def putInTPoses(self, context):
         from .t_pose import putInTPose
-        context.scene.frame_set(0)
+        scn = context.scene
+        scn.frame_set(0)
         putInRestPose(self.srcRig, True)
-        putInTPose(self.srcRig, context)
+        putInTPose(self.srcRig, scn.McpSourceTPose, context)
         putInRestPose(self.trgRig, True)
-        putInTPose(self.trgRig, context)
+        putInTPose(self.trgRig, scn.McpTargetTPose, context)
         updateScene(context, updateDepsGraph=True)
         for banim in self.boneAnims.values():
             banim.getTPoseMatrix()
