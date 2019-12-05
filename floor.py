@@ -322,6 +322,33 @@ def floorIkFoot(rig, plane, scn, frames):
             addOffset(root, hOffset, ez)
 
 
+def findBoneFCurve(pb, rig, index, mode='rotation'):
+    from .edit import findFCurve
+    if mode == 'rotation':
+        if pb.rotation_mode == 'QUATERNION':
+            mode = "rotation_quaternion"
+        else:
+            mode = "rotation_euler"
+    path = 'pose.bones["%s"].%s' % (pb.name, mode)
+
+    if rig.animation_data is None:
+        return None
+    action = rig.animation_data.action
+    if action is None:
+        return None
+    return findFCurve(path, index, action.fcurves)
+
+
+def fillKeyFrames(pb, rig, frames, nIndices, mode='rotation'):
+    for index in range(nIndices):
+        fcu = findBoneFCurve(pb, rig, index, mode)
+        if fcu is None:
+            return
+        for frame in frames:
+            y = fcu.evaluate(frame)
+            fcu.keyframe_points.insert(frame, y, options={'FAST'})
+
+
 def getIkOffset(rig, ez, origin, leg):
     offset = getHeadOffset(leg, ez, origin)
     tailOffset = getTailOffset(leg, ez, origin)

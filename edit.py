@@ -87,6 +87,7 @@ def getUndoAction(rig):
 
 def startEdit(context):
     from .action import getObjectAction
+    from .loop import fCurveIdentity
     global _EditLoc, _EditRot
 
     rig = context.object
@@ -239,6 +240,7 @@ def getActionPair(context):
 
 def confirmEdit(context):
     from .action import deleteAction
+    from .loop import fCurveIdentity
     global _EditLoc, _EditRot
 
     rig = context.object
@@ -319,6 +321,7 @@ def removeEditDict(editDict, frame, name, n):
 
 
 def insertKey(context, useLoc, useRot, delete):
+    from .loop import fCurveIdentity
     global _EditLoc, _EditRot
 
     rig = context.object
@@ -428,6 +431,17 @@ class MCP_OT_MoveToMarker(bpy.types.Operator):
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
 
+#
+#   findFCurve(path, index, fcurves):
+#
+
+def findFCurve(path, index, fcurves):
+    for fcu in fcurves:
+        if (fcu.data_path == path and
+            fcu.array_index == index):
+            return fcu
+    print('F-curve "%s" not found.' % path)
+    return None
 
 #
 #   displaceFCurve(fcu, ofcu, edits):

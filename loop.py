@@ -38,7 +38,6 @@ from .utils import *
 #   normalizeRotCurves(scn, rig, fcurves, frames)
 #
 
-
 def normalizeRotCurves(scn, rig, fcurves, frames):
     hasQuat = {}
     for fcu in fcurves:
@@ -53,6 +52,19 @@ def normalizeRotCurves(scn, rig, fcurves, frames):
         for (name, pb) in hasQuat.items():
             pb.rotation_quaternion.normalize()
             pb.keyframe_insert("rotation_quaternion", group=name)
+
+#
+#   fCurveIdentity(fcu):
+#
+
+def fCurveIdentity(fcu):
+    words = fcu.data_path.split('"')
+    if len(words) < 2:
+        return (None, None)
+    name = words[1]
+    words = fcu.data_path.split('.')
+    mode = words[-1]
+    return (name, mode)
 
 #
 #   loopFCurves(context):

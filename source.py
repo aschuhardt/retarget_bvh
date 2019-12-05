@@ -119,7 +119,7 @@ def guessSrcArmatureFromList(rig, scn):
 
 def findSrcArmature(context, rig):
     global _srcArmature, _sourceArmatures
-    from .t_pose import autoTPose, defineTPose
+    from .t_pose import autoTPose, defineTPose, putInRestPose
     scn = context.scene
 
     setCategory("Identify Source Rig")

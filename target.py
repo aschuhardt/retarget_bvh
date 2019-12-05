@@ -70,6 +70,7 @@ def ensureTargetInited(scn):
 #
 
 def getTargetArmature(rig, context):
+    from .t_pose import putInRestPose
     global _target, _targetArmatures, _targetInfo, _trgArmature, _ikBones, _bendTwist
 
     scn = context.scene

@@ -82,7 +82,7 @@ class CAnimation:
 
 
     def putInTPoses(self, context):
-        from .t_pose import putInTPose
+        from .t_pose import putInTPose, putInRestPose
         scn = context.scene
         scn.frame_set(0)
         putInRestPose(self.srcRig, True)
@@ -538,9 +538,11 @@ class MCP_OT_RetargetMhx(bpy.types.Operator):
         return{'FINISHED'}
 
     def invoke(self, context, event):
+        from .load import checkObjectProblems
         return checkObjectProblems(self, context)
 
     def draw(self, context):
+        from .load import drawObjectProblems
         drawObjectProblems(self)
 
 
@@ -567,9 +569,11 @@ class MCP_OT_LoadAndRetarget(bpy.types.Operator, ImportHelper, BVHFile):
         return{'FINISHED'}
 
     def invoke(self, context, event):
+        from .load import problemFreeFileSelect
         return problemFreeFileSelect(self, context)
 
     def draw(self, context):
+        from .load import drawObjectProblems
         drawObjectProblems(self)
 
 

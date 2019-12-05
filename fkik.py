@@ -616,6 +616,7 @@ def limbsBendPositive(rig, doElbows, doKnees, frames):
 
 
 def minimizeFCurve(pb, rig, index, frames):
+    from .floor import findBoneFCurve
     if pb is None:
         return
     fcu = findBoneFCurve(pb, rig, index)

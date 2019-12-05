@@ -184,8 +184,14 @@ def autoTPose(rig, context):
         setKeys(pb, True)
 
 #------------------------------------------------------------------
-#   Put in T-pose
+#   Put in rest and T pose
 #------------------------------------------------------------------
+
+def putInRestPose(rig, useSetKeys):
+    for pb in rig.pose.bones:
+        pb.matrix_basis = Matrix()
+        setKeys(pb, useSetKeys)
+        
 
 def putInTPose(rig, tpname, context):
     global _t_poses
@@ -258,9 +264,11 @@ class MCP_OT_DefineTPose(bpy.types.Operator):
         return{'FINISHED'}
 
     def invoke(self, context, event):
+        from .load import checkObjectProblems
         return checkObjectProblems(self, context)
 
     def draw(self, context):
+        from .load import drawObjectProblems
         drawObjectProblems(self)
 
 #------------------------------------------------------------------

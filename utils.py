@@ -54,34 +54,6 @@ def updateScene():
     scn.frame_current = scn.frame_current
     
 #
-#   printMat3(string, mat)
-#
-
-def printMat3(string, mat, pad=""):
-    if not mat:
-        print("%s None" % string)
-        return
-    print("%s " % string)
-    mc = "%s  [" % pad
-    for m in range(3):
-        s = mc
-        for n in range(3):
-            s += " %6.3f" % mat[m][n]
-        print(s+"]")
-
-def printMat4(string, mat, pad=""):
-    if not mat:
-        print("%s None" % string)
-        return
-    print("%s%s " % (pad, string))
-    mc = "%s  [" % pad
-    for m in range(4):
-        s = mc
-        for n in range(4):
-            s += " %6.3f" % mat[m][n]
-        print(s+"]")
-
-#
 #  quadDict():
 #
 
@@ -206,57 +178,6 @@ def isRotationMatrix(mat):
     return True
 
 #
-#   fCurveIdentity(fcu):
-#
-
-def fCurveIdentity(fcu):
-    words = fcu.data_path.split('"')
-    if len(words) < 2:
-        return (None, None)
-    name = words[1]
-    words = fcu.data_path.split('.')
-    mode = words[-1]
-    return (name, mode)
-
-#
-#   findFCurve(path, index, fcurves):
-#
-
-def findFCurve(path, index, fcurves):
-    for fcu in fcurves:
-        if (fcu.data_path == path and
-            fcu.array_index == index):
-            return fcu
-    print('F-curve "%s" not found.' % path)
-    return None
-
-
-def findBoneFCurve(pb, rig, index, mode='rotation'):
-    if mode == 'rotation':
-        if pb.rotation_mode == 'QUATERNION':
-            mode = "rotation_quaternion"
-        else:
-            mode = "rotation_euler"
-    path = 'pose.bones["%s"].%s' % (pb.name, mode)
-
-    if rig.animation_data is None:
-        return None
-    action = rig.animation_data.action
-    if action is None:
-        return None
-    return findFCurve(path, index, action.fcurves)
-
-
-def fillKeyFrames(pb, rig, frames, nIndices, mode='rotation'):
-    for index in range(nIndices):
-        fcu = findBoneFCurve(pb, rig, index, mode)
-        if fcu is None:
-            return
-        for frame in frames:
-            y = fcu.evaluate(frame)
-            fcu.keyframe_points.insert(frame, y, options={'FAST'})
-
-#
 #   isRotation(mode):
 #   isLocation(mode):
 #
@@ -266,7 +187,6 @@ def isRotation(mode):
 
 def isLocation(mode):
     return (mode[0:3] == 'loc')
-
 
 #
 #    setRotation(pb, mat, frame, group):
@@ -289,22 +209,18 @@ def setRotation(pb, rot, frame, group):
         pb.keyframe_insert('rotation_euler', frame=frame, group=group)
 
 
-#
-#   putInRestPose(rig, useSetKeys):
-#
+def insertRotationKeyFrame(pb, frame=bpy.context.scene.frame_current):
+    if pb.rotation_mode == "QUATERNION":
+        pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
+    elif pb.rotation_mode == "AXIS_ANGLE":
+        pb.keyframe_insert("rotation_axis_angle", frame=frame, group=pb.name)
+    else:
+        pb.keyframe_insert("rotation_euler", frame=frame, group=pb.name)
 
-def putInRestPose(rig, useSetKeys):
-    for pb in rig.pose.bones:
-        pb.matrix_basis = Matrix()
-        setKeys(pb, useSetKeys)
-        
         
 def setKeys(pb, useSetKeys):        
     if useSetKeys:
-        if pb.rotation_mode == 'QUATERNION':
-            pb.keyframe_insert('rotation_quaternion')
-        else:
-            pb.keyframe_insert('rotation_euler')
+        insertRotationKeyFrame(pb)
         pb.keyframe_insert('location')
 
 #
@@ -324,69 +240,6 @@ def setInterpolation(rig):
     return
 
 #
-#   insertRotationKeyFrame(pb, frame):
-#
-
-def insertRotationKeyFrame(pb, frame):
-    rotMode = pb.rotation_mode
-    grp = pb.name
-    if rotMode == "QUATERNION":
-        pb.keyframe_insert("rotation_quaternion", frame=frame, group=grp)
-    elif rotMode == "AXIS_ANGLE":
-        pb.keyframe_insert("rotation_axis_angle", frame=frame, group=grp)
-    else:
-        pb.keyframe_insert("rotation_euler", frame=frame, group=grp)
-
-#
-#   checkObjectProblems(self, context):
-#
-
-def getObjectProblems(self, context):
-    self.problems = ""
-    epsilon = 1e-2
-    rig = context.object
-
-    eu = rig.rotation_euler
-    print(eu)
-    if abs(eu.x) + abs(eu.y) + abs(eu.z) > epsilon:
-        self.problems += "object rotation\n"
-
-    vec = rig.scale - Vector((1,1,1))
-    print(vec, vec.length)
-    if vec.length > epsilon:
-        self.problems += "object scaling\n"
-
-    if self.problems:
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=300, height=20)
-    else:
-        return False
-
-
-def checkObjectProblems(self, context):
-    problems = getObjectProblems(self, context)
-    if problems:
-        return problems
-    else:
-        return self.execute(context)
-
-
-def problemFreeFileSelect(self, context):
-    problems = getObjectProblems(self, context)
-    if problems:
-        return problems
-    context.window_manager.fileselect_add(self)
-    return {'RUNNING_MODAL'}
-
-
-def drawObjectProblems(self):
-    if self.problems:
-        self.layout.label(text="MakeWalk cannot use this rig because it has:")
-        for problem in self.problems.split("\n"):
-            self.layout.label(text="  %s" % problem)
-        self.layout.label(text="Apply object transformations before using MakeWalk")
-
-#
 #   showProgress(n, frame):
 #
 
@@ -403,7 +256,7 @@ def showProgress(n, frame, nFrames, step=20):
         print("%d (%.1f pct)" % (int(frame), (100.0*n)/nFrames))
 
 #
-#
+#   Error handling
 #
 
 _category = ""
