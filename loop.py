@@ -61,12 +61,15 @@ def normalizeRotCurves(scn, rig, fcurves, frames):
 #
 
 def loopFCurves(context):
+    from .action import getObjectAction
+    from .simplify import getActionFCurves
+    
     scn = context.scene
     rig = context.object
-    act = getAction(rig)
+    act = getObjectAction(rig)
     if not act:
         return
-    (fcurves, minTime, maxTime) = simplify.getActionFCurves(act, False, True, scn)
+    (fcurves, minTime, maxTime) = getActionFCurves(act, False, True, scn)
     if not fcurves:
         return
 
@@ -120,14 +123,38 @@ def loopFCurves(context):
             loopFCurve(fcu, minTime, maxTime, scn)
 
 
+def getIkBoneList(rig):
+    hips = getTrgBone('hips', rig)
+    if hips is None:
+        if isMhxRig(rig):
+            hips = rig.pose.bones["root"]
+        elif isRigify(rig):
+            hips = rig.pose.bones["hips"]
+        elif isRigify2(rig):
+            hips = rig.pose.bones["torso"]
+        else:
+            for bone in rig.data.bones:
+                if bone.parent is None:
+                    hips = bone
+                    break
+    blist = [hips]
+    for bname in ['hand.ik.L', 'hand.ik.R', 'foot.ik.L', 'foot.ik.R']:
+        try:
+            blist.append(rig.pose.bones[bname])
+        except KeyError:
+            pass
+    return blist
+
+
 def loopFCurve(fcu, t0, tn, scn):
+    from .simplify import getFCurveLimits
     delta = scn.McpLoopBlendRange
 
     v0 = fcu.evaluate(t0)
     vn = fcu.evaluate(tn)
     fcu.keyframe_points.insert(frame=t0, value=v0)
     fcu.keyframe_points.insert(frame=tn, value=vn)
-    (mode, upper, lower, diff) = simplify.getFCurveLimits(fcu)
+    (mode, upper, lower, diff) = getFCurveLimits(fcu)
     if mode == 'location':
         dv = vn-v0
     else:
@@ -184,11 +211,13 @@ class MCP_OT_LoopFCurves(bpy.types.Operator):
 #
 
 def repeatFCurves(context, nRepeats):
+    from .simplify import getActionFCurves
+    
     startProgress("Repeat F-curves %d times" % nRepeats)
-    act = getAction(context.object)
+    act = getObjectAction(context.object)
     if not act:
         return
-    (fcurves, minTime, maxTime) = simplify.getActionFCurves(act, False, True, context.scene)
+    (fcurves, minTime, maxTime) = getActionFCurves(act, False, True, context.scene)
     if not fcurves:
         return
 
@@ -229,13 +258,14 @@ class MCP_OT_RepeatFCurves(bpy.types.Operator):
 #
 
 def stitchActions(context):
+    from .action import getActionFromName
     from .retarget import getLocks, correctMatrixForLocks
 
     action.listAllActions(context)
     scn = context.scene
     rig = context.object
-    act1 = action.getAction(scn.McpFirstAction)
-    act2 = action.getAction(scn.McpSecondAction)
+    act1 = getActionFromName(scn.McpFirstAction)
+    act2 = getActionFromName(scn.McpSecondAction)
     frame1 = scn.McpFirstEndFrame
     frame2 = scn.McpSecondStartFrame
     delta = scn.McpLoopBlendRange
@@ -418,12 +448,13 @@ def getBaseMatrices(act, frames, rig, useAll):
 
 
 def shiftBoneFCurves(rig, context):
+    from .action import getObjectAction
     from .retarget import getLocks, correctMatrixForLocks
 
     scn = context.scene
     frames = [scn.frame_current] + getActiveFrames(rig)
     nFrames = len(frames)
-    act = getAction(rig)
+    act = getObjectAction(rig)
     if not act:
         return
     basemats, useLoc = getBaseMatrices(act, frames, rig, False)
@@ -470,7 +501,8 @@ class MCP_OT_ShiftBoneFCurves(bpy.types.Operator):
 
 
 def fixateBoneFCurves(rig, scn):
-    act = getAction(rig)
+    from .action import getObjectAction
+    act = getObjectAction(rig)
     if not act:
         return
 
@@ -512,6 +544,62 @@ class MCP_OT_FixateBoneFCurves(bpy.types.Operator):
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
+
+#----------------------------------------------------------
+#   Get active frames
+#----------------------------------------------------------
+
+def getActiveFrames0(ob):
+    active = {}
+    if ob.animation_data is None:
+        return active
+    action = ob.animation_data.action
+    if action is None:
+        return active
+    for fcu in action.fcurves:
+        for kp in fcu.keyframe_points:
+            active[kp.co[0]] = True
+    return active
+
+
+def getActiveFrames(ob, minTime=None, maxTime=None):
+    active = getActiveFrames0(ob)
+    frames = list(active.keys())
+    frames.sort()
+    if minTime is not None:
+        while frames[0] < minTime:
+            frames = frames[1:]
+    if maxTime is not None:
+        frames.reverse()
+        while frames[0] > maxTime:
+            frames = frames[1:]
+        frames.reverse()
+    return frames
+
+
+def getActiveFramesBetweenMarkers(ob, scn):
+    minTime,maxTime = getMarkedTime(scn)
+    if minTime is None:
+        return getActiveFrames(ob)
+    active = getActiveFrames0(ob)
+    frames = []
+    for time in active.keys():
+        if time >= minTime and time <= maxTime:
+            frames.append(time)
+    frames.sort()
+    return frames
+
+
+def getMarkedTime(scn):
+    markers = []
+    for mrk in scn.timeline_markers:
+        if mrk.select:
+            markers.append(mrk.frame)
+    markers.sort()
+    if len(markers) >= 2:
+        return (markers[0], markers[-1])
+    else:
+        return (None, None)
 
 #----------------------------------------------------------
 #   Initialize

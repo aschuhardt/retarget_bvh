@@ -89,7 +89,7 @@ class CAnimation:
         putInTPose(self.srcRig, scn.McpSourceTPose, context)
         putInRestPose(self.trgRig, True)
         putInTPose(self.trgRig, scn.McpTargetTPose, context)
-        updateScene(context, updateDepsGraph=True)
+        updateScene()
         for banim in self.boneAnims.values():
             banim.getTPoseMatrix()
 
@@ -331,6 +331,7 @@ def retargetAnimation(context, srcRig, trgRig):
     from .source import ensureSourceInited, setSourceArmature 
     from .target import ensureTargetInited, getTargetArmature
     from .fkik import setMhxIk, setRigifyFKIK, setRigify2FKIK
+    from .loop import getActiveFrames
 
     startProgress("Retargeting")
     scn = context.scene

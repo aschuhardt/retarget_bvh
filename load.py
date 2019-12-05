@@ -174,7 +174,7 @@ def readBvhFile(context, filepath, scn, scan):
             rig = bpy.data.objects.new("BvhRig", amt)
             coll.objects.link(rig)
             setActiveObject(context, rig)
-            updateScene(context)
+            updateScene()
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.object.mode_set(mode='EDIT')
             root.build(amt, Vector((0,0,0)), None)
@@ -453,9 +453,18 @@ def deleteSourceRig(context, rig, prefix):
                 act.use_fake_user = False
                 if act.users == 0:
                     bpy.data.actions.remove(act)
-                    del act
-    return
 
+
+def deleteObject(context, ob):
+    if context.object:
+        bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='DESELECT')
+    ob.select_set(True)
+    for coll in bpy.data.collections:
+        if ob in coll.objects.values():
+            coll.objects.unlink(ob)
+    bpy.ops.object.delete(use_global=False)
+    del ob
 
 #
 #    rescaleRig(scn, trgRig, srcRig):

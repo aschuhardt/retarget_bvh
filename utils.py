@@ -47,28 +47,11 @@ def setActiveObject(context, ob):
     vly.update()
 
 
-def updateScene(context=None, updateDepsGraph=True):
-    if context is None:
-        context = bpy.context
-    scn = context.scene
-    if hasattr(scn, "update"):
-        scn.update()
-    if updateDepsGraph:
-        depth = context.evaluated_depsgraph_get()
-        depth.update()
+def updateScene():
+    deps = bpy.context.evaluated_depsgraph_get()
+    deps.update()
+    scn = bpy.context.scene
     scn.frame_current = scn.frame_current
-    
-    
-def deleteObject(context, ob):
-    if context.object:
-        bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.select_all(action='DESELECT')
-    ob.select_set(True)
-    for coll in bpy.data.collections:
-        if ob in coll.objects.values():
-            coll.objects.unlink(ob)
-    bpy.ops.object.delete(use_global=False)
-    del ob
     
 #
 #   printMat3(string, mat)
@@ -190,67 +173,6 @@ def getTrgBone(bname, rig):
             return pb
     return None
 
-
-#
-#   getIkBoneList(rig):
-#
-
-def getIkBoneList(rig):
-    hips = getTrgBone('hips', rig)
-    if hips is None:
-        if isMhxRig(rig):
-            hips = rig.pose.bones["root"]
-        elif isRigify(rig):
-            hips = rig.pose.bones["hips"]
-        elif isRigify2(rig):
-            hips = rig.pose.bones["torso"]
-        else:
-            for bone in rig.data.bones:
-                if bone.parent is None:
-                    hips = bone
-                    break
-    blist = [hips]
-    for bname in ['hand.ik.L', 'hand.ik.R', 'foot.ik.L', 'foot.ik.R']:
-        try:
-            blist.append(rig.pose.bones[bname])
-        except KeyError:
-            pass
-    return blist
-
-#
-#   getAction(ob):
-#
-
-def getAction(ob):
-    try:
-        return ob.animation_data.action
-    except:
-        print("%s has no action" % ob)
-        return None
-
-#
-#   deleteAction(act):
-#
-
-def deleteAction(act):
-    act.use_fake_user = False
-    if act.users == 0:
-        bpy.data.actions.remove(act)
-    else:
-        print("%s has %d users" % (act, act.users))
-
-#
-#   copyAction(act1, name):
-#
-
-def copyAction(act1, name):
-    act2 = bpy.data.actions.new(name)
-    for fcu1 in act1.fcurves:
-        fcu2 = act2.fcurves.new(fcu1.data_path, fcu1.array_index)
-        for kp1 in fcu1.keyframe_points:
-            fcu2.keyframe_points.insert(kp1.co[0], kp1.co[1], options={'FAST'})
-    return act2
-
 #
 #
 #
@@ -282,66 +204,6 @@ def isRotationMatrix(mat):
                 print(prod)
                 return False
     return True
-
-
-#
-#   getActiveFrames(ob):
-#
-
-def getActiveFrames0(ob):
-    active = {}
-    if ob.animation_data is None:
-        return active
-    action = ob.animation_data.action
-    if action is None:
-        return active
-    for fcu in action.fcurves:
-        for kp in fcu.keyframe_points:
-            active[kp.co[0]] = True
-    return active
-
-
-def getActiveFrames(ob, minTime=None, maxTime=None):
-    active = getActiveFrames0(ob)
-    frames = list(active.keys())
-    frames.sort()
-    if minTime is not None:
-        while frames[0] < minTime:
-            frames = frames[1:]
-    if maxTime is not None:
-        frames.reverse()
-        while frames[0] > maxTime:
-            frames = frames[1:]
-        frames.reverse()
-    return frames
-
-
-def getActiveFramesBetweenMarkers(ob, scn):
-    minTime,maxTime = getMarkedTime(scn)
-    if minTime is None:
-        return getActiveFrames(ob)
-    active = getActiveFrames0(ob)
-    frames = []
-    for time in active.keys():
-        if time >= minTime and time <= maxTime:
-            frames.append(time)
-    frames.sort()
-    return frames
-
-#
-#    getMarkedTime(scn):
-#
-
-def getMarkedTime(scn):
-    markers = []
-    for mrk in scn.timeline_markers:
-        if mrk.select:
-            markers.append(mrk.frame)
-    markers.sort()
-    if len(markers) >= 2:
-        return (markers[0], markers[-1])
-    else:
-        return (None, None)
 
 #
 #   fCurveIdentity(fcu):

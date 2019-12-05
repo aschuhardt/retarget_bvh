@@ -86,13 +86,14 @@ def getUndoAction(rig):
 
 
 def startEdit(context):
+    from .action import getObjectAction
     global _EditLoc, _EditRot
 
     rig = context.object
     scn = context.scene
     if getUndoAction(rig):
         raise MocapError("Action already being edited. Undo or confirm edit first")
-    act = getAction(rig)
+    act = getObjectAction(rig)
     if not act:
         raise MocapError("Object %s has no action" % rig.name)
     aname = act.name
@@ -154,7 +155,8 @@ def setKeyMap(context, idname, doAdd):
 #
 
 def undoEdit(context):
-    global _EditLoc, _EditRot
+    from .action import deleteAction
+    global _EditLoc, _EditRot    
 
     rig = context.object
     restoreMarkers(context.scene)
@@ -211,6 +213,7 @@ def clearUndoAction(rig):
 
 
 def getActionPair(context):
+    from .action import getObjectAction
     global _EditLoc, _EditRot
 
     rig = context.object
@@ -223,7 +226,7 @@ def getActionPair(context):
         _EditLoc = quadDict()
     if not _EditRot:
         _EditRot = quadDict()
-    act = getAction(rig)
+    act = getObjectAction(rig)
     if act:
         return (act, oact)
     else:
@@ -235,6 +238,7 @@ def getActionPair(context):
 #
 
 def confirmEdit(context):
+    from .action import deleteAction
     global _EditLoc, _EditRot
 
     rig = context.object

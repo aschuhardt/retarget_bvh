@@ -106,6 +106,7 @@ def addOffset(pb, offset, ez):
 #-------------------------------------------------------------
 
 def toesBelowBall(context):
+    from .loop import getActiveFramesBetweenMarkers
     scn = context.scene
     rig,plane = getRigAndPlane(context)
     try:
@@ -211,6 +212,7 @@ class MCP_OT_OffsetToe(bpy.types.Operator):
 #-------------------------------------------------------------
 
 def floorFoot(context):
+    from .loop import getActiveFramesBetweenMarkers
     startProgress("Keep feet above floor")
     scn = context.scene
     rig,plane = getRigAndPlane(context)

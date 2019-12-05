@@ -313,6 +313,7 @@ def setMhxIk(rig, useArms, useLegs, value):
 
 def transferMhxToFk(rig, context):
     from . import target
+    from .loop import getActiveFramesBetweenMarkers
 
     scn = context.scene
     target.getTargetArmature(rig, context)
@@ -358,6 +359,7 @@ def transferMhxToFk(rig, context):
 
 def transferMhxToIk(rig, context):
     from . import target
+    from .loop import getActiveFramesBetweenMarkers
 
     scn = context.scene
     target.getTargetArmature(rig, context)
@@ -418,7 +420,6 @@ def muteAllConstraints(rig, value):
     muteConstraints(lLegCnsFk, value)
     muteConstraints(rLegCnsIk, value)
     muteConstraints(rLegCnsFk, value)
-
 
 #------------------------------------------------------------------------
 #   Rigify
@@ -485,6 +486,7 @@ def setRigify2FKIK(rig, value):
 
 def transferRigifyToFk(rig, context, delim):
     from rig_ui import fk2ik_arm, fk2ik_leg
+    from .loop import getActiveFramesBetweenMarkers
 
     scn = context.scene
     frames = getActiveFramesBetweenMarkers(rig, scn)
@@ -540,6 +542,7 @@ def transferRigifyToFk(rig, context, delim):
 
 def transferRigifyToIk(rig, context, delim):
     from rig_ui import ik2fk_arm, ik2fk_leg
+    from .loop import getActiveFramesBetweenMarkers
 
     scn = context.scene
     frames = getActiveFramesBetweenMarkers(rig, scn)
@@ -637,6 +640,8 @@ class MCP_OT_LimbsBendPositive(bpy.types.Operator):
 
     def execute(self, context):
         from .target import getTargetArmature
+        from .loop import getActiveFramesBetweenMarkers
+
         scn = context.scene
         rig = context.object
         try:

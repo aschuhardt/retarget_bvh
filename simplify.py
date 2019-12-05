@@ -38,8 +38,9 @@ from .utils import *
 #
 
 def simplifyFCurves(context, rig, useVisible, useMarkers):
+    from .action import getObjectAction
     scn = context.scene
-    act = getAction(rig)
+    act = getObjectAction(rig)
     if not act:
         return
     (fcurves, minTime, maxTime) = getActionFCurves(act, useVisible, useMarkers, scn)
@@ -57,6 +58,8 @@ def simplifyFCurves(context, rig, useVisible, useMarkers):
 #
 
 def getActionFCurves(act, useVisible, useMarkers, scn):
+    from .loop import getMarkedTime
+    
     if useVisible:
         fcurves = []
         for fcu in act.fcurves:
@@ -178,7 +181,8 @@ def iterateFCurves(points, keeps, maxErr):
 #
 
 def rescaleFCurves(context, rig, factor):
-    act = getAction(context.object)
+    from .action import getObjectAction
+    act = getObjectAction(context.object)
     if not act:
         return
     for fcu in act.fcurves:

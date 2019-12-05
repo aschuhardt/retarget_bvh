@@ -107,7 +107,7 @@ class MCP_OT_UpdateActionList(bpy.types.Operator):
 #   class MCP_OT_Delete(bpy.types.Operator):
 #
 
-def deleteAction(context):
+def deleteActions(context):
     global _actions
     listAllActions(context)
     scn = context.scene
@@ -139,7 +139,7 @@ class MCP_OT_Delete(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            deleteAction(context)
+            deleteActions(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
@@ -155,6 +155,14 @@ class MCP_OT_Delete(bpy.types.Operator):
 #   deleteHash():
 #   class MCP_OT_DeleteHash(bpy.types.Operator):
 #
+
+def deleteAction(act):
+    act.use_fake_user = False
+    if act.users == 0:
+        bpy.data.actions.remove(act)
+    else:
+        print("%s has %d users" % (act, act.users))
+
 
 def deleteHash():
     for act in bpy.data.actions:
@@ -188,18 +196,26 @@ class MCP_OT_DeleteHash(bpy.types.Operator):
 def setCurrentAction(context, prop):
     listAllActions(context)
     name = getattr(context.scene, prop)
-    act = getAction(name)
+    act = getActionFromName(name)
     context.object.animation_data.action = act
     print("Action set to %s" % act)
     return
 
 
-def getAction(name):
+def getActionFromName(name):
     try:
         return bpy.data.actions[name]
     except KeyError:
         pass
     raise MocapError("Did not find action %s" % name)
+
+
+def getObjectAction(ob):
+    try:
+        return ob.animation_data.action
+    except:
+        print("%s has no action" % ob)
+        return None
 
 
 class MCP_OT_SetCurrentAction(bpy.types.Operator):

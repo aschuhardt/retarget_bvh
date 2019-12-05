@@ -180,7 +180,7 @@ def autoTPose(rig, context):
         euler = mat.to_euler('YZX')
         euler.y = 0
         pb.matrix_basis = euler.to_matrix().to_4x4()
-        updateScene(context, updateDepsGraph=True)
+        updateScene()
         setKeys(pb, True)
 
 #------------------------------------------------------------------
