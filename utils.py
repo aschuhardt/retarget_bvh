@@ -209,7 +209,9 @@ def setRotation(pb, rot, frame, group):
         pb.keyframe_insert('rotation_euler', frame=frame, group=group)
 
 
-def insertRotationKeyFrame(pb, frame=bpy.context.scene.frame_current):
+def insertRotationKeyFrame(pb, frame=None):
+    if frame is None:
+        frame = bpy.context.scene.frame_current
     if pb.rotation_mode == "QUATERNION":
         pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
     elif pb.rotation_mode == "AXIS_ANGLE":
@@ -221,7 +223,7 @@ def insertRotationKeyFrame(pb, frame=bpy.context.scene.frame_current):
 def setKeys(pb, useSetKeys):        
     if useSetKeys:
         insertRotationKeyFrame(pb)
-        pb.keyframe_insert('location')
+        pb.keyframe_insert('location', group=pb.name)
 
 #
 #    setInterpolation(rig):

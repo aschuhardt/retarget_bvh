@@ -294,7 +294,6 @@ class MCP_OT_UndefineTPose(bpy.types.Operator):
             quat = Quaternion()
             for pb in rig.pose.bones:            
                 pb.McpQuat = quat    
-                print("UU", pb.name, list(pb.McpQuat))
             print("Undefined T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
