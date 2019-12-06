@@ -175,10 +175,9 @@ class CBoneAnim:
 
     def insertKeyFrame(self, mat, frame):
         pb = self.trgBone
-        setRotation(pb, mat, frame, pb.name)
+        insertRotation(pb, mat, frame)
         if not self.parent:
-            pb.location = mat.to_translation()
-            pb.keyframe_insert("location", frame=frame, group=pb.name)
+            insertLocation(pb, mat, frame)
 
 
     def getTPoseMatrix(self):
@@ -516,7 +515,7 @@ class MCP_OT_RetargetMhx(bpy.types.Operator):
     problems = ""
 
     def execute(self, context):
-        from . import target
+        from .target import getTargetArmature
 
         if self.problems:
             return{'FINISHED'}
@@ -527,7 +526,7 @@ class MCP_OT_RetargetMhx(bpy.types.Operator):
         rigList = list(context.selected_objects)
 
         try:
-            target.getTargetArmature(trgRig, context)
+            getTargetArmature(trgRig, context)
             for srcRig in rigList:
                 if srcRig != trgRig:
                     retargetAnimation(context, srcRig, trgRig)

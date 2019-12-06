@@ -30,7 +30,6 @@ import bpy
 from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
 from .utils import *
-from . import fkik
 
 #-------------------------------------------------------------
 #  Plane
@@ -95,11 +94,12 @@ def getTailOffset(pb, ez, origin):
 
 
 def addOffset(pb, offset, ez):
+    from fkik import getPoseMatrix
     gmat = pb.matrix.copy()
     x,y,z = offset*ez
     gmat.col[3] += Vector((x,y,z,0))
-    pmat = fkik.getPoseMatrix(gmat, pb)
-    fkik.insertLocation(pb, pmat)
+    pmat = getPoseMatrix(gmat, pb)
+    insertLocation(pb, pmat)
 
 #-------------------------------------------------------------
 #   Toe below ball
@@ -129,6 +129,7 @@ def toesBelowBall(context):
 
 def toeBelowBall(context, frames, rig, plane, suffix):
     from .retarget import getLocks
+    from .fkik import getPoseMatrix
 
     scn = context.scene
     foot,toe,mBall,mToe,mHeel = getFkFeetBones(rig, suffix)
@@ -145,9 +146,9 @@ def toeBelowBall(context, frames, rig, plane, suffix):
             if zToe > zBall:
                 pmat = offsetToeRotation(toe, ez, factor, order, lock, context)
             else:
-                pmat = fkik.getPoseMatrix(toe.matrix, toe)
+                pmat = getPoseMatrix(toe.matrix, toe)
             pmat = keepToeRotationNegative(pmat, scn)
-            fkik.insertRotation(toe, pmat)
+            insertRotation(toe, pmat)
     else:
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
@@ -156,13 +157,14 @@ def toeBelowBall(context, frames, rig, plane, suffix):
             if dzToe > 0:
                 pmat = offsetToeRotation(toe, ez, factor, order, lock, context)
             else:
-                pmat = fkik.getPoseMatrix(toe.matrix, toe)
+                pmat = getPoseMatrix(toe.matrix, toe)
             pmat = keepToeRotationNegative(pmat, scn)
-            fkik.insertRotation(toe, pmat)
+            insertRotation(toe, pmat)
 
 
 def offsetToeRotation(toe, ez, factor, order, lock, context):
     from .retarget import correctMatrixForLocks
+    from .fkik import getPoseMatrix
 
     mat = toe.matrix.to_3x3()
     y = mat.col[1]
@@ -177,7 +179,7 @@ def offsetToeRotation(toe, ez, factor, order, lock, context):
     mat.col[2] = z
     gmat = mat.to_4x4()
     gmat.col[3] = toe.matrix.col[3]
-    pmat = fkik.getPoseMatrix(gmat, toe)
+    pmat = getPoseMatrix(gmat, toe)
     return correctMatrixForLocks(pmat, order, lock, toe, context.scene.McpUseLimits)
 
 

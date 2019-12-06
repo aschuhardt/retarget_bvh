@@ -181,7 +181,7 @@ def autoTPose(rig, context):
         euler.y = 0
         pb.matrix_basis = euler.to_matrix().to_4x4()
         updateScene()
-        setKeys(pb, True)
+        setKeys(pb)
 
 #------------------------------------------------------------------
 #   Put in rest and T pose
@@ -190,7 +190,18 @@ def autoTPose(rig, context):
 def putInRestPose(rig, useSetKeys):
     for pb in rig.pose.bones:
         pb.matrix_basis = Matrix()
-        setKeys(pb, useSetKeys)
+        if useSetKeys:
+            setKeys(pb)
+
+
+def setKeys(pb):        
+    if pb.rotation_mode == "QUATERNION":
+        pb.keyframe_insert("rotation_quaternion", group=pb.name)
+    elif pb.rotation_mode == "AXIS_ANGLE":
+        pb.keyframe_insert("rotation_axis_angle", group=pb.name)
+    else:
+        pb.keyframe_insert("rotation_euler", group=pb.name)
+    #pb.keyframe_insert('location', group=pb.name)
         
 
 def putInTPose(rig, tpname, context):
@@ -324,7 +335,7 @@ def setTPose(rig, struct):
             pb = rig.pose.bones[bname]
             quat = Quaternion(value)
             pb.matrix_basis = quat.to_matrix().to_4x4()
-            setKeys(pb, True)
+            setKeys(pb)
 
 
 def getBoneName(rig, name):
@@ -447,7 +458,6 @@ def initTPoses():
             keys.append((key,key,key))
     keys.sort()
     _tposeEnums = [("Default", "Default", "Default")] + keys
-    print("INITT", _tposeEnums)
 
 
 def initSourceTPose(scn):

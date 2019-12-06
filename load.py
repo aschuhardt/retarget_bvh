@@ -292,7 +292,7 @@ def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
                         mats.append(Matrix.Rotation(angle, 3, axis))
                         m += 1
                     mat = (node.inverse @ flipMatrix) @ mats[0] @ mats[1] @ mats[2] @ (flipInv @ node.matrix)
-                    setRotation(pb, mat, frame, name)
+                    insertRotation(pb, mat, frame)
 
     return
 

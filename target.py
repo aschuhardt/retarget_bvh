@@ -76,16 +76,11 @@ def getTargetArmature(rig, context):
     scn = context.scene
     setCategory("Identify Target Rig")
     ensureTargetInited(scn)
-    putInRestPose(rig, True)
-    bones = rig.data.bones.keys()
 
     if scn.McpTargetRig == "Automatic":
-        name = guessTargetArmatureFromList(rig, bones, scn)
+        name = guessTargetArmatureFromList(rig, scn)
     else:
-        try:
-            name = scn.McpTargetRig
-        except:
-            raise MocapError("Initialize Target Panel first")
+        name = scn.McpTargetRig
 
     if name == "Automatic":
         setCategory("Automatic Target Rig")
@@ -130,8 +125,7 @@ def getTargetArmature(rig, context):
         return boneAssoc
 
 
-
-def guessTargetArmatureFromList(rig, bones, scn):
+def guessTargetArmatureFromList(rig, scn):
     global _target, _targetArmatures, _targetInfo
     ensureTargetInited(scn)
     print("Guessing target")
@@ -150,12 +144,6 @@ def guessTargetArmatureFromList(rig, bones, scn):
         return "Genesis 1,2"
     elif isGenesis38(rig):
         return "Genesis 3,8"
-    elif False:
-        for name in _targetInfo.keys():
-            if name not in ["MHX", "MH-Official", "Rigify", "Rigify2", "MH-alpha7", "Genesis", "Genesis3"]:
-                (boneAssoc, _ikBones, _bendTwist) = _targetInfo[name]
-                if testTargetRig(name, rig, boneAssoc):
-                    return name
     else:
         return "Automatic"
 
@@ -298,6 +286,7 @@ class MCP_OT_GetTargetRig(bpy.types.Operator):
         rig = context.object
         scn = context.scene
         data = changeTargetData(rig, scn)
+        scn.McpTargetRig = "Automatic"        
         try:
             getTargetArmature(rig, context)
         except MocapError:

@@ -255,10 +255,10 @@ def muteConstraints(constraints, value):
 
 
 def clearAnimation(rig, context, act, type, snapBones):
-    from . import target
+    from .target import getTargetArmature
 
     scn = context.scene
-    target.getTargetArmature(rig, context)
+    getTargetArmature(rig, context)
 
     ikBones = []
     if scn.McpFkIkArms:
@@ -312,11 +312,11 @@ def setMhxIk(rig, useArms, useLegs, value):
 
 
 def transferMhxToFk(rig, context):
-    from . import target
+    from .target import getTargetArmature
     from .loop import getActiveFramesBetweenMarkers
 
     scn = context.scene
-    target.getTargetArmature(rig, context)
+    getTargetArmature(rig, context)
 
     lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
     lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
@@ -358,11 +358,11 @@ def transferMhxToFk(rig, context):
 
 
 def transferMhxToIk(rig, context):
-    from . import target
+    from .target import getTargetArmature
     from .loop import getActiveFramesBetweenMarkers
 
     scn = context.scene
-    target.getTargetArmature(rig, context)
+    getTargetArmature(rig, context)
 
     lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
     lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")

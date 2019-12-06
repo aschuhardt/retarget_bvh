@@ -6,29 +6,29 @@
         "hips" : "hips",
 	    "spine" : "spine",
 	    "spine-1" : "spine-1",
-	    "chest" : "chest",
+	    "chest-1" : "chest",
 	    "neck" : "neck",
 	    "head" : "head", 
 
 	    "clavicle.L" : "shoulder.L",
-	    "upper_arm.L" : "upper_arm.L", 
-	    "forearm.L" : "forearm.L",
-	    "hand.L" : "hand.L",
+	    "upper_arm.fk.L" : "upper_arm.L", 
+	    "forearm.fk.L" : "forearm.L",
+	    "hand.fk.L" : "hand.L",
 	    
 	    "clavicle.R" : "shoulder.R",
-	    "upper_arm.R" : "upper_arm.R", 
-	    "forearm.R" : "forearm.R",
-	    "hand.R" : "hand.R",
+	    "upper_arm.fk.R" : "upper_arm.R", 
+	    "forearm.fk.R" : "forearm.R",
+	    "hand.fk.R" : "hand.R",
 
-	    "thigh.L" : "thigh.L",
-    	"shin.L" : "shin.L",
-	    "foot.L" : "foot.L", 
-	    "toe.L" : "toe.L",
+	    "thigh.fk.L" : "thigh.L",
+    	"shin.fk.L" : "shin.L",
+	    "foot.fk.L" : "foot.L", 
+	    "toe.fk.L" : "toe.L",
 
-	    "thigh.R" : "thigh.R",
-    	"shin.R" : "shin.R",
-	    "foot.R" : "foot.R", 
-	    "toe.R" : "toe.R"
+	    "thigh.fk.R" : "thigh.R",
+    	"shin.fk.R" : "shin.R",
+	    "foot.fk.R" : "foot.R", 
+	    "toe.fk.R" : "toe.R"
     },
     
     "ik-bones" : []

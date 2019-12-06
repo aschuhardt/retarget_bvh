@@ -149,21 +149,6 @@ def getTrgBone(bname, rig):
 #
 #
 
-def insertLocation(pb, mat):
-    pb.location = mat.to_translation()
-    pb.keyframe_insert("location", group=pb.name)
-
-
-def insertRotation(pb, mat):
-    q = mat.to_quaternion()
-    if pb.rotation_mode == 'QUATERNION':
-        pb.rotation_quaternion = q
-        pb.keyframe_insert("rotation_quaternion", group=pb.name)
-    else:
-        pb.rotation_euler = q.to_euler(pb.rotation_mode)
-        pb.keyframe_insert("rotation_euler", group=pb.name)
-
-
 def isRotationMatrix(mat):
     mat = mat.to_3x3()
     prod = mat @ mat.transposed()
@@ -189,41 +174,28 @@ def isLocation(mode):
     return (mode[0:3] == 'loc')
 
 #
-#    setRotation(pb, mat, frame, group):
+#    Insert location and rotation
 #
 
-def setRotation(pb, rot, frame, group):
-    if pb.rotation_mode == 'QUATERNION':
-        try:
-            quat = rot.to_quaternion()
-        except:
-            quat = rot
-        pb.rotation_quaternion = quat
-        pb.keyframe_insert('rotation_quaternion', frame=frame, group=group)
-    else:
-        try:
-            euler = rot.to_euler(pb.rotation_mode)
-        except:
-            euler = rot
-        pb.rotation_euler = euler
-        pb.keyframe_insert('rotation_euler', frame=frame, group=group)
-
-
-def insertRotationKeyFrame(pb, frame=None):
+def insertLocation(pb, mat, frame=None):
     if frame is None:
         frame = bpy.context.scene.frame_current
-    if pb.rotation_mode == "QUATERNION":
+    pb.location = mat.to_translation()
+    pb.keyframe_insert("location", group=pb.name)
+
+
+def insertRotation(pb, mat, frame=None):
+    if frame is None:
+        frame = bpy.context.scene.frame_current
+    if pb.rotation_mode == 'QUATERNION':
+        pb.rotation_quaternion = mat.to_quaternion()
         pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
     elif pb.rotation_mode == "AXIS_ANGLE":
+        pb.rotation_axis_angle = mat.to_axis_angle()
         pb.keyframe_insert("rotation_axis_angle", frame=frame, group=pb.name)
     else:
+        pb.rotation_euler = mat.to_euler(pb.rotation_mode)
         pb.keyframe_insert("rotation_euler", frame=frame, group=pb.name)
-
-        
-def setKeys(pb, useSetKeys):        
-    if useSetKeys:
-        insertRotationKeyFrame(pb)
-        pb.keyframe_insert('location', group=pb.name)
 
 #
 #    setInterpolation(rig):
