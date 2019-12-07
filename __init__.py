@@ -407,9 +407,9 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
         if scn.McpTargetRig:
             from .target import getTargetInfo, TargetBoneNames, findTargetKeys
 
-            (bones, ikBones, bendTwist) = getTargetInfo(scn.McpTargetRig)
+            (bones, ) = getTargetInfo(scn.McpTargetRig)
 
-            layout.label(text="FK bones")
+            layout.label(text="Bones")
             box = layout.box()
             for boneText in TargetBoneNames:
                 if not boneText:
@@ -426,27 +426,6 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
                     row = box.row()
                     row.label(text=text)
                     row.label(text="-")
-
-            if ikBones:
-                row = layout.row()
-                row.label(text="IK bone")
-                row.label(text="FK bone")
-                box = layout.box()
-                for (ikBone, fkBone) in ikBones:
-                    row = box.row()
-                    row.label(text=ikBone)
-                    row.label(text=fkBone)
-
-            if bendTwist:
-                row = layout.row()
-                row.label(text="Bend bone")
-                row.label(text="Twist bone")
-                box = layout.box()
-                for (bendBone, twistBone) in bendTwist:
-                    row = box.row()
-                    row.label(text=bendBone)
-                    row.label(text=twistBone)
-
 
 ########################################################################
 #

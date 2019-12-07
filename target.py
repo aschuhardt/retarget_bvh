@@ -47,8 +47,6 @@ _targetInfo = {}
 _targetArmatures = {}
 _trgArmature = None
 _trgArmatureEnums =[("Automatic", "Automatic", "Automatic")]
-_ikBones = []
-_bendTwist = {}
 
 def getTargetInfo(rigname):
     global _targetInfo
@@ -71,7 +69,7 @@ def ensureTargetInited(scn):
 
 def getTargetArmature(rig, context):
     from .t_pose import putInRestPose
-    global _target, _targetArmatures, _targetInfo, _trgArmature, _ikBones, _bendTwist
+    global _target, _targetArmatures, _targetInfo, _trgArmature
 
     scn = context.scene
     setCategory("Identify Target Rig")
@@ -95,9 +93,8 @@ def getTargetArmature(rig, context):
             if pb.McpBone:
                 boneAssoc.append( (pb.name, pb.McpBone) )
 
-        _ikBones = []
         rig.McpTPoseFile = ""
-        _targetInfo[name] = (boneAssoc, _ikBones, _bendTwist)
+        _targetInfo[name] = (boneAssoc, )
         clearCategory()
         return boneAssoc
 
@@ -105,7 +102,7 @@ def getTargetArmature(rig, context):
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
         _target = name
-        (boneAssoc, _ikBones, _bendTwist) = _targetInfo[name]
+        (boneAssoc, ) = _targetInfo[name]
         if not testTargetRig(name, rig, boneAssoc):
             print("WARNING:\nTarget armature %s does not match armature %s.\nBones:" % (rig.name, name))
             for pair in boneAssoc:
@@ -115,11 +112,10 @@ def getTargetArmature(rig, context):
         for pb in rig.pose.bones:
             pb.McpBone = pb.McpParent = ""
         for bname,mhx in boneAssoc:
-            try:
+            if bname in rig.pose.bones.keys():
                 rig.pose.bones[bname].McpBone = mhx
-            except KeyError:
+            else:
                 print("  ", bname)
-                pass
 
         clearCategory()
         return boneAssoc
@@ -249,13 +245,7 @@ def readTrgArmature(filepath, name):
         struct = json.load(fp)
     name = struct["name"]
     bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
-    ikbones = []    
-    if "ikbones" in struct.keys():
-        ikbones = [(key, nameOrNone(value)) for key,value in struct["ikbones"].items()]
-    bendtwist = []    
-    if "bendtwist" in struct.keys():
-        bendtwist = [(key, nameOrNone(value)) for key,value in struct["bendtwist"].items()]
-    return (name, (bones, ikbones, bendtwist))
+    return (name, (bones, ))
 
 
 class MCP_OT_InitTargets(bpy.types.Operator):
@@ -297,22 +287,22 @@ class MCP_OT_GetTargetRig(bpy.types.Operator):
 
 
 def saveTargetFile(filepath, context):
+    from collections import OrderedDict
     from .t_pose import saveTPose
+    from .json import saveJson
 
     rig = context.object
     scn = context.scene
     fname,ext = os.path.splitext(filepath)
-    filepath = fname + ".trg"
-    fp = open(filepath, "w")
     name = os.path.basename(fname).capitalize().replace(" ","_")
-    fp.write("Name:\t%s\n\nBones:\n" % name)
+    arm = OrderedDict()
+    struct = {"name" : name, "url" : "", "armature" : arm}
     for pb in rig.pose.bones:
         if pb.McpBone:
-            fp.write("\t%s\t%s\n" % (pb.name, pb.McpBone))
-    fp.write("\nIkBones:\n\n")
-    if scn.McpSaveTargetTPose:
-        fp.write("T-pose:\t%s-tpose.json\n" % name)
-    fp.close()
+            arm[pb.name] = pb.McpBone
+
+    filepath = fname + ".json"
+    saveJson(struct, filepath)  
     print("Saved %s" % filepath)
 
     if scn.McpSaveTargetTPose:
@@ -323,7 +313,7 @@ def saveTargetFile(filepath, context):
 class MCP_OT_SaveTargetFile(bpy.types.Operator, ExportHelper):
     bl_idname = "mcp.save_target_file"
     bl_label = "Save Target File"
-    bl_description = "Save a .trg file for this character"
+    bl_description = "Save a .json file for this character"
     bl_options = {'UNDO'}
 
     filename_ext = ".trg"
