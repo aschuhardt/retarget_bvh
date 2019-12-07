@@ -54,6 +54,8 @@ class CTargetInfo:
             struct = json.load(fp)
         self.name = struct["name"]
         self.bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
+        if "parents" in struct.keys():
+            self.parents = struct["parents"]
         
 
     def addAutoBones(self, rig):
@@ -61,17 +63,38 @@ class CTargetInfo:
         for pb in rig.pose.bones:
             if pb.McpBone:
                 self.bones.append( (pb.name, pb.McpBone) )
-
+        self.addParents(rig)
+        
 
     def addManualBones(self, rig):
         for pb in rig.pose.bones:
-            pb.McpBone = pb.McpParent = ""
+            pb.McpBone = ""
         for bname,mhx in self.bones:
             if bname in rig.pose.bones.keys():
                 rig.pose.bones[bname].McpBone = mhx
             else:
                 print("  ", bname)
-
+        self.addParents(rig)
+        
+        
+    def addParents(self, rig):        
+        for pb in rig.pose.bones:
+            if pb.McpBone:
+                pb.McpParent = ""
+                par = pb.parent
+                while par:
+                    if par.McpBone:
+                        pb.McpParent = par.name
+                        break
+                    par = par.parent
+        for bname,pname in self.parents.items():
+            pb = rig.pose.bones[bname]
+            pb.McpParent = pname
+        print("Parents")
+        for pb in rig.pose.bones:
+            if pb.McpBone:
+                print("  ", pb.name, pb.McpParent)
+          
 
     def testRig(self, name, rig):
         from .armature import validBone

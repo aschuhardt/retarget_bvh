@@ -65,13 +65,22 @@ class CAnimation:
         self.boneAnims = OrderedDict()
 
         for (trgName, srcName) in info.bones:
-            try:
+            if (trgName in trgRig.pose.bones.keys() and
+                srcName in srcRig.pose.bones.keys()):
                 trgBone = trgRig.pose.bones[trgName]
                 srcBone = srcRig.pose.bones[srcName]
-            except KeyError:
+            else:
                 print("  -", trgName, srcName)
                 continue
-            banim = self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, self, context)
+            if trgBone.McpParent and trgBone.McpParent in self.boneAnims.keys():
+                parent = self.boneAnims[trgBone.McpParent]
+            elif trgBone.McpParent:
+                print("No par", trgName, trgBone.McpParent)
+                print(list(self.boneAnims.keys()))
+                halt
+            else:
+                parent = None
+            banim = self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, parent, self, context)
 
 
     def printResult(self, scn, frame):
@@ -108,7 +117,7 @@ class CAnimation:
 
 class CBoneAnim:
 
-    def __init__(self, srcBone, trgBone, anim, context):
+    def __init__(self, srcBone, trgBone, parent, anim, context):
         self.name = srcBone.name
         self.srcMatrices = {}
         self.trgMatrices = {}
@@ -116,23 +125,17 @@ class CBoneAnim:
         self.trgMatrix = None
         self.srcBone = srcBone
         self.trgBone = trgBone
+        self.parent = parent
         self.order,self.locks = getLocks(trgBone, context)
         self.aMatrix = None
-        self.parent = self.getParent(trgBone, anim)
         if self.parent:
-            self.trgBone.McpParent = self.parent.trgBone.name
-            trgParent = self.parent.trgBone
-            self.bMatrix = trgBone.bone.matrix_local.inverted() @ trgParent.bone.matrix_local
+            self.bMatrix = trgBone.bone.matrix_local.inverted() @ self.parent.trgBone.bone.matrix_local
         else:
             self.bMatrix = trgBone.bone.matrix_local.inverted()
         self.useLimits = anim.scene.McpUseLimits
 
 
     def __repr__(self):
-        if self.parent:
-            parname = self.parent.name
-        else:
-            parname = None
         return (
             "<CBoneAnim %s" % self.name +
             "  src %s" % self.srcBone.name +
@@ -148,29 +151,6 @@ class CBoneAnim:
             "T %s\n" % self.trgBone.matrix +
             "R %s\n" % self.trgBone.matrix @ self.srcBone.matrix.inverted()
             )
-
-
-    def getParent(self, pb, anim):
-        pb = pb.parent
-        while pb:
-            if pb.McpBone:
-                try:
-                    return anim.boneAnims[pb.name]
-                except KeyError:
-                    pass
-
-            subtar = None
-            for cns in pb.constraints:
-                if (cns.type[0:4] == "COPY" and
-                    cns.type != "COPY_SCALE" and
-                    cns.influence > 0.8):
-                    subtar = cns.subtarget
-
-            if subtar:
-                pb = anim.trgRig.pose.bones[subtar]
-            else:
-                pb = pb.parent
-        return None
 
 
     def insertKeyFrame(self, mat, frame):

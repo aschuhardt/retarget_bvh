@@ -72,7 +72,9 @@
 	    "rPinky3" : "rPinky3"
     },
     
-    "ik-bones" : []
+    "parents" : {
+      	"lShin" : "lThighBend"      
+    }
 }
 
 
