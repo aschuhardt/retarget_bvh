@@ -91,7 +91,7 @@ def isRigify(rig):
     return hasAllBones(["MCH-spine.flex"], rig)
 
 def isRigify2(rig):
-    return hasAllBones(["MCH-upper_arm_ik.L"], rig)
+    return hasAllBones(["MCH-forearm_ik.L"], rig)
 
 def isGenesis38(rig):
     return (hasAllBones(["abdomenLower", "lShldrBend"], rig) and

@@ -29,8 +29,34 @@
 	    "foot.fk.R" : "foot.R", 
 	    "toe.R" : "toe.R"
     },
-    
-    "ik-bones" : []
+
+
+    "parents" : {
+        "torso" : "",
+	    "chest" : "torso",
+	    "neck" : "chest",
+	    "head" : "neck", 
+
+	    "shoulder.L" : "chest",
+	    "upper_arm.fk.L" : "shoulder.L", 
+	    "forearm.fk.L" : "upper_arm.fk.L",
+	    "hand.fk.L" : "forearm.fk.L",
+	    
+	    "shoulder.R" : "chest",
+	    "upper_arm.fk.R" : "shoulder.R", 
+	    "forearm.fk.R" : "upper_arm.fk.R",
+	    "hand.fk.R" : "forearm.fk.R",
+
+	    "thigh.fk.L" : "torso",
+    	"shin.fk.L" : "thigh.fk.L",
+	    "foot.fk.L" : "shin.fk.L", 
+	    "toe.L" : "foot.fk.L",
+
+	    "thigh.fk.R" : "torso",
+    	"shin.fk.R" : "thigh.fk.R",
+	    "foot.fk.R" : "shin.fk.R", 
+	    "toe.R" : "foot.fk.R"
+    }
 }
 
 

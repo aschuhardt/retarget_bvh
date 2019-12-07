@@ -660,6 +660,18 @@ class MCP_OT_LimbsBendPositive(bpy.types.Operator):
 #   Buttons
 #------------------------------------------------------------------------
 
+def disableGlobalUndo(context):
+    return None
+    undo = context.user_preferences.edit.use_global_undo
+    context.user_preferences.edit.use_global_undo = False
+    return undo
+
+
+def restoreGlobalUndo(context, undo):
+    return
+    context.user_preferences.edit.use_global_undo = undo
+
+
 class MCP_OT_TransferToFk(bpy.types.Operator):
     bl_idname = "mcp.transfer_to_fk"
     bl_label = "Transfer IK => FK"
@@ -667,8 +679,7 @@ class MCP_OT_TransferToFk(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        undo = disableGlobalUndo(context)
         try:
             startProgress("Transfer to FK")
             rig = context.object
@@ -685,7 +696,7 @@ class MCP_OT_TransferToFk(bpy.types.Operator):
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            restoreGlobalUndo(context, undo)
         return{'FINISHED'}
 
 
@@ -696,8 +707,7 @@ class MCP_OT_TransferToIk(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        undo = disableGlobalUndo(context)
         try:
             startProgress("Transfer to IK")
             rig = context.object
@@ -714,7 +724,7 @@ class MCP_OT_TransferToIk(bpy.types.Operator):
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            restoreGlobalUndo(context, undo)
         return{'FINISHED'}
 
 
@@ -727,8 +737,7 @@ class MCP_OT_ClearAnimation(bpy.types.Operator):
     type : StringProperty()
 
     def execute(self, context):
-        use_global_undo = context.user_preferences.edit.use_global_undo
-        context.user_preferences.edit.use_global_undo = False
+        undo = disableGlobalUndo(context)
         try:
             startProgress("Clear animation")
             rig = context.object
@@ -754,7 +763,7 @@ class MCP_OT_ClearAnimation(bpy.types.Operator):
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
-            context.user_preferences.edit.use_global_undo = use_global_undo
+            restoreGlobalUndo(context, undo)
         return{'FINISHED'}
 
 #------------------------------------------------------------------------
