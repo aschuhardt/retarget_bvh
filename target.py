@@ -37,16 +37,64 @@ from . import t_pose
 from .utils import *
 from .armature import CArmature
 
+
+class CTargetInfo:
+    def __init__(self, name):
+        self.name = name
+        self.filepath = "None"
+        self.bones = []
+        self.parents = {}
+        
+
+    def readFile(self, filepath):
+        import json
+        print("Read target file", filepath)
+        self.filepath = filepath
+        with open(filepath, "r") as fp:
+            struct = json.load(fp)
+        self.name = struct["name"]
+        self.bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
+        
+
+    def addAutoBones(self, rig):
+        self.bones = []
+        for pb in rig.pose.bones:
+            if pb.McpBone:
+                self.bones.append( (pb.name, pb.McpBone) )
+
+
+    def addManualBones(self, rig):
+        for pb in rig.pose.bones:
+            pb.McpBone = pb.McpParent = ""
+        for bname,mhx in self.bones:
+            if bname in rig.pose.bones.keys():
+                rig.pose.bones[bname].McpBone = mhx
+            else:
+                print("  ", bname)
+
+
+    def testRig(self, name, rig):
+        from .armature import validBone
+        print("Testing %s" % name)
+        for (bname, mhxname) in self.bones:
+            try:
+                pb = rig.pose.bones[bname]
+            except KeyError:
+                pb = None
+            if pb is None or not validBone(pb):
+                print("  Did not find bone %s (%s)" % (bname, mhxname))
+                print("WARNING:\nTarget armature %s does not match armature %s.\nBones:" % (rig.name, name))
+                for pair in self.bones:
+                    print("  %s : %s" % pair)
+                return
+
 #
 #   Global variables
 #
 
 _target = None
 _targetInfo = {}
-#_targetArmatures = { "Automatic" : ([],[],[]) }
 _targetArmatures = {}
-_trgArmature = None
-_trgArmatureEnums =[("Automatic", "Automatic", "Automatic")]
 
 def getTargetInfo(rigname):
     global _targetInfo
@@ -69,7 +117,7 @@ def ensureTargetInited(scn):
 
 def getTargetArmature(rig, context):
     from .t_pose import putInRestPose
-    global _target, _targetArmatures, _targetInfo, _trgArmature
+    global _target, _targetArmatures, _targetInfo
 
     scn = context.scene
     setCategory("Identify Target Rig")
@@ -82,50 +130,34 @@ def getTargetArmature(rig, context):
 
     if name == "Automatic":
         setCategory("Automatic Target Rig")
-        amt = _trgArmature = CArmature()
+        amt = CArmature()
         amt.findArmature(rig, ignoreHiddenLayers=scn.McpIgnoreHiddenLayers)
         _targetArmatures["Automatic"] = amt
         scn.McpTargetRig = "Automatic"
         amt.display("Target")
 
-        boneAssoc = []
-        for pb in rig.pose.bones:
-            if pb.McpBone:
-                boneAssoc.append( (pb.name, pb.McpBone) )
-
+        info = _targetInfo[name] = CTargetInfo(name)
+        info.addAutoBones(rig)
         rig.McpTPoseFile = ""
-        _targetInfo[name] = (boneAssoc, )
         clearCategory()
-        return boneAssoc
+        return info
 
     else:
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
         _target = name
-        (boneAssoc, ) = _targetInfo[name]
-        if not testTargetRig(name, rig, boneAssoc):
-            print("WARNING:\nTarget armature %s does not match armature %s.\nBones:" % (rig.name, name))
-            for pair in boneAssoc:
-                print("  %s : %s" % pair)
+        info = _targetInfo[name]
+        if not info.testRig(name, rig):
+            pass
         print("Target armature %s" % name)
-
-        for pb in rig.pose.bones:
-            pb.McpBone = pb.McpParent = ""
-        for bname,mhx in boneAssoc:
-            if bname in rig.pose.bones.keys():
-                rig.pose.bones[bname].McpBone = mhx
-            else:
-                print("  ", bname)
-
+        info.addManualBones(rig)
         clearCategory()
-        return boneAssoc
+        return info
 
 
 def guessTargetArmatureFromList(rig, scn):
-    global _target, _targetArmatures, _targetInfo
     ensureTargetInited(scn)
     print("Guessing target")
-
     if isMhxRig(rig):
         return "MHX"
     elif isMakeHuman(rig):
@@ -142,20 +174,6 @@ def guessTargetArmatureFromList(rig, scn):
         return "Genesis 3,8"
     else:
         return "Automatic"
-
-
-def testTargetRig(name, rig, rigBones):
-    from .armature import validBone
-    print("Testing %s" % name)
-    for (bname, mhxname) in rigBones:
-        try:
-            pb = rig.pose.bones[bname]
-        except KeyError:
-            pb = None
-        if pb is None or not validBone(pb):
-            print("  Did not find bone %s (%s)" % (bname, mhxname))
-            return False
-    return True
 
 #
 #   findTargetKeys(mhx, list):
@@ -214,38 +232,29 @@ TargetBoneNames = [
 ###############################################################################
 
 def initTargets(scn):
-    global _targetArmatures, _targetInfo, _trgArmatureEnums
-    _targetInfo = { "Automatic" : ([], [], {}) }
+    global _targetArmatures, _targetInfo
+    _targetInfo = { "Automatic" : CTargetInfo("Automatic") }
     _targetArmatures = { "Automatic" : CArmature() }
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
-        file = os.path.join(path, fname)
+        filepath = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
-        if ext == ".json" and os.path.isfile(file):
-            (name, stuff) = readTrgArmature(file, name)
-            _targetInfo[name] = stuff
+        if ext == ".json" and os.path.isfile(filepath):
+            info = CTargetInfo("Manual")
+            info.readFile(filepath)
+            _targetInfo[info.name] = info
 
-    _trgArmatureEnums =[]
+    enums =[]
     keys = list(_targetInfo.keys())
     keys.sort()
     for key in keys:
-        _trgArmatureEnums.append((key,key,key))
+        enums.append((key,key,key))
 
     bpy.types.Scene.McpTargetRig = EnumProperty(
-        items = _trgArmatureEnums,
+        items = enums,
         name = "Target rig",
         default = 'Automatic')
     print("Defined McpTargetRig")
-
-
-def readTrgArmature(filepath, name):
-    import json
-    print("Read target file", filepath)
-    with open(filepath, "r") as fp:
-        struct = json.load(fp)
-    name = struct["name"]
-    bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
-    return (name, (bones, ))
 
 
 class MCP_OT_InitTargets(bpy.types.Operator):

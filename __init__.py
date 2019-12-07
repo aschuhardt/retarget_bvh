@@ -407,7 +407,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
         if scn.McpTargetRig:
             from .target import getTargetInfo, TargetBoneNames, findTargetKeys
 
-            (bones, ) = getTargetInfo(scn.McpTargetRig)
+            info = getTargetInfo(scn.McpTargetRig)
 
             layout.label(text="Bones")
             box = layout.box()
@@ -416,7 +416,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
                     box.separator()
                     continue
                 (mhx, text) = boneText
-                bnames = findTargetKeys(mhx, bones)
+                bnames = findTargetKeys(mhx, info.bones)
                 if bnames:
                     for bname in bnames:
                         row = box.row()

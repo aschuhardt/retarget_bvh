@@ -58,13 +58,13 @@ from .load import BVHFile
 
 class CAnimation:
 
-    def __init__(self, srcRig, trgRig, boneAssoc, context):
+    def __init__(self, srcRig, trgRig, info, context):
         self.srcRig = srcRig
         self.trgRig = trgRig
         self.scene = context.scene
         self.boneAnims = OrderedDict()
 
-        for (trgName, srcName) in boneAssoc:
+        for (trgName, srcName) in info.bones:
             try:
                 trgBone = trgRig.pose.bones[trgName]
                 srcBone = srcRig.pose.bones[srcName]
@@ -358,8 +358,8 @@ def retargetAnimation(context, srcRig, trgRig):
     print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
     ensureTargetInited(scn)
-    boneAssoc = getTargetArmature(trgRig, context)
-    anim = CAnimation(srcRig, trgRig, boneAssoc, context)
+    info = getTargetArmature(trgRig, context)
+    anim = CAnimation(srcRig, trgRig, info, context)
     anim.putInTPoses(context)
 
     setCategory("Retarget")
