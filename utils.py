@@ -81,7 +81,7 @@ def hasAllBones(blist, rig):
 def isMhxRig(rig):
     return hasAllBones(["foot.rev.L"], rig)
 
-def isMhOfficialRig(rig):
+def isMakeHuman(rig):
     return hasAllBones(["risorius03.R"], rig)
 
 def isMhx7Rig(rig):
@@ -99,9 +99,6 @@ def isGenesis38(rig):
 
 def isGenesis12(rig):
     return hasAllBones(["abdomen2", "lShldr"], rig)
-
-def isMakeHumanRig(rig):
-    return ("MhAlpha8" in rig.keys())
 
 #
 #   nameOrNone(string):

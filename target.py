@@ -132,8 +132,8 @@ def guessTargetArmatureFromList(rig, scn):
 
     if isMhxRig(rig):
         return "MHX"
-    elif isMhOfficialRig(rig):
-        return "MH-Official"
+    elif isMakeHuman(rig):
+        return "Makehuman"
     elif isRigify(rig):
         return "Rigify"
     elif isRigify2(rig):
