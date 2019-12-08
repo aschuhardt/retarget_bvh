@@ -106,10 +106,10 @@ class CTargetInfo:
                 pb = None
             if pb is None or not validBone(pb):
                 print("  Did not find bone %s (%s)" % (bname, mhxname))
-                print("WARNING:\nTarget armature %s does not match armature %s.\nBones:" % (rig.name, name))
+                print("Bones:")
                 for pair in self.bones:
                     print("  %s : %s" % pair)
-                return
+                raise MocapError("Target armature %s does not\nmatch armature %s." % (rig.name, name))
 
 #
 #   Global variables
