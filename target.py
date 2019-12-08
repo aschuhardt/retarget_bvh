@@ -115,9 +115,7 @@ class CTargetInfo:
 #   Global variables
 #
 
-_target = None
 _targetInfo = {}
-_targetArmatures = {}
 
 def getTargetInfo(rigname):
     global _targetInfo
@@ -128,7 +126,7 @@ def loadTargets():
     _targetInfo = {}
 
 def isTargetInited(scn):
-    return ( _targetArmatures != {} )
+    return ( _targetInfo != {} )
 
 def ensureTargetInited(scn):
     if not isTargetInited(scn):
@@ -140,7 +138,7 @@ def ensureTargetInited(scn):
 
 def getTargetArmature(rig, context):
     from .t_pose import putInRestPose
-    global _target, _targetArmatures, _targetInfo
+    global _targetInfo
 
     scn = context.scene
     setCategory("Identify Target Rig")
@@ -155,7 +153,6 @@ def getTargetArmature(rig, context):
         setCategory("Automatic Target Rig")
         amt = CArmature()
         amt.findArmature(rig, ignoreHiddenLayers=scn.McpIgnoreHiddenLayers)
-        _targetArmatures["Automatic"] = amt
         scn.McpTargetRig = "Automatic"
         amt.display("Target")
 
@@ -168,7 +165,6 @@ def getTargetArmature(rig, context):
     else:
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
-        _target = name
         info = _targetInfo[name]
         if not info.testRig(name, rig):
             pass
@@ -255,9 +251,8 @@ TargetBoneNames = [
 ###############################################################################
 
 def initTargets(scn):
-    global _targetArmatures, _targetInfo
+    global _targetInfo
     _targetInfo = { "Automatic" : CTargetInfo("Automatic") }
-    _targetArmatures = { "Automatic" : CArmature() }
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
         filepath = os.path.join(path, fname)
