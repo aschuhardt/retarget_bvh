@@ -494,8 +494,6 @@ def rescaleRig(scn, trgRig, srcRig):
         if words[-1] == 'location':
             for kp in fcu.keyframe_points:
                 kp.co[1] *= scale
-    return
-
 
 #
 #    renameAndRescaleBvh(context, srcRig, trgRig):
@@ -511,6 +509,7 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     from .t_pose import putInTPose
     
     scn = context.scene
+    scn.frame_current = 0
     setActiveObject(context, srcRig)
     #(srcRig, srcBones, action) =  renameBvhRig(rig, filepath)
     getTargetArmature(trgRig, context)
