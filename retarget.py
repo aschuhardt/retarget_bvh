@@ -326,9 +326,9 @@ def retargetAnimation(context, srcRig, trgRig):
     elif isRigify2(trgRig):
         setRigify2FKIK(trgRig, 1.0)
 
-    try:
+    if frames:
         scn.frame_current = frames[0]
-    except:
+    else:
         raise MocapError("No frames found.")
     oldData = changeTargetData(trgRig, scn)
 

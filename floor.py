@@ -94,7 +94,7 @@ def getTailOffset(pb, ez, origin):
 
 
 def addOffset(pb, offset, ez):
-    from fkik import getPoseMatrix
+    from .fkik import getPoseMatrix
     gmat = pb.matrix.copy()
     x,y,z = offset*ez
     gmat.col[3] += Vector((x,y,z,0))

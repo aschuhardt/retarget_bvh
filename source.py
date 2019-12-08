@@ -145,19 +145,13 @@ def findSrcArmature(context, rig):
 
 def setSourceArmature(rig, scn):
     global _srcArmature, _sourceArmatures
-    try:
-        name = rig.McpArmature
-    except:
-        name = scn.McpSourceRig
-
+    name = rig.McpArmature
     if name:
-        rig.McpArmature = name
         scn.McpSourceRig = name
     else:
         raise MocapError("No source armature set")
     _srcArmature = _sourceArmatures[name]
     print("Set source armature to %s" % name)
-    return
 
 #
 #   findSourceKey(mhx, struct):

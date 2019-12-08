@@ -79,9 +79,9 @@ def removeMarker(scn, frame):
 #
 
 def getUndoAction(rig):
-    try:
+    if rig.McpUndoAction in bpy.data.actions.keys():
         return bpy.data.actions[rig.McpUndoAction]
-    except:
+    else:
         return None
 
 
@@ -257,13 +257,13 @@ def confirmEdit(context):
         if isRotation(mode):
             try:
                 edit = _EditRot[fcu.array_index][name]
-            except:
+            except KeyError:
                 continue
             displaceFCurve(fcu, ofcu, edit)
         elif  isLocation(mode):
             try:
                 edit = _EditLoc[fcu.array_index][name]
-            except:
+            except KeyError:
                 continue
             displaceFCurve(fcu, ofcu, edit)
 
@@ -306,7 +306,7 @@ def setEditDict(editDict, frame, name, channel, n):
     for index in range(n):
         try:
             edit = editDict[index][name]
-        except:
+        except KeyError:
             edit = editDict[index][name] = {}
         edit[frame] = channel[index]
     return
@@ -316,7 +316,7 @@ def removeEditDict(editDict, frame, name, n):
     for index in range(n):
         try:
             del editDict[index][name][frame]
-        except:
+        except KeyError:
             editDict[index][name] = {}
 
 

@@ -98,7 +98,7 @@ def inset(layout):
 #
 
 class MCP_PT_Main(bpy.types.Panel):
-    bl_category = "Retarget BVH"
+    bl_category = "BVH"
     bl_label = "Retarget BVH v %d.%d: Main" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -134,7 +134,7 @@ class MCP_PT_Main(bpy.types.Panel):
 #
 
 class MCP_PT_Options(bpy.types.Panel):
-    bl_category = "Retarget BVH"
+    bl_category = "BVH"
     bl_label = "Options"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -184,7 +184,7 @@ class MCP_PT_Options(bpy.types.Panel):
 #
 
 class MCP_PT_Edit(bpy.types.Panel):
-    bl_category = "Retarget BVH"
+    bl_category = "BVH"
     bl_label = "Edit Actions"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -325,7 +325,7 @@ class MCP_PT_Edit(bpy.types.Panel):
 #
 
 class MCP_PT_MhxSourceBones(bpy.types.Panel):
-    bl_category = "Retarget BVH"
+    bl_category = "BVH"
     bl_label = "Source armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -371,7 +371,7 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel):
 #
 
 class MCP_PT_MhxTargetBones(bpy.types.Panel):
-    bl_category = "Retarget BVH"
+    bl_category = "BVH"
     bl_label = "Target armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -429,11 +429,11 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
 
 ########################################################################
 #
-#   class MCP_PT_Utility(bpy.types.Panel):
+#   class MCP_PT_Poses(bpy.types.Panel):
 #
 
 class MCP_PT_Poses(bpy.types.Panel):
-    bl_category = "Retarget BVH"
+    bl_category = "BVH"
     bl_label = "Poses"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -464,12 +464,12 @@ class MCP_PT_Poses(bpy.types.Panel):
 
 ########################################################################
 #
-#   class MCP_PT_Utility(bpy.types.Panel):
+#   class MCP_PT_Actions(bpy.types.Panel):
 #
 
-class MCP_PT_Utility(bpy.types.Panel):
-    bl_category = "Retarget BVH"
-    bl_label = "Utilities"
+class MCP_PT_Actions(bpy.types.Panel):
+    bl_category = "BVH"
+    bl_label = "Actions"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -484,29 +484,17 @@ class MCP_PT_Utility(bpy.types.Panel):
         scn = context.scene
         rig = context.object
 
-        layout.prop(scn, "McpShowDefaultSettings")
-        if scn.McpShowDefaultSettings:
-            ins = inset(layout)
-            ins.operator("mcp.save_defaults")
-            ins.operator("mcp.load_defaults")
-
-        layout.separator()
-        layout.prop(scn, "McpShowActions")
-        if scn.McpShowActions:
-            ins = inset(layout)
-            ins.prop_menu_enum(context.scene, "McpActions")
-            ins.prop(scn, 'McpFilterActions')
-            ins.operator("mcp.update_action_list")
-            ins.operator("mcp.set_current_action").prop = 'McpActions'
-            ins.operator("mcp.delete")
-            ins.operator("mcp.delete_hash")
-
+        layout.prop_menu_enum(context.scene, "McpActions")
+        layout.prop(scn, 'McpFilterActions')
+        layout.operator("mcp.update_action_list")
+        layout.operator("mcp.set_current_action").prop = 'McpActions'
+        layout.operator("mcp.delete")
+        layout.operator("mcp.delete_hash")
 
         layout.separator()
         layout.operator("mcp.clear_temp_props")
 
         return
-        layout.operator("mcp.copy_angles_fk_ik")
 
         layout.separator()
         layout.label(text="Batch conversion")
@@ -525,7 +513,7 @@ classes = [
     MCP_PT_MhxSourceBones,
     MCP_PT_MhxTargetBones,
     MCP_PT_Poses,
-    MCP_PT_Utility,
+    MCP_PT_Actions,
 
     utils.ErrorOperator
 ]

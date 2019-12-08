@@ -32,7 +32,6 @@ from math import sin, cos
 from mathutils import *
 from bpy.props import *
 
-from . import props
 from . import simplify
 from .utils import *
 
@@ -123,7 +122,6 @@ Frames = 3
 Epsilon = 1e-5
 
 def readBvhFile(context, filepath, scn, scan):
-    props.ensureInited(context)
     setCategory("Load Bvh File")
     scale = scn.McpBvhScale
     startFrame = scn.McpStartFrame
@@ -269,12 +267,9 @@ def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
     first = True
     flipInv = flipMatrix.inverted()
     for node in nodes:
-        name = node.name
-        try:
-            pb = pbones[name]
-        except:
-            pb = None
-        if pb:
+        bname = node.name
+        if bname in pbones.keys():
+            pb = pbones[bname]
             for (mode, indices) in node.channels:
                 if mode == Location:
                     vec = Vector((0,0,0))
@@ -283,7 +278,7 @@ def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
                         m += 1
                     if first:
                         pb.location = node.inverse @ (scale * flipMatrix @ vec) - node.head
-                        pb.keyframe_insert('location', frame=frame, group=name)
+                        pb.keyframe_insert('location', frame=frame, group=bname)
                     first = False
                 elif mode == Rotation:
                     mats = []
@@ -508,11 +503,8 @@ def rescaleRig(scn, trgRig, srcRig):
 
 def renameAndRescaleBvh(context, srcRig, trgRig):
     setCategory("Rename And Rescale")
-    try:
-        if srcRig["McpRenamed"]:
-            raise MocapError("%s already renamed and rescaled." % srcRig.name)
-    except:
-        pass
+    if srcRig.McpRenamed:
+        raise MocapError("%s already renamed and rescaled." % srcRig.name)
 
     from .source import findSrcArmature
     from .target import getTargetArmature
@@ -527,7 +519,7 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     putInTPose(srcRig, scn.McpSourceTPose, context)
     setInterpolation(srcRig)
     rescaleRig(scn, trgRig, srcRig)
-    srcRig["McpRenamed"] = True
+    srcRig.McpRenamed = True
     clearCategory()
 
 ########################################################################
@@ -563,6 +555,7 @@ class MCP_OT_RenameBvh(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        from .simplify import rescaleFCurves
         scn = context.scene
         srcRig = context.object
         trgRig = None
@@ -575,7 +568,7 @@ class MCP_OT_RenameBvh(bpy.types.Operator):
                 raise MocapError("No target rig selected")
             renameAndRescaleBvh(context, srcRig, trgRig)
             if scn.McpRescale:
-                simplify.rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
+                rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
             print("%s renamed" % srcRig.name)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
@@ -594,9 +587,11 @@ class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ImportHelper, BVHFile):
     problems = ""
 
     def execute(self, context):
-        from .retarget import changeTargetData, restoreTargetData
         if self.problems:
             return{'FINISHED'}
+
+        from .retarget import changeTargetData, restoreTargetData
+        from .simplify import rescaleFCurves
 
         scn = context.scene
         trgRig = context.object
@@ -605,7 +600,7 @@ class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ImportHelper, BVHFile):
             srcRig = readBvhFile(context, self.properties.filepath, context.scene, False)
             renameAndRescaleBvh(context, srcRig, trgRig)
             if scn.McpRescale:
-                simplify.rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
+                rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
             print("%s loaded and renamed" % srcRig.name)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')

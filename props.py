@@ -26,161 +26,8 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-
-
-import bpy, os
+import bpy
 from bpy.props import *
-
-#
-#    ensureInited(context):
-#
-
-def ensureInited(context):
-    try:
-        context.scene.McpBvhScale
-        inited = True
-    except:
-        inited = False
-    if not inited:
-        initInterface(context)
-    return
-
-#----------------------------------------------------------
-#   Get path to My Documents
-#----------------------------------------------------------
-
-def getMyDocuments():
-    import sys
-    if sys.platform == 'win32':
-        import winreg
-        try:
-            k = winreg.HKEY_CURRENT_USER
-            for x in ['Software', 'Microsoft', 'Windows', 'CurrentVersion', 'Explorer', 'Shell Folders']:
-                k = winreg.OpenKey(k, x)
-
-            name, type = winreg.QueryValueEx(k, 'Personal')
-
-            if type == 1:
-                print("Found My Documents folder: %s" % name)
-                return name
-        except Exception as e:
-            print("Did not find path to My Documents folder")
-
-    return os.path.expanduser("~")
-
-
-def getMHDirectory():
-    return os.path.join(getMyDocuments(), "makehuman", "v1")
-
-
-def getMHBlenderDirectory():
-    return os.path.join(getMyDocuments(), "makehuman", "blendertools")
-
-
-def settingsFile():
-    outdir = os.path.join(getMHBlenderDirectory(), "settings")
-    if not os.path.isdir(outdir):
-        os.makedirs(outdir)
-    return os.path.join(outdir, "mocap.defaults")
-
-#----------------------------------------------------------
-#   Load and save defaults
-#----------------------------------------------------------
-
-def loadDefaults(context):
-    if not context.scene:
-        return
-    filename = settingsFile()
-    try:
-        fp = open(filename, "r")
-    except:
-        print("Unable to open %s for reading" % filename)
-        return
-    for line in fp:
-        words = line.split()
-        if len(words) < 2:
-            continue
-        try:
-            val = eval(words[1])
-        except:
-            val = words[1]
-        context.scene[words[0]] = val
-    fp.close()
-    print("Defaults loaded from %s" % filename)
-    return
-
-#
-#    saveDefaults(context):
-#
-
-def saveDefaults(context):
-    if not context.scene:
-        return
-    filename = settingsFile()
-    try:
-        fp = open(filename, "w", encoding="utf-8", newline="\n")
-    except:
-        print("Unable to open %s for writing" % filename)
-        return
-    for (key,value) in context.scene.items():
-        if key[:3] == "Mcp":
-            fp.write("%s %s\n" % (key, value))
-    fp.close()
-    print("Defaults saved to %s" % filename)
-    return
-
-
-########################################################################
-#
-#   class MCP_OT_InitInterface(bpy.types.Operator):
-#   class MCP_OT_SaveDefaults(bpy.types.Operator):
-#   class MCP_OT_LoadDefaults(bpy.types.Operator):
-#
-
-class MCP_OT_InitInterface(bpy.types.Operator):
-    bl_idname = "mcp.init_interface"
-    bl_label = "Initialize"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        initInterface(context)
-        print("Interface initialized")
-        return{"FINISHED"}
-
-
-class MCP_OT_SaveDefaults(bpy.types.Operator):
-    bl_idname = "mcp.save_defaults"
-    bl_label = "Save defaults"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        saveDefaults(context)
-        return{"FINISHED"}
-
-
-class MCP_OT_LoadDefaults(bpy.types.Operator):
-    bl_idname = "mcp.load_defaults"
-    bl_label = "Load defaults"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        loadDefaults(context)
-        return{"FINISHED"}
-
-#
-#    class MCP_OT_CopyAnglesIK(bpy.types.Operator):
-#
-
-class MCP_OT_CopyAnglesIK(bpy.types.Operator):
-    bl_idname = "mcp.copy_angles_fk_ik"
-    bl_label = "Angles  --> IK"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        copyAnglesIK(context)
-        print("Angles copied")
-        return{"FINISHED"}
-
 
 #
 #    readDirectory(directory, prefix):
@@ -188,6 +35,7 @@ class MCP_OT_CopyAnglesIK(bpy.types.Operator):
 #
 
 def readDirectory(directory, prefix):
+    import os
     realdir = os.path.realpath(os.path.expanduser(directory))
     files = os.listdir(realdir)
     n = len(prefix)
@@ -212,16 +60,11 @@ class MCP_OT_Batch(bpy.types.Operator):
             loadRetargetSimplify(context, filepath)
         return{"FINISHED"}
 
-
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
 classes = [
-    MCP_OT_InitInterface,
-    MCP_OT_SaveDefaults,
-    MCP_OT_LoadDefaults,
-    MCP_OT_CopyAnglesIK,
     MCP_OT_Batch,
 ]
 
@@ -335,6 +178,9 @@ def initialize():
     bpy.types.Object.McpIsSourceRig = BoolProperty(
         name="Is Source Rig",
         default=False)
+
+    bpy.types.Object.McpRenamed = BoolProperty(default = False)
+
 
     # Subsample and rescale
 

@@ -203,17 +203,16 @@ def setCurrentAction(context, prop):
 
 
 def getActionFromName(name):
-    try:
+    if name in bpy.data.actions.keys():
         return bpy.data.actions[name]
-    except KeyError:
-        pass
-    raise MocapError("Did not find action %s" % name)
+    else:
+        raise MocapError("Did not find action %s" % name)
 
 
 def getObjectAction(ob):
-    try:
+    if ob and ob.animation_data:
         return ob.animation_data.action
-    except:
+    else:
         print("%s has no action" % ob)
         return None
 
