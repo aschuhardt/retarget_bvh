@@ -70,17 +70,22 @@ class CAnimation:
                 trgBone = trgRig.pose.bones[trgName]
                 srcBone = srcRig.pose.bones[srcName]
             else:
-                print("  -", trgName, srcName)
+                #print("  -", trgName, srcName)
                 continue
-            if trgBone.McpParent and trgBone.McpParent in self.boneAnims.keys():
-                parent = self.boneAnims[trgBone.McpParent]
-            elif trgBone.McpParent:
-                print("No par", trgName, trgBone.McpParent)
-                print(list(self.boneAnims.keys()))
-                halt
-            else:
-                parent = None
-            banim = self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, parent, self, context)
+            parent = self.getTargetParent(trgName, trgBone)            
+            self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, parent, self, context)
+
+
+    def getTargetParent(self, trgName, trgBone):    
+        parName = trgBone.McpParent    
+        while parName and parName not in self.boneAnims.keys():
+            print("Skipping", parName)
+            parBone = self.trgRig.pose.bones[parName]
+            parName = parBone.McpParent
+        if parName:
+            return self.boneAnims[parName]
+        else:
+            return None
 
 
     def printResult(self, scn, frame):
