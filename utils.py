@@ -143,23 +143,6 @@ def getTrgBone(bname, rig):
     return None
 
 #
-#
-#
-
-def isRotationMatrix(mat):
-    mat = mat.to_3x3()
-    prod = mat @ mat.transposed()
-    diff = prod - Matrix().to_3x3()
-    for i in range(3):
-        for j in range(3):
-            if abs(diff[i][j]) > 1e-3:
-                print("Not a rotation matrix")
-                print(mat)
-                print(prod)
-                return False
-    return True
-
-#
 #   isRotation(mode):
 #   isLocation(mode):
 #

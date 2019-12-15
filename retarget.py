@@ -166,18 +166,11 @@ class CBoneAnim:
 
 
     def getTPoseMatrix(self):
-        self.aMatrix = self.srcBone.matrix.inverted() @ self.trgBone.matrix
-        if not isRotationMatrix(self.trgBone.matrix):
-            raise RuntimeError("Target %s not rotation matrix %s" % (self.trgBone.name, self.trgBone.matrix))
-        if not isRotationMatrix(self.srcBone.matrix):
-            raise RuntimeError("Source %s not rotation matrix %s" % (self.srcBone.name, self.srcBone.matrix))
-        if not isRotationMatrix(self.aMatrix):
-            raise RuntimeError("A %s not rotation matrix %s" % (self.trgBone.name, self.aMatrix.matrix))
-
-        return
-
-        if self.name == "upper_arm.L":
-            print("\nGTP", self)
+        trgrot = self.trgBone.matrix.decompose()[1]
+        trgmat = trgrot.to_matrix().to_4x4()
+        srcrot = self.srcBone.matrix.decompose()[1]
+        srcmat = srcrot.to_matrix().to_4x4()
+        self.aMatrix = srcmat.inverted() @ trgmat
 
 
     def retarget(self, frame):
