@@ -532,6 +532,31 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     srcRig.McpRenamed = True
     clearCategory()
 
+#----------------------------------------------------------
+#   Object Problems
+#----------------------------------------------------------
+
+def checkObjectProblems(context):
+    problems = ""
+    epsilon = 1e-2
+    rig = context.object
+
+    eu = rig.rotation_euler
+    print(eu)
+    if abs(eu.x) + abs(eu.y) + abs(eu.z) > epsilon:
+        problems += "object rotation\n"
+
+    vec = rig.scale - Vector((1,1,1))
+    print(vec, vec.length)
+    if vec.length > epsilon:
+        problems += "object scaling\n"
+
+    if problems:
+        msg = ("BVH Retargeter cannot use this rig because it has:\n" +
+               problems +
+               "Apply object transformations before using BVH Retargeter")               
+        raise MocapError(msg)
+
 ########################################################################
 #
 #   class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
@@ -544,6 +569,7 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
     bl_options = {'UNDO'}
 
     def run(self, context):
+        checkObjectProblems(context)
         for file_elem in self.files:
             filepath = os.path.join(self.directory, file_elem.name)
             readBvhFile(context, filepath, context.scene, False)
@@ -588,16 +614,13 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile):
     bl_description = "Load armature from bvh file and rename bones"
     bl_options = {'UNDO'}
     
-    problems = ""
-
     def prequel(self, context):
         from .retarget import changeTargetData
         return changeTargetData(context.object, context.scene)
     
     def run(self, context):
         from .simplify import rescaleFCurves
-        if self.problems:
-            return
+        checkObjectProblems(context)
         scn = context.scene
         srcRig = readBvhFile(context, self.properties.filepath, context.scene, False)
         renameAndRescaleBvh(context, srcRig, trgRig)
@@ -608,61 +631,6 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile):
     def sequel(self, context, data):
         from .retarget import restoreTargetData
         restoreTargetData(data)
-
-    def invoke(self, context, event):
-        return problemFreeFileSelect(self, context)
-
-    def draw(self, context):
-        drawObjectProblems(self)
-
-#----------------------------------------------------------
-#   Object Problems
-#----------------------------------------------------------
-
-def getObjectProblems(self, context):
-    self.problems = ""
-    epsilon = 1e-2
-    rig = context.object
-
-    eu = rig.rotation_euler
-    print(eu)
-    if abs(eu.x) + abs(eu.y) + abs(eu.z) > epsilon:
-        self.problems += "object rotation\n"
-
-    vec = rig.scale - Vector((1,1,1))
-    print(vec, vec.length)
-    if vec.length > epsilon:
-        self.problems += "object scaling\n"
-
-    if self.problems:
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=300, height=20)
-    else:
-        return False
-
-
-def checkObjectProblems(self, context):
-    problems = getObjectProblems(self, context)
-    if problems:
-        return problems
-    else:
-        return self.execute(context)
-
-
-def problemFreeFileSelect(self, context):
-    problems = getObjectProblems(self, context)
-    if problems:
-        return problems
-    context.window_manager.fileselect_add(self)
-    return {'RUNNING_MODAL'}
-
-
-def drawObjectProblems(self):
-    if self.problems:
-        self.layout.label(text="MakeWalk cannot use this rig because it has:")
-        for problem in self.problems.split("\n"):
-            self.layout.label(text="  %s" % problem)
-        self.layout.label(text="Apply object transformations before using MakeWalk")
 
 #----------------------------------------------------------
 #   Initialize

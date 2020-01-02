@@ -288,7 +288,7 @@ class MCP_OT_InitTargets(BvhOperator):
         initTargets(context.scene)
         
 
-class MCP_OT_GetTargetRig(bpy.types.Operator, IsArmature):
+class MCP_OT_GetTargetRig(BvhOperator, IsArmature):
     bl_idname = "mcp.get_target_rig"
     bl_label = "Identify Target Rig"
     bl_description = "Identify the target rig type of the active armature."
@@ -300,7 +300,7 @@ class MCP_OT_GetTargetRig(bpy.types.Operator, IsArmature):
     
     def run(self, context):
         context.scene.McpTargetRig = "Automatic"        
-        getTargetArmature(rig, context)
+        getTargetArmature(context.object, context)
         
     def sequel(self, context, data):
         from .retarget import restoreTargetData

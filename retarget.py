@@ -456,15 +456,13 @@ class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armature"
     bl_options = {'UNDO'}
 
-    problems = ""
-
     def prequel(self, context):
         return changeTargetData(context.object, context.scene)
 
     def run(self, context):
         from .target import getTargetArmature
-        if self.problems:
-            return
+        from .load import checkObjectProblems
+        checkObjectProblems(context)
         trgRig = context.object
         scn = context.scene
         data = changeTargetData(trgRig, scn)
@@ -493,20 +491,21 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
     bl_description = "Load animation from bvh file to the active armature"
     bl_options = {'UNDO'}
 
-    problems = ""
-    
     def prequel(self, context):
         data = changeTargetData(context.object, context.scene)
         return (time.clock(), data)
         
 
     def run(self, context):
+        from .load import checkObjectProblems
+        checkObjectProblems(context)
         acts = []
         for file_elem in self.files:
             filepath = os.path.join(self.directory, file_elem.name)
             act = self.retarget(context, filepath)
             acts.append(act)
-            
+        print("ACT", acts)
+        
             
     def retarget(self, context, filepath):
         from .fkik import limbsBendPositive
@@ -537,15 +536,6 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
         restoreTargetData(data)
         time2 = time.clock()
         print("Retargeting finished in %.3f s" % (time2-time1))
-
-
-    def invoke(self, context, event):
-        from .load import problemFreeFileSelect
-        return problemFreeFileSelect(self, context)
-
-    def draw(self, context):
-        from .load import drawObjectProblems
-        drawObjectProblems(self)
 
 
 class MCP_OT_ClearTempProps(BvhOperator):
