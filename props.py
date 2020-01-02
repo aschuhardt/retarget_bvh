@@ -143,12 +143,12 @@ def initialize():
 
     bpy.types.Scene.McpStartFrame = IntProperty(
         name="Start Frame",
-        description="Starting frame for the animation",
+        description="Default starting frame for the animation",
         default=1)
 
     bpy.types.Scene.McpEndFrame = IntProperty(
         name="Last Frame",
-        description="Last frame for the animation",
+        description="Default last frame for the animation",
         default=250)
 
     bpy.types.Scene.McpRot90Anim = BoolProperty(

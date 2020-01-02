@@ -1,4 +1,4 @@
-# ------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
 #   
 #   Copyright (c) 2019, Thomas Larsson
@@ -44,12 +44,28 @@ class BvhFile:
 
 class MultiFile(ImportHelper):
     files : CollectionProperty(
-            name = "File Path",
-            type = bpy.types.OperatorFileListElement,
-            )
+        name = "File Path",
+        type = bpy.types.OperatorFileListElement)
+
     directory : StringProperty(
-            subtype='DIR_PATH',
-            )
+        subtype='DIR_PATH')
+
+
+class Framed:
+    startFrame : IntProperty(
+        name = "Start Frame",
+        description = "Starting frame for the animation",
+        default = 1)
+
+    endFrame : IntProperty(
+        name = "Last Frame",
+        description = "Last frame for the animation",
+        default = 250)
+             
+    def setupFrames(self, scn):
+        self.startFrame = scn.McpStartFrame
+        self.endFrame = scn.McpEndFrame
+            
 
 ###################################################################################
 #    BVH importer.
@@ -132,11 +148,9 @@ Frames = 3
 
 Epsilon = 1e-5
 
-def readBvhFile(context, filepath, scn, scan):
+def readBvhFile(context, filepath, scn, scan, startFrame, endFrame):
     setCategory("Load Bvh File")
     scale = scn.McpBvhScale
-    startFrame = scn.McpStartFrame
-    endFrame = scn.McpEndFrame
     frameno = 1
     if scn.McpFlipYAxis:
         flipMatrix = Matrix.Rotation(math.pi, 3, 'X') @ Matrix.Rotation(math.pi, 3, 'Y')
@@ -562,7 +576,7 @@ def checkObjectProblems(context):
 #   class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
 #
 
-class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
+class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, Framed):
     bl_idname = "mcp.load_bvh"
     bl_label = "Load BVH File (.bvh)"
     bl_description = "Load an armature from a bvh file"
@@ -572,9 +586,10 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
         checkObjectProblems(context)
         for file_elem in self.files:
             filepath = os.path.join(self.directory, file_elem.name)
-            readBvhFile(context, filepath, context.scene, False)
+            readBvhFile(context, filepath, context.scene, False, self.startFrame, self.endFrame)
 
     def invoke(self, context, event):
+        self.setupFrames(context.scene)
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
@@ -622,7 +637,8 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile):
         from .simplify import rescaleFCurves
         checkObjectProblems(context)
         scn = context.scene
-        srcRig = readBvhFile(context, self.properties.filepath, context.scene, False)
+        self.setupFrames(scn)
+        srcRig = readBvhFile(context, self.properties.filepath, scn, False, self.startFrame, self.endFrame)
         renameAndRescaleBvh(context, srcRig, trgRig)
         if scn.McpRescale:
             rescaleFCurves(context, srcRig, scn.McpRescaleFactor)

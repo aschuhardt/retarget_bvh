@@ -109,14 +109,11 @@ class MCP_PT_Main(bpy.types.Panel):
         scn = context.scene
         layout.operator("mcp.load_and_retarget")
         layout.separator()
-        layout.prop(scn, "McpStartFrame")
-        layout.prop(scn, "McpEndFrame")
-        
+        layout.operator("mcp.load_bvh")        
         layout.separator()
         layout.prop(scn, "McpShowDetailSteps")
         if scn.McpShowDetailSteps:
             ins = inset(layout)
-            ins.operator("mcp.load_bvh")
             ins.operator("mcp.rename_bvh")
             ins.operator("mcp.load_and_rename_bvh")
 
@@ -143,6 +140,10 @@ class MCP_PT_Options(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
         rig = context.object
+
+        layout.prop(scn, "McpStartFrame")
+        layout.prop(scn, "McpEndFrame")
+        layout.separator()
 
         layout.prop(scn, "McpAutoScale")
         layout.prop(scn, "McpBvhScale")

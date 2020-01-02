@@ -54,7 +54,7 @@ from bpy_extras.io_utils import ImportHelper
 
 from .simplify import simplifyFCurves, rescaleFCurves
 from .utils import *
-from .load import BvhFile, MultiFile
+from .load import BvhFile, MultiFile, Framed
 
 
 class CAnimation:
@@ -464,8 +464,6 @@ class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
         from .load import checkObjectProblems
         checkObjectProblems(context)
         trgRig = context.object
-        scn = context.scene
-        data = changeTargetData(trgRig, scn)
         rigList = list(context.selected_objects)
         getTargetArmature(trgRig, context)
         for srcRig in rigList:
@@ -485,20 +483,22 @@ class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
         drawObjectProblems(self)
 
 
-class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
+class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
     bl_options = {'UNDO'}
 
-    useNLA : BoolProperty(name = "Create NLA Strip",
-                          description = "Combined loaded actions into an NLA strip",
-                          default = False)
+    useNLA : BoolProperty(
+        name = "Create NLA Strip",
+        description = "Combined loaded actions into an NLA strip",
+        default = False)
 
-    spacing : IntProperty(name = "NLA Spacing",
-                          description = "Number of empty keyframes between NLA actions",
-                          default = 1)
-                                                            
+    spacing : IntProperty(
+        name = "NLA Spacing",
+        description = "Number of empty keyframes between NLA actions",
+        default = 1)
+                         
     def prequel(self, context):
         data = changeTargetData(context.object, context.scene)
         return (time.clock(), data)
@@ -531,7 +531,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
         print("\nLoad and retarget %s" % filepath)
         scn = context.scene
         trgRig = context.object
-        srcRig = readBvhFile(context, filepath, scn, False)
+        srcRig = readBvhFile(context, filepath, scn, False, self.startFrame, self.endFrame)
         info = (None, 0)
         try:
             renameAndRescaleBvh(context, srcRig, trgRig)
@@ -553,6 +553,12 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
         restoreTargetData(data)
         time2 = time.clock()
         print("Retargeting finished in %.3f s" % (time2-time1))
+
+
+    def invoke(self, context, event):
+        self.setupFrames(context.scene)
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 class MCP_OT_ClearTempProps(BvhOperator):
