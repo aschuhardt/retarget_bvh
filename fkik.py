@@ -633,28 +633,24 @@ def minimizeFCurve(pb, rig, index, frames):
                 kp.co[1] = y0
 
 
-class MCP_OT_LimbsBendPositive(bpy.types.Operator):
+class MCP_OT_LimbsBendPositive(BvhOperator, IsArmature):
     bl_idname = "mcp.limbs_bend_positive"
     bl_label = "Bend Limbs Positive"
     bl_description = "Ensure that limbs' X rotation is positive."
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         from .target import getTargetArmature
         from .loop import getActiveFramesBetweenMarkers
 
         scn = context.scene
         rig = context.object
-        try:
-            layers = list(rig.data.layers)
-            getTargetArmature(rig, context)
-            frames = getActiveFramesBetweenMarkers(rig, scn)
-            limbsBendPositive(rig, scn.McpBendElbows, scn.McpBendKnees, frames)
-            rig.data.layers = layers
-            print("Limbs bent positive")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+        layers = list(rig.data.layers)
+        getTargetArmature(rig, context)
+        frames = getActiveFramesBetweenMarkers(rig, scn)
+        limbsBendPositive(rig, scn.McpBendElbows, scn.McpBendKnees, frames)
+        rig.data.layers = layers
+        print("Limbs bent positive")
 
 #------------------------------------------------------------------------
 #   Buttons
@@ -672,15 +668,13 @@ def restoreGlobalUndo(context, undo):
     context.user_preferences.edit.use_global_undo = undo
 
 
-class MCP_OT_TransferToFk(bpy.types.Operator):
+class MCP_OT_TransferToFk(BvhUndoOperator, IsArmature):
     bl_idname = "mcp.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        undo = disableGlobalUndo(context)
-        try:
+    def run(self, context):
             startProgress("Transfer to FK")
             rig = context.object
             scn = context.scene
@@ -693,22 +687,15 @@ class MCP_OT_TransferToFk(bpy.types.Operator):
             else:
                 raise MocapError("Can not transfer to FK with this rig")
             endProgress("Transfer to FK completed")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        finally:
-            restoreGlobalUndo(context, undo)
-        return{'FINISHED'}
 
 
-class MCP_OT_TransferToIk(bpy.types.Operator):
+class MCP_OT_TransferToIk(BvhUndoOperator):
     bl_idname = "mcp.transfer_to_ik"
     bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        undo = disableGlobalUndo(context)
-        try:
+    def run(self, context):
             startProgress("Transfer to IK")
             rig = context.object
             scn = context.scene
@@ -721,50 +708,38 @@ class MCP_OT_TransferToIk(bpy.types.Operator):
             else:
                 raise MocapError("Can not transfer to IK with this rig")
             endProgress("Transfer to IK completed")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        finally:
-            restoreGlobalUndo(context, undo)
-        return{'FINISHED'}
 
 
-class MCP_OT_ClearAnimation(bpy.types.Operator):
+class MCP_OT_ClearAnimation(BvhUndoOperator, IsArmature):
     bl_idname = "mcp.clear_animation"
     bl_label = "Clear Animation"
     bl_description = "Clear Animation For FK or IK Bones"
     bl_options = {'UNDO'}
 
     type : StringProperty()
+    
+    def run(self, context):
+        startProgress("Clear animation")
+        rig = context.object
+        scn = context.scene
+        if not rig.animation_data:
+            raise MocapError("Rig has no animation data")
+        act = rig.animation_data.action
+        if not act:
+            raise MocapError("Rig has no action")
 
-    def execute(self, context):
-        undo = disableGlobalUndo(context)
-        try:
-            startProgress("Clear animation")
-            rig = context.object
-            scn = context.scene
-            if not rig.animation_data:
-                raise MocapError("Rig has no animation data")
-            act = rig.animation_data.action
-            if not act:
-                raise MocapError("Rig has no action")
-
-            if isMhxRig(rig):
-                clearAnimation(rig, context, act, self.type, SnapBonesAlpha8)
-                if self.type == "FK":
-                    value = 1.0
-                else:
-                    value = 0.0
-                setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, value)
-            elif isRigify(rig):
-                clearAnimation(rig, context, act, self.type, SnapBonesRigify)
+        if isMhxRig(rig):
+            clearAnimation(rig, context, act, self.type, SnapBonesAlpha8)
+            if self.type == "FK":
+                value = 1.0
             else:
-                raise MocapError("Can not clear %s animation with this rig" % self.type)
-            endProgress("Animation cleared")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        finally:
-            restoreGlobalUndo(context, undo)
-        return{'FINISHED'}
+                value = 0.0
+            setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, value)
+        elif isRigify(rig):
+            clearAnimation(rig, context, act, self.type, SnapBonesRigify)
+        else:
+            raise MocapError("Can not clear %s animation with this rig" % self.type)
+        endProgress("Animation cleared")
 
 #------------------------------------------------------------------------
 #   Debug
@@ -785,14 +760,13 @@ def printHand(context):
         print(footIk.matrix)
 
 
-class MCP_OT_PrintHands(bpy.types.Operator):
+class MCP_OT_PrintHands(BvhOperator, IsArmature):
     bl_idname = "mcp.print_hands"
     bl_label = "Print Hands"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         printHand(context)
-        return{'FINISHED'}
 
 #----------------------------------------------------------
 #   Initialize

@@ -275,30 +275,26 @@ def initTargets(scn):
     print("Defined McpTargetRig")
 
 
-class MCP_OT_InitTargets(bpy.types.Operator):
+class MCP_OT_InitTargets(BvhOperator):
     bl_idname = "mcp.init_targets"
     bl_label = "Init Target Panel"
     bl_description = "(Re)load all .trg files in the target_rigs directory."
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         from .t_pose import initTPoses, initTargetTPose
-        try:
-            initTPoses()
-            initTargetTPose(context.scene)
-            initTargets(context.scene)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+        initTPoses()
+        initTargetTPose(context.scene)
+        initTargets(context.scene)
         
 
-class MCP_OT_GetTargetRig(bpy.types.Operator):
+class MCP_OT_GetTargetRig(bpy.types.Operator, IsArmature):
     bl_idname = "mcp.get_target_rig"
     bl_label = "Identify Target Rig"
     bl_description = "Identify the target rig type of the active armature."
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         from .retarget import changeTargetData, restoreTargetData
         rig = context.object
         scn = context.scene
@@ -337,7 +333,7 @@ def saveTargetFile(filepath, context):
         saveTPose(context, tposePath)
 
 
-class MCP_OT_SaveTargetFile(bpy.types.Operator, ExportHelper):
+class MCP_OT_SaveTargetFile(BvhOperator, IsArmature, ExportHelper):
     bl_idname = "mcp.save_target_file"
     bl_label = "Save Target File"
     bl_description = "Save a .json file for this character"
@@ -347,12 +343,8 @@ class MCP_OT_SaveTargetFile(bpy.types.Operator, ExportHelper):
     filter_glob : StringProperty(default="*.trg", options={'HIDDEN'})
     filepath : StringProperty(name="File Path", description="Filepath to target file", maxlen=1024, default="")
 
-    def execute(self, context):
-        try:
-            saveTargetFile(self.properties.filepath, context)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        saveTargetFile(self.properties.filepath, context)
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)

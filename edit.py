@@ -75,7 +75,7 @@ def removeMarker(scn, frame):
 ########################################################################
 #
 #   startEdit(context):
-#   class MCP_OT_StartEdit(bpy.types.Operator):
+#   class MCP_OT_StartEdit(BvhOperator):
 #
 
 def getUndoAction(rig):
@@ -120,7 +120,7 @@ def startEdit(context):
     return nact
 
 
-class MCP_OT_StartEdit(bpy.types.Operator):
+class MCP_OT_StartEdit(BvhOperator, IsArmature):
     bl_idname = "mcp.start_edit"
     bl_label = "Start Edit"
     bl_options = {'UNDO'}
@@ -129,13 +129,9 @@ class MCP_OT_StartEdit(bpy.types.Operator):
     def poll(self, context):
         return (context.object.McpUndoAction == "")
 
-    def execute(self, context):
-        try:
-            startEdit(context)
-            setKeyMap(context, "mcp.insert_locrot", True)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        startEdit(context)
+        setKeyMap(context, "mcp.insert_locrot", True)
 
 
 def setKeyMap(context, idname, doAdd):
@@ -152,7 +148,7 @@ def setKeyMap(context, idname, doAdd):
 
 #
 #   undoEdit(context):
-#   class MCP_OT_UndoEdit(bpy.types.Operator):
+#   class MCP_OT_UndoEdit(BvhOperator):
 #
 
 def undoEdit(context):
@@ -175,7 +171,7 @@ def undoEdit(context):
     return
 
 
-class MCP_OT_UndoEdit(bpy.types.Operator):
+class MCP_OT_UndoEdit(BvhOperator):
     bl_idname = "mcp.undo_edit"
     bl_label = "Undo Edit"
     bl_options = {'UNDO'}
@@ -186,13 +182,9 @@ class MCP_OT_UndoEdit(bpy.types.Operator):
     def poll(self, context):
         return (context.object.McpUndoAction != "")
 
-    def execute(self, context):
+    def run(self, context):
         setKeyMap(context, "mcp.insert_locrot", False)
-        try:
-            undoEdit(context)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+        undoEdit(context)
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -235,7 +227,7 @@ def getActionPair(context):
 
 #
 #   confirmEdit(context):
-#   class MCP_OT_ConfirmEdit(bpy.types.Operator):
+#   class MCP_OT_ConfirmEdit(BvhOperator):
 #
 
 def confirmEdit(context):
@@ -277,7 +269,7 @@ def confirmEdit(context):
     return
 
 
-class MCP_OT_ConfirmEdit(bpy.types.Operator):
+class MCP_OT_ConfirmEdit(BvhOperator):
     bl_idname = "mcp.confirm_edit"
     bl_label = "Confirm Edit"
     bl_options = {'UNDO'}
@@ -286,20 +278,16 @@ class MCP_OT_ConfirmEdit(bpy.types.Operator):
     def poll(self, context):
         return (context.object.McpUndoAction != "")
 
-    def execute(self, context):
+    def run(self, context):
         setKeyMap(context, "mcp.insert_locrot", False)
-        try:
-            confirmEdit(context)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+        confirmEdit(context)
 
 #
 #   setEditDict(editDict, frame, name, channel, index):
 #   insertKey(context, useLoc, useRot):
-#   class MCP_OT_InsertLoc(bpy.types.Operator):
-#   class MCP_OT_InsertRot(bpy.types.Operator):
-#   class MCP_OT_InsertLocRot(bpy.types.Operator):
+#   class MCP_OT_InsertLoc(BvhOperator):
+#   class MCP_OT_InsertRot(BvhOperator):
+#   class MCP_OT_InsertLocRot(BvhOperator):
 #
 
 def setEditDict(editDict, frame, name, channel, n):
@@ -365,7 +353,7 @@ def insertKey(context, useLoc, useRot, delete):
                     displaceFCurve(fcu, ofcu, _EditLoc[fcu.array_index][name])
 
 
-class MCP_OT_InsertKey(bpy.types.Operator):
+class MCP_OT_InsertKey(BvhOperator):
     bl_idname = "mcp.insert_key"
     bl_label = "Key"
     bl_options = {'UNDO'}
@@ -378,12 +366,8 @@ class MCP_OT_InsertKey(bpy.types.Operator):
     def poll(self, context):
         return (context.object.McpUndoAction != "")
 
-    def execute(self, context):
-        try:
-            insertKey(context, self.properties.loc, self.properties.rot, self.properties.delete)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        insertKey(context, self.properties.loc, self.properties.rot, self.properties.delete)
 
 
 def move2marker(context, left, last):
@@ -411,7 +395,7 @@ def move2marker(context, left, last):
                     break
 
 
-class MCP_OT_MoveToMarker(bpy.types.Operator):
+class MCP_OT_MoveToMarker(BvhOperator):
     bl_idname = "mcp.move_to_marker"
     bl_label = "Move"
     bl_description = "Move to time marker"
@@ -424,12 +408,8 @@ class MCP_OT_MoveToMarker(bpy.types.Operator):
     def poll(self, context):
         return (context.object.McpUndoAction != "")
 
-    def execute(self, context):
-        try:
-            move2marker(context, self.properties.left, self.properties.last)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        move2marker(context, self.properties.left, self.properties.last)
 
 #
 #   findFCurve(path, index, fcurves):

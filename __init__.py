@@ -117,16 +117,15 @@ class MCP_PT_Main(bpy.types.Panel):
         if scn.McpShowDetailSteps:
             ins = inset(layout)
             ins.operator("mcp.load_bvh")
-            if ob and ob.type == 'ARMATURE':
-                ins.operator("mcp.rename_bvh")
-                ins.operator("mcp.load_and_rename_bvh")
+            ins.operator("mcp.rename_bvh")
+            ins.operator("mcp.load_and_rename_bvh")
 
-                ins.separator()
-                ins.operator("mcp.retarget_mhx")
+            ins.separator()
+            ins.operator("mcp.retarget_mhx")
 
-                ins.separator()
-                ins.operator("mcp.simplify_fcurves")
-                ins.operator("mcp.rescale_fcurves")
+            ins.separator()
+            ins.operator("mcp.simplify_fcurves")
+            ins.operator("mcp.rescale_fcurves")
 
 ########################################################################
 #
@@ -139,11 +138,6 @@ class MCP_PT_Options(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        if context.object and context.object.type == 'ARMATURE':
-            return True
 
     def draw(self, context):
         layout = self.layout
@@ -183,17 +177,12 @@ class MCP_PT_Options(bpy.types.Panel):
 #   class MCP_PT_Edit(bpy.types.Panel):
 #
 
-class MCP_PT_Edit(bpy.types.Panel):
+class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Edit Actions"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        if context.object and context.object.type == 'ARMATURE':
-            return True
 
     def draw(self, context):
         layout = self.layout
@@ -324,16 +313,12 @@ class MCP_PT_Edit(bpy.types.Panel):
 #    class MCP_PT_MhxSourceBones(bpy.types.Panel):
 #
 
-class MCP_PT_MhxSourceBones(bpy.types.Panel):
+class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Source armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object and context.object.type == 'ARMATURE')
 
     def draw(self, context):
         layout = self.layout
@@ -370,16 +355,12 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel):
 #    class MCP_PT_MhxTargetBones(bpy.types.Panel):
 #
 
-class MCP_PT_MhxTargetBones(bpy.types.Panel):
+class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Target armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object and context.object.type == 'ARMATURE')
 
     def draw(self, context):
         layout = self.layout
@@ -432,17 +413,12 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel):
 #   class MCP_PT_Poses(bpy.types.Panel):
 #
 
-class MCP_PT_Poses(bpy.types.Panel):
+class MCP_PT_Poses(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Poses"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        if context.object and context.object.type == 'ARMATURE':
-            return True
 
     def draw(self, context):
         layout = self.layout
@@ -467,17 +443,12 @@ class MCP_PT_Poses(bpy.types.Panel):
 #   class MCP_PT_Actions(bpy.types.Panel):
 #
 
-class MCP_PT_Actions(bpy.types.Panel):
+class MCP_PT_Actions(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Actions"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        if context.object and context.object.type == 'ARMATURE':
-            return True
 
     def draw(self, context):
         layout = self.layout

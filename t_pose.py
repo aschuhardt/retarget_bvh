@@ -111,20 +111,16 @@ def setShapeKey(ob, name, value):
     skey.value = value
 
 
-class MCP_OT_RestCurrentPose(bpy.types.Operator):
+class MCP_OT_RestCurrentPose(BvhOperator, IsArmature):
     bl_idname = "mcp.rest_current_pose"
     bl_label = "Current Pose => Rest Pose"
     bl_description = "Change rest pose to current pose"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            initRig(context)
-            applyRestPose(context, 1.0)
-            print("Set current pose to rest pose")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        initRig(context)
+        applyRestPose(context, 1.0)
+        print("Set current pose to rest pose")
 
 #------------------------------------------------------------------
 #   Automatic T-Pose
@@ -220,20 +216,16 @@ def putInTPose(rig, tpname, context):
         setTPose(rig, struct)
 
 
-class MCP_OT_PutInTPose(bpy.types.Operator):
+class MCP_OT_PutInTPose(BvhOperator, IsArmature):
     bl_idname = "mcp.put_in_t_pose"
     bl_label = "Put In T-pose"
     bl_description = "Put the character into T-pose"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            rig = initRig(context)
-            putInTPose(rig, context.scene.McpTargetTPose, context)
-            print("Pose set to T-pose")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        rig = initRig(context)
+        putInTPose(rig, context.scene.McpTargetTPose, context)
+        print("Pose set to T-pose")
 
 #------------------------------------------------------------------
 #   Set T-Pose
@@ -255,7 +247,7 @@ def defineTPose(rig):
     rig.McpTPoseDefined = True
 
 
-class MCP_OT_DefineTPose(bpy.types.Operator):
+class MCP_OT_DefineTPose(BvhOperator, IsArmature):
     bl_idname = "mcp.define_t_pose"
     bl_label = "Define T-pose"
     bl_description = "Define T-pose as current pose"
@@ -263,16 +255,12 @@ class MCP_OT_DefineTPose(bpy.types.Operator):
 
     problems = ""
 
-    def execute(self, context):
+    def run(self, context):
         if self.problems:
-            return{'FINISHED'}
-        try:
-            rig = initRig(context)
-            defineTPose(rig)
-            print("T-pose defined as current pose")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+            return
+        rig = initRig(context)
+        defineTPose(rig)
+        print("T-pose defined as current pose")
 
     def invoke(self, context, event):
         from .load import checkObjectProblems
@@ -292,23 +280,19 @@ def setRestPose(rig):
         pb.matrix_basis = unit
 
 
-class MCP_OT_UndefineTPose(bpy.types.Operator):
+class MCP_OT_UndefineTPose(BvhOperator, IsArmature):
     bl_idname = "mcp.undefine_t_pose"
     bl_label = "Undefine T-pose"
     bl_description = "Remove definition of T-pose"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            rig = initRig(context)
-            rig.McpTPoseDefined = False
-            quat = Quaternion()
-            for pb in rig.pose.bones:            
-                pb.McpQuat = quat    
-            print("Undefined T-pose")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        rig = initRig(context)
+        rig.McpTPoseDefined = False
+        quat = Quaternion()
+        for pb in rig.pose.bones:            
+            pb.McpQuat = quat    
+        print("Undefined T-pose")
 
 #------------------------------------------------------------------
 #   Load T-pose from file
@@ -349,21 +333,16 @@ def getBoneName(rig, name):
             return ""
 
 
-class MCP_OT_LoadPose(bpy.types.Operator, ExportHelper, JsonFile):
+class MCP_OT_LoadPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
     bl_idname = "mcp.load_pose"
     bl_label = "Load Pose"
     bl_description = "Load pose from file"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         rig = initRig(context)
         filename = os.path.relpath(self.filepath, os.path.dirname(__file__))
-        try:
-            loadPose(rig, filename)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        print("Loaded pose")
-        return{'FINISHED'}
+        loadPose(rig, filename)
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -396,19 +375,15 @@ def savePose(context, filepath):
     saveJson(struct, filepath)
 
 
-class MCP_OT_SavePose(bpy.types.Operator, ExportHelper, JsonFile):
+class MCP_OT_SavePose(BvhOperator, IsArmature, ExportHelper, JsonFile):
     bl_idname = "mcp.save_pose"
     bl_label = "Save Pose"
     bl_description = "Save current pose as .json file"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            savePose(context, self.filepath)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
+    def run(self, context):
+        savePose(context, self.filepath)
         print("Saved current pose")
-        return{'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -476,17 +451,16 @@ def initTargetTPose(scn):
     scn.McpTargetTPose = 'Default'
 
 
-class MCP_OT_InitTPoses(bpy.types.Operator):
+class MCP_OT_InitTPoses(BvhOperator):
     bl_idname = "mcp.init_t_poses"
     bl_label = "Init T-poses"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         initTPoses()
         initSourceTPose(context.scene)
         initTargetTPose(context.scene)
         print("T-poses initialized")
-        return{'FINISHED'}
 
 #----------------------------------------------------------
 #   Initialize

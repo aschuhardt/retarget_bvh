@@ -69,7 +69,7 @@ def fCurveIdentity(fcu):
 #
 #   loopFCurves(context):
 #   loopFCurve(fcu, minTime, maxTime, scn):
-#   class MCP_OT_LoopFCurves(bpy.types.Operator):
+#   class MCP_OT_LoopFCurves(BvhOperator):
 #
 
 def loopFCurves(context):
@@ -203,20 +203,16 @@ def loopFCurve(fcu, t0, tn, scn):
         fcu.keyframe_points.insert(frame=t, value=v)
     return
 
-class MCP_OT_LoopFCurves(bpy.types.Operator):
+class MCP_OT_LoopFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.loop_fcurves"
     bl_label = "Loop F-curves"
     bl_description = "Make the beginning and end of the selected time range connect smoothly. Use before repeating."
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            startProgress("Loop F-curves")
-            loopFCurves(context)
-            endProgress("F-curves looped")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+         startProgress("Loop F-curves")
+         loopFCurves(context)
+         endProgress("F-curves looped")
 
 #
 #   repeatFCurves(context, nRepeats):
@@ -251,18 +247,14 @@ def repeatFCurves(context, nRepeats):
     endProgress("F-curves repeated %d times" % nRepeats)
 
 
-class MCP_OT_RepeatFCurves(bpy.types.Operator):
+class MCP_OT_RepeatFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.repeat_fcurves"
     bl_label = "Repeat Animation"
     bl_description = "Repeat the part of the animation between selected markers n times"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            repeatFCurves(context, context.scene.McpRepeatNumber)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        repeatFCurves(context, context.scene.McpRepeatNumber)
 
 
 #
@@ -366,25 +358,21 @@ def getActionExtent(act):
     return first,last
 
 
-class MCP_OT_StitchActions(bpy.types.Operator):
+class MCP_OT_StitchActions(BvhOperator, IsArmature):
     bl_idname = "mcp.stitch_actions"
     bl_label = "Stitch Actions"
     bl_description = "Stitch two action together seamlessly"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            startProgress("Stitch actions")
-            stitchActions(context)
-            endProgress("Actions stitched")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        startProgress("Stitch actions")
+        stitchActions(context)
+        endProgress("Actions stitched")
 
 
 #
 #   shiftBoneFCurves(rig, context):
-#   class MCP_OT_ShiftBoneFCurves(bpy.types.Operator):
+#   class MCP_OT_ShiftBoneFCurves(BvhOperator):
 #
 
 def getBaseMatrices(act, frames, rig, useAll):
@@ -496,20 +484,16 @@ def printmat(mat):
     print("   (%.4f %.4f %.4f %.4f)" % tuple(mat.to_quaternion()))
 
 
-class MCP_OT_ShiftBoneFCurves(bpy.types.Operator):
+class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.shift_bone"
     bl_label = "Shift Animation"
     bl_description = "Shift the animation globally for selected boens"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            startProgress("Shift animation")
-            shiftBoneFCurves(context.object, context)
-            endProgress("Animation shifted")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        startProgress("Shift animation")
+        shiftBoneFCurves(context.object, context)
+        endProgress("Animation shifted")
 
 
 def fixateBoneFCurves(rig, scn):
@@ -542,20 +526,16 @@ def fixateBoneFCurves(rig, scn):
                     kp.co[1] = value
 
 
-class MCP_OT_FixateBoneFCurves(bpy.types.Operator):
+class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.fixate_bone"
     bl_label = "Fixate Bone Location"
     bl_description = "Keep bone location fixed (local coordinates)"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            startProgress("Fixate bone locations")
-            fixateBoneFCurves(context.object, context.scene)
-            endProgress("Bone locations fixed")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        startProgress("Fixate bone locations")
+        fixateBoneFCurves(context.object, context.scene)
+        endProgress("Bone locations fixed")
 
 #----------------------------------------------------------
 #   Get active frames

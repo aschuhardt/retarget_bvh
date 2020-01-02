@@ -44,7 +44,7 @@ _actions = []
 #
 #   listAllActions(context):
 #   findActionNumber(name):
-#   class MCP_OT_UpdateActionList(bpy.types.Operator):
+#   class MCP_OT_UpdateActionList(BvhOperator):
 #
 
 def listAllActions(context):
@@ -88,7 +88,7 @@ def findActionNumber(name):
     raise MocapError("Unrecognized action %s" % name)
 
 
-class MCP_OT_UpdateActionList(bpy.types.Operator):
+class MCP_OT_UpdateActionList(BvhOperator):
     bl_idname = "mcp.update_action_list"
     bl_label = "Update Action List"
     bl_description = "Update the action list"
@@ -98,13 +98,12 @@ class MCP_OT_UpdateActionList(bpy.types.Operator):
     def poll(cls, context):
         return context.object
 
-    def execute(self, context):
+    def run(self, context):
         listAllActions(context)
-        return{'FINISHED'}
 
 #
 #   deleteAction(context):
-#   class MCP_OT_Delete(bpy.types.Operator):
+#   class MCP_OT_Delete(BvhOperator):
 #
 
 def deleteActions(context):
@@ -131,18 +130,14 @@ def deleteActions(context):
         raise MocapError("Cannot delete. Action %s has %d users." % (act.name, act.users))
 
 
-class MCP_OT_Delete(bpy.types.Operator):
+class MCP_OT_Delete(BvhOperator):
     bl_idname = "mcp.delete"
     bl_label = "Delete Action"
     bl_description = "Delete the action selected in the action list"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            deleteActions(context)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        deleteActions(context)
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -153,7 +148,7 @@ class MCP_OT_Delete(bpy.types.Operator):
 
 #
 #   deleteHash():
-#   class MCP_OT_DeleteHash(bpy.types.Operator):
+#   class MCP_OT_DeleteHash(BvhOperator):
 #
 
 def deleteAction(act):
@@ -171,7 +166,7 @@ def deleteHash():
     return
 
 
-class MCP_OT_DeleteHash(bpy.types.Operator):
+class MCP_OT_DeleteHash(BvhOperator):
     bl_idname = "mcp.delete_hash"
     bl_label = "Delete Temporary Actions"
     bl_description = (
@@ -181,16 +176,12 @@ class MCP_OT_DeleteHash(bpy.types.Operator):
     )
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            deleteHash()
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        deleteHash()
 
 #
 #   setCurrentAction(context, prop):
-#   class MCP_OT_SetCurrentAction(bpy.types.Operator):
+#   class MCP_OT_SetCurrentAction(BvhOperator):
 #
 
 def setCurrentAction(context, prop):
@@ -217,7 +208,7 @@ def getObjectAction(ob):
         return None
 
 
-class MCP_OT_SetCurrentAction(bpy.types.Operator):
+class MCP_OT_SetCurrentAction(BvhOperator):
     bl_idname = "mcp.set_current_action"
     bl_label = "Set Current Action"
     bl_description = "Set the action selected in the action list as the current action"
@@ -225,12 +216,8 @@ class MCP_OT_SetCurrentAction(bpy.types.Operator):
 
     prop : StringProperty()
 
-    def execute(self, context):
-        try:
-            setCurrentAction(context, self.prop)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        setCurrentAction(context, self.prop)
 
 #----------------------------------------------------------
 #   Initialize

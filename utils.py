@@ -209,9 +209,9 @@ def showProgress(n, frame, nFrames, step=20):
     if n % step == 0:
         print("%d (%.1f pct)" % (int(frame), (100.0*n)/nFrames))
 
-#
+#-------------------------------------------------------------
 #   Error handling
-#
+#-------------------------------------------------------------
 
 _category = ""
 _errorLines = ""
@@ -263,4 +263,47 @@ class ErrorOperator(bpy.types.Operator):
         global _errorLines
         for line in _errorLines:
             self.layout.label(text=line)
+
+#-------------------------------------------------------------
+#   Poll
+#-------------------------------------------------------------
+
+class IsMesh:
+    @classmethod
+    def poll(self, context):
+        ob = context.object
+        return (ob and ob.type == 'MESH')
+
+
+class IsArmature:
+    @classmethod
+    def poll(self, context):
+        ob = context.object
+        return (ob and ob.type == 'ARMATURE')
+
+#-------------------------------------------------------------
+#   Execute
+#-------------------------------------------------------------
+
+class BvhOperator(bpy.types.Operator):
+    def execute(self, context):
+        try:
+            self.run(context)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}    
+
+
+class BvhUndoOperator(bpy.types.Operator):
+    def execute(self, context):
+        undo = disableGlobalUndo(context)
+        try:
+            self.run(context)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        finally:
+            restoreGlobalUndo(context, undo)
+        return{'FINISHED'}
+
+
 

@@ -35,10 +35,21 @@ from bpy.props import *
 from . import simplify
 from .utils import *
 
-class BVHFile:
+
+class BvhFile:
     filename_ext = ".bvh"
     filter_glob : StringProperty(default="*.bvh", options={'HIDDEN'})
     filepath : StringProperty(name="File Path", description="Filepath used for importing the BVH file", maxlen=1024, default="")
+
+
+class MultiFile(ImportHelper):
+    files : CollectionProperty(
+            name = "File Path",
+            type = bpy.types.OperatorFileListElement,
+            )
+    directory : StringProperty(
+            subtype='DIR_PATH',
+            )
 
 ###################################################################################
 #    BVH importer.
@@ -523,37 +534,35 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
 
 ########################################################################
 #
-#   class MCP_OT_LoadBvh(bpy.types.Operator, ImportHelper, BVHFile):
+#   class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
 #
 
-class MCP_OT_LoadBvh(bpy.types.Operator, ImportHelper, BVHFile):
+class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
     bl_idname = "mcp.load_bvh"
     bl_label = "Load BVH File (.bvh)"
     bl_description = "Load an armature from a bvh file"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            readBvhFile(context, self.properties.filepath, context.scene, False)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        for file_elem in self.files:
+            filepath = os.path.join(self.directory, file_elem.name)
+            readBvhFile(context, filepath, context.scene, False)
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
 #
-#   class MCP_OT_RenameBvh(bpy.types.Operator):
+#   class MCP_OT_RenameBvh(BvhOperator):
 #
 
-class MCP_OT_RenameBvh(bpy.types.Operator):
+class MCP_OT_RenameBvh(BvhOperator, IsArmature):
     bl_idname = "mcp.rename_bvh"
     bl_label = "Rename And Rescale BVH Rig"
     bl_description = "Rename bones of active armature and scale it to fit other armature"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         from .simplify import rescaleFCurves
         scn = context.scene
         srcRig = context.object
@@ -562,22 +571,18 @@ class MCP_OT_RenameBvh(bpy.types.Operator):
             if ob.type == 'ARMATURE' and ob.select_get() and ob != srcRig:
                 trgRig = ob
                 break
-        try:
-            if not trgRig:
-                raise MocapError("No target rig selected")
-            renameAndRescaleBvh(context, srcRig, trgRig)
-            if scn.McpRescale:
-                rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
-            print("%s renamed" % srcRig.name)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+        if not trgRig:
+            raise MocapError("No target rig selected")
+        renameAndRescaleBvh(context, srcRig, trgRig)
+        if scn.McpRescale:
+            rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
+        print("%s renamed" % srcRig.name)
 
 #
-#   class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ImportHelper, BVHFile):
+#   class MCP_OT_LoadAndRenameBvh(BvhOperator, ImportHelper, BvhFile):
 #
 
-class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ImportHelper, BVHFile):
+class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile):
     bl_idname = "mcp.load_and_rename_bvh"
     bl_label = "Load And Rename BVH File (.bvh)"
     bl_description = "Load armature from bvh file and rename bones"
@@ -585,9 +590,9 @@ class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ImportHelper, BVHFile):
     
     problems = ""
 
-    def execute(self, context):
+    def run(self, context):
         if self.problems:
-            return{'FINISHED'}
+            return
 
         from .retarget import changeTargetData, restoreTargetData
         from .simplify import rescaleFCurves
@@ -605,7 +610,6 @@ class MCP_OT_LoadAndRenameBvh(bpy.types.Operator, ImportHelper, BVHFile):
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
             restoreTargetData(trgRig, data)
-        return{'FINISHED'}
 
     def invoke(self, context, event):
         return problemFreeFileSelect(self, context)

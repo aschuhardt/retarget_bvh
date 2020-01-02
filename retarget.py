@@ -46,6 +46,7 @@
 import bpy
 import mathutils
 import time
+import os
 from collections import OrderedDict
 from mathutils import *
 from bpy.props import *
@@ -53,7 +54,7 @@ from bpy_extras.io_utils import ImportHelper
 
 from .simplify import simplifyFCurves, rescaleFCurves
 from .utils import *
-from .load import BVHFile
+from .load import BvhFile, MultiFile
 
 
 class CAnimation:
@@ -484,7 +485,7 @@ def loadRetargetSimplify(context, filepath):
 #   Buttons
 #
 
-class MCP_OT_RetargetMhx(bpy.types.Operator):
+class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
     bl_idname = "mcp.retarget_mhx"
     bl_label = "Retarget Selected To Active"
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armature"
@@ -492,11 +493,11 @@ class MCP_OT_RetargetMhx(bpy.types.Operator):
 
     problems = ""
 
-    def execute(self, context):
+    def run(self, context):
         from .target import getTargetArmature
 
         if self.problems:
-            return{'FINISHED'}
+            return
 
         trgRig = context.object
         scn = context.scene
@@ -508,11 +509,9 @@ class MCP_OT_RetargetMhx(bpy.types.Operator):
             for srcRig in rigList:
                 if srcRig != trgRig:
                     retargetAnimation(context, srcRig, trgRig)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
             restoreTargetData(trgRig, data)
-        return{'FINISHED'}
+
 
     def invoke(self, context, event):
         from .load import checkObjectProblems
@@ -523,27 +522,18 @@ class MCP_OT_RetargetMhx(bpy.types.Operator):
         drawObjectProblems(self)
 
 
-class MCP_OT_LoadAndRetarget(bpy.types.Operator, ImportHelper, BVHFile):
+class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
     bl_options = {'UNDO'}
 
     problems = ""
-
-    @classmethod
-    def poll(self, context):
-        return (context.object and context.object.type == 'ARMATURE')
-
-    def execute(self, context):
-        if self.problems:
-            return{'FINISHED'}
-
-        try:
-            loadRetargetSimplify(context, self.properties.filepath)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    
+    def run(self, context):
+        for file_elem in self.files:
+            filepath = os.path.join(self.directory, file_elem.name)
+            loadRetargetSimplify(context, filepath)
 
     def invoke(self, context, event):
         from .load import problemFreeFileSelect
@@ -554,18 +544,14 @@ class MCP_OT_LoadAndRetarget(bpy.types.Operator, ImportHelper, BVHFile):
         drawObjectProblems(self)
 
 
-class MCP_OT_ClearTempProps(bpy.types.Operator):
+class MCP_OT_ClearTempProps(BvhOperator):
     bl_idname = "mcp.clear_temp_props"
     bl_label = "Clear Temporary Properties"
     bl_description = "Clear properties used by MakeWalk. Animation editing may fail after this."
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            clearMcpProps(context.object)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        clearMcpProps(context.object)
 
 #----------------------------------------------------------
 #   Initialize

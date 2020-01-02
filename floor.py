@@ -193,7 +193,7 @@ def keepToeRotationNegative(pmat, scn):
     return pmat
 
 
-class MCP_OT_OffsetToe(bpy.types.Operator):
+class MCP_OT_OffsetToe(BvhOperator, IsArmature):
     bl_idname = "mcp.offset_toe"
     bl_label = "Offset Toes"
     bl_description = "Keep toes below balls"
@@ -202,12 +202,7 @@ class MCP_OT_OffsetToe(bpy.types.Operator):
     def execute(self, context):
         from .target import getTargetArmature
         getTargetArmature(context.object, context)
-        try:
-            toesBelowBall(context)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
-
+        toesBelowBall(context)
 
 #-------------------------------------------------------------
 #   Floor
@@ -377,20 +372,16 @@ def getIkOffset(rig, ez, origin, leg):
     return offset
 
 
-class MCP_OT_FloorFoot(bpy.types.Operator):
+class MCP_OT_FloorFoot(BvhOperator, IsArmature):
     bl_idname = "mcp.floor_foot"
     bl_label = "Keep Feet Above Floor"
     bl_description = "Keep Feet Above Plane"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         from .target import getTargetArmature
         getTargetArmature(context.object, context)
-        try:
-            floorFoot(context)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+        floorFoot(context)
 
 #----------------------------------------------------------
 #   Initialize

@@ -268,34 +268,26 @@ def addFCurveInserts(fcu, inserts, limitData):
 
 ########################################################################
 #
-#   class MCP_OT_SimplifyFCurves(bpy.types.Operator):
+#   class MCP_OT_SimplifyFCurves(BvhOperator):
 #
 
-class MCP_OT_SimplifyFCurves(bpy.types.Operator):
+class MCP_OT_SimplifyFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.simplify_fcurves"
     bl_label = "Simplify FCurves"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            scn = context.scene
-            simplifyFCurves(context, context.object, scn.McpSimplifyVisible, scn.McpSimplifyMarkers)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        scn = context.scene
+        simplifyFCurves(context, context.object, scn.McpSimplifyVisible, scn.McpSimplifyMarkers)
 
-class MCP_OT_RescaleFCurves(bpy.types.Operator):
+class MCP_OT_RescaleFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.rescale_fcurves"
     bl_label = "Rescale FCurves"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
-        try:
-            scn = context.scene
-            rescaleFCurves(context, context.object, scn.McpRescaleFactor)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
+    def run(self, context):
+        scn = context.scene
+        rescaleFCurves(context, context.object, scn.McpRescaleFactor)
 
 #----------------------------------------------------------
 #   Initialize
