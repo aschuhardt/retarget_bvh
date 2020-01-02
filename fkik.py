@@ -668,49 +668,62 @@ def restoreGlobalUndo(context, undo):
     context.user_preferences.edit.use_global_undo = undo
 
 
-class MCP_OT_TransferToFk(BvhUndoOperator, IsArmature):
+class MCP_OT_TransferToFk(BvhOperator, IsArmature):
     bl_idname = "mcp.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
     bl_options = {'UNDO'}
 
+    def prequel(self, context):
+        return disableGlobalUndo(context)
+        
     def run(self, context):
-            startProgress("Transfer to FK")
-            rig = context.object
-            scn = context.scene
-            if isMhxRig(rig):
-                transferMhxToFk(rig, context)
-            elif isRigify(rig):
-                transferRigifyToFk(rig, context, ".")
-            elif isRigify2(rig):
-                transferRigifyToFk(rig, context, "_")
-            else:
-                raise MocapError("Can not transfer to FK with this rig")
-            endProgress("Transfer to FK completed")
+        startProgress("Transfer to FK")
+        rig = context.object
+        scn = context.scene
+        if isMhxRig(rig):
+            transferMhxToFk(rig, context)
+        elif isRigify(rig):
+            transferRigifyToFk(rig, context, ".")
+        elif isRigify2(rig):
+            transferRigifyToFk(rig, context, "_")
+        else:
+            raise MocapError("Can not transfer to FK with this rig")
+        endProgress("Transfer to FK completed")
+
+    def sequel(self, context, data):
+        return restoreGlobalUndo(context, undo)
+        
 
 
-class MCP_OT_TransferToIk(BvhUndoOperator):
+class MCP_OT_TransferToIk(BvhOperator):
     bl_idname = "mcp.transfer_to_ik"
     bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
     bl_options = {'UNDO'}
 
+    def prequel(self, context):
+        return disableGlobalUndo(context)
+        
     def run(self, context):
-            startProgress("Transfer to IK")
-            rig = context.object
-            scn = context.scene
-            if isMhxRig(rig):
-                transferMhxToIk(rig, context)
-            elif isRigify(rig):
-                transferRigifyToIk(rig, context, ".")
-            elif isRigify2(rig):
-                transferRigifyToIk(rig, context, "_")
-            else:
-                raise MocapError("Can not transfer to IK with this rig")
-            endProgress("Transfer to IK completed")
+        startProgress("Transfer to IK")
+        rig = context.object
+        scn = context.scene
+        if isMhxRig(rig):
+            transferMhxToIk(rig, context)
+        elif isRigify(rig):
+            transferRigifyToIk(rig, context, ".")
+        elif isRigify2(rig):
+            transferRigifyToIk(rig, context, "_")
+        else:
+            raise MocapError("Can not transfer to IK with this rig")
+        endProgress("Transfer to IK completed")
 
+    def sequel(self, context, data):
+        return restoreGlobalUndo(context, undo)
+        
 
-class MCP_OT_ClearAnimation(BvhUndoOperator, IsArmature):
+class MCP_OT_ClearAnimation(BvhOperator, IsArmature):
     bl_idname = "mcp.clear_animation"
     bl_label = "Clear Animation"
     bl_description = "Clear Animation For FK or IK Bones"
@@ -718,6 +731,9 @@ class MCP_OT_ClearAnimation(BvhUndoOperator, IsArmature):
 
     type : StringProperty()
     
+    def prequel(self, context):
+        return disableGlobalUndo(context)
+        
     def run(self, context):
         startProgress("Clear animation")
         rig = context.object
@@ -741,6 +757,9 @@ class MCP_OT_ClearAnimation(BvhUndoOperator, IsArmature):
             raise MocapError("Can not clear %s animation with this rig" % self.type)
         endProgress("Animation cleared")
 
+    def sequel(self, context, data):
+        return restoreGlobalUndo(context, undo)
+        
 #------------------------------------------------------------------------
 #   Debug
 #------------------------------------------------------------------------

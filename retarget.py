@@ -353,7 +353,7 @@ def retargetAnimation(context, srcRig, trgRig):
 
         scn.frame_current = frames[0]
     finally:
-        restoreTargetData(trgRig, oldData)
+        restoreTargetData(oldData)
 
     #anim.printResult(scn, 1)
 
@@ -363,11 +363,11 @@ def retargetAnimation(context, srcRig, trgRig):
     act.use_fake_user = True
     clearCategory()
     endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
-
+    return act
 
 #
 #   changeTargetData(rig, scn):
-#   restoreTargetData(rig, data):
+#   restoreTargetData(data):
 #
 
 def changeTargetData(rig, scn):
@@ -427,11 +427,12 @@ def changeTargetData(rig, scn):
         locks.append( (pb, constraints) )
 
     norotBones = []
-    return (props, layers, locks, norotBones)
+    return (rig, props, layers, locks, norotBones)
 
 
-def restoreTargetData(rig, data):
-    (props, rig.data.layers, locks, norotBones) = data
+def restoreTargetData(data):
+    (rig, props, layers, locks, norotBones) = data
+    rig.data.layers = layers
 
     for (key,value) in props:
         rig[key] = value
@@ -443,42 +444,6 @@ def restoreTargetData(rig, data):
         (pb, constraints) = lock
         for (cns, mute) in constraints:
             cns.mute = mute
-
-
-#
-#    loadRetargetSimplify(context, filepath):
-#
-
-def loadRetargetSimplify(context, filepath):
-    from .fkik import limbsBendPositive
-    from .load import readBvhFile, renameAndRescaleBvh, deleteSourceRig
-
-    print("\nLoad and retarget %s" % filepath)
-    time1 = time.clock()
-    scn = context.scene
-    trgRig = context.object
-    data = changeTargetData(trgRig, scn)
-    try:
-        #clearMcpProps(trgRig)
-        srcRig = readBvhFile(context, filepath, scn, False)
-        try:
-            renameAndRescaleBvh(context, srcRig, trgRig)
-            retargetAnimation(context, srcRig, trgRig)
-            scn = context.scene
-            if scn.McpDoBendPositive:
-                limbsBendPositive(trgRig, True, True, (0,1e6))
-            if scn.McpDoSimplify:
-                simplifyFCurves(context, trgRig, False, False)
-            if scn.McpRescale:
-                rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
-        finally:
-            deleteSourceRig(context, srcRig, 'Y_')
-    finally:
-        restoreTargetData(trgRig, data)
-    time2 = time.clock()
-    print("%s finished in %.3f s" % (filepath, time2-time1))
-    return
-
 
 ########################################################################
 #
@@ -493,25 +458,25 @@ class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
 
     problems = ""
 
+    def prequel(self, context):
+        return changeTargetData(context.object, context.scene)
+
     def run(self, context):
         from .target import getTargetArmature
-
         if self.problems:
             return
-
         trgRig = context.object
         scn = context.scene
         data = changeTargetData(trgRig, scn)
         rigList = list(context.selected_objects)
-
-        try:
-            getTargetArmature(trgRig, context)
-            for srcRig in rigList:
-                if srcRig != trgRig:
-                    retargetAnimation(context, srcRig, trgRig)
-        finally:
-            restoreTargetData(trgRig, data)
-
+        getTargetArmature(trgRig, context)
+        for srcRig in rigList:
+            if srcRig != trgRig:
+                retargetAnimation(context, srcRig, trgRig)
+                
+                
+    def sequel(self, context, data):
+        restoreTargetData(data)
 
     def invoke(self, context, event):
         from .load import checkObjectProblems
@@ -530,10 +495,49 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
 
     problems = ""
     
+    def prequel(self, context):
+        data = changeTargetData(context.object, context.scene)
+        return (time.clock(), data)
+        
+
     def run(self, context):
+        acts = []
         for file_elem in self.files:
             filepath = os.path.join(self.directory, file_elem.name)
-            loadRetargetSimplify(context, filepath)
+            act = self.retarget(context, filepath)
+            acts.append(act)
+            
+            
+    def retarget(self, context, filepath):
+        from .fkik import limbsBendPositive
+        from .load import readBvhFile, renameAndRescaleBvh, deleteSourceRig
+
+        print("\nLoad and retarget %s" % filepath)
+        scn = context.scene
+        trgRig = context.object
+        srcRig = readBvhFile(context, filepath, scn, False)
+        act = None
+        try:
+            renameAndRescaleBvh(context, srcRig, trgRig)
+            act = retargetAnimation(context, srcRig, trgRig)
+            scn = context.scene
+            if scn.McpDoBendPositive:
+                limbsBendPositive(trgRig, True, True, (0,1e6))
+            if scn.McpDoSimplify:
+                simplifyFCurves(context, trgRig, False, False)
+            if scn.McpRescale:
+                rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
+        finally:
+            deleteSourceRig(context, srcRig, 'Y_')
+        return act
+        
+                
+    def sequel(self, context, stuff):
+        time1,data = stuff
+        restoreTargetData(data)
+        time2 = time.clock()
+        print("Retargeting finished in %.3f s" % (time2-time1))
+
 
     def invoke(self, context, event):
         from .load import problemFreeFileSelect

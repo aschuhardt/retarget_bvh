@@ -294,19 +294,17 @@ class MCP_OT_GetTargetRig(bpy.types.Operator, IsArmature):
     bl_description = "Identify the target rig type of the active armature."
     bl_options = {'UNDO'}
 
+    def prequel(self, context):
+        from .retarget import changeTargetData
+        return changeTargetData(context.object, context.scene)
+    
     def run(self, context):
-        from .retarget import changeTargetData, restoreTargetData
-        rig = context.object
-        scn = context.scene
-        data = changeTargetData(rig, scn)
-        scn.McpTargetRig = "Automatic"        
-        try:
-            getTargetArmature(rig, context)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        finally:
-            restoreTargetData(rig, data)
-        return{'FINISHED'}
+        context.scene.McpTargetRig = "Automatic"        
+        getTargetArmature(rig, context)
+        
+    def sequel(self, context, data):
+        from .retarget import restoreTargetData
+        restoreTargetData(data)
 
 
 def saveTargetFile(filepath, context):

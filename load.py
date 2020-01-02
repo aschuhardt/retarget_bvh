@@ -590,26 +590,24 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile):
     
     problems = ""
 
+    def prequel(self, context):
+        from .retarget import changeTargetData
+        return changeTargetData(context.object, context.scene)
+    
     def run(self, context):
+        from .simplify import rescaleFCurves
         if self.problems:
             return
-
-        from .retarget import changeTargetData, restoreTargetData
-        from .simplify import rescaleFCurves
-
         scn = context.scene
-        trgRig = context.object
-        data = changeTargetData(trgRig, scn)
-        try:
-            srcRig = readBvhFile(context, self.properties.filepath, context.scene, False)
-            renameAndRescaleBvh(context, srcRig, trgRig)
-            if scn.McpRescale:
-                rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
-            print("%s loaded and renamed" % srcRig.name)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        finally:
-            restoreTargetData(trgRig, data)
+        srcRig = readBvhFile(context, self.properties.filepath, context.scene, False)
+        renameAndRescaleBvh(context, srcRig, trgRig)
+        if scn.McpRescale:
+            rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
+        print("%s loaded and renamed" % srcRig.name)
+
+    def sequel(self, context, data):
+        from .retarget import restoreTargetData
+        restoreTargetData(data)
 
     def invoke(self, context, event):
         return problemFreeFileSelect(self, context)

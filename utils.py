@@ -287,23 +287,20 @@ class IsArmature:
 
 class BvhOperator(bpy.types.Operator):
     def execute(self, context):
-        try:
-            self.run(context)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
-
-
-class BvhUndoOperator(bpy.types.Operator):
-    def execute(self, context):
-        undo = disableGlobalUndo(context)
+        data = self.prequel(context)
         try:
             self.run(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
-            restoreGlobalUndo(context, undo)
-        return{'FINISHED'}
+            self.sequel(context, data)
+        return{'FINISHED'}    
+        
+    def prequel(self, context):
+        return None    
+    
+    def sequel(self, context, data):
+        pass        
 
 
 
