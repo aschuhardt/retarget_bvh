@@ -363,7 +363,7 @@ def retargetAnimation(context, srcRig, trgRig):
     act.use_fake_user = True
     clearCategory()
     endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
-    return act
+    return act,nFrames
 
 #
 #   changeTargetData(rig, scn):
@@ -491,6 +491,14 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
     bl_description = "Load animation from bvh file to the active armature"
     bl_options = {'UNDO'}
 
+    useNLA : BoolProperty(name = "Create NLA Strip",
+                          description = "Combined loaded actions into an NLA strip",
+                          default = False)
+
+    spacing : IntProperty(name = "NLA Spacing",
+                          description = "Number of empty keyframes between NLA actions",
+                          default = 1)
+                                                            
     def prequel(self, context):
         data = changeTargetData(context.object, context.scene)
         return (time.clock(), data)
@@ -499,12 +507,21 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
     def run(self, context):
         from .load import checkObjectProblems
         checkObjectProblems(context)
-        acts = []
+        rig = context.object
+        infos = []
         for file_elem in self.files:
             filepath = os.path.join(self.directory, file_elem.name)
-            act = self.retarget(context, filepath)
-            acts.append(act)
-        print("ACT", acts)
+            info = self.retarget(context, filepath)
+            infos.append(info)
+        if self.useNLA:
+            track = rig.animation_data.nla_tracks.new()
+            track.is_solo = True
+            start = 1
+            for info in infos:
+                act, size = info
+                track.strips.new(act.name, start, act)
+                start += size + self.spacing
+            rig.animation_data.action = None                
         
             
     def retarget(self, context, filepath):
@@ -515,10 +532,10 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
         scn = context.scene
         trgRig = context.object
         srcRig = readBvhFile(context, filepath, scn, False)
-        act = None
+        info = (None, 0)
         try:
             renameAndRescaleBvh(context, srcRig, trgRig)
-            act = retargetAnimation(context, srcRig, trgRig)
+            info = retargetAnimation(context, srcRig, trgRig)
             scn = context.scene
             if scn.McpDoBendPositive:
                 limbsBendPositive(trgRig, True, True, (0,1e6))
@@ -528,7 +545,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile):
                 rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
         finally:
             deleteSourceRig(context, srcRig, 'Y_')
-        return act
+        return info
         
                 
     def sequel(self, context, stuff):
