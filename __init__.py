@@ -61,8 +61,8 @@ if "bpy" in locals():
     imp.reload(target)
     imp.reload(simplify)
     imp.reload(load)
-    imp.reload(retarget)
     imp.reload(fkik)
+    imp.reload(retarget)
     imp.reload(action)
     imp.reload(loop)
     imp.reload(edit)
@@ -80,8 +80,8 @@ else:
     from . import target
     from . import simplify
     from . import load
-    from . import retarget
     from . import fkik
+    from . import retarget
     from . import action
     from . import loop
     from . import edit
@@ -117,8 +117,6 @@ class MCP_PT_Main(bpy.types.Panel):
             ins.operator("mcp.rename_bvh")
             ins.operator("mcp.load_and_rename_bvh")
             ins.operator("mcp.retarget_mhx")
-            ins.operator("mcp.simplify_fcurves")
-            ins.operator("mcp.rescale_fcurves")
 
 ########################################################################
 #
@@ -133,26 +131,10 @@ class MCP_PT_Options(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        layout = self.layout
         scn = context.scene
-        rig = context.object
-
-        layout.prop(scn, "McpAutoScale")
-        layout.prop(scn, "McpBvhScale")
-        layout.prop(scn, "McpUseLimits")
-        layout.prop(scn, "McpClearLocks")
-        layout.prop(scn, "McpIgnoreHiddenLayers")
-        layout.prop(scn, "McpDoBendPositive")
-
-        layout.separator()
-        layout.label(text="SubSample and Rescale")
-        ins = inset(layout)
-        ins.prop(scn, "McpDefaultSS")
-        if not scn.McpDefaultSS:
-            ins.prop(scn, "McpSubsample")
-            ins.prop(scn, "McpSSFactor")
-            ins.operator("mcp.rescale_fcurves")
-
+        self.layout.prop(scn, "McpUseLimits")
+        self.layout.prop(scn, "McpClearLocks")
+        self.layout.prop(scn, "McpIgnoreHiddenLayers")
 
 ########################################################################
 #
@@ -174,9 +156,6 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         layout.prop(scn, "McpShowIK")
         if scn.McpShowIK:
             ins = inset(layout)
-            row = ins.row()
-            row.prop(scn, "McpFkIkArms")
-            row.prop(scn, "McpFkIkLegs")
             ins.operator("mcp.transfer_to_ik")
             ins.operator("mcp.transfer_to_fk")
             ins.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
@@ -187,17 +166,10 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         if scn.McpShowGlobal:
             ins = inset(layout)
             ins.operator("mcp.shift_bone")
-
-            #ins.separator()
-            #row = ins.row()
-            #row.prop(scn, "McpBendElbows")
-            #row.prop(scn, "McpBendKnees")
-            #ins.operator("mcp.limbs_bend_positive")
-
-            ins.separator()
+            ins.operator("mcp.limbs_bend_positive")
             ins.operator("mcp.fixate_bone")
-            ins.separator()
-            ins.operator("mcp.rescale_fcurves")
+            ins.operator("mcp.simplify_fcurves")
+            ins.operator("mcp.timescale_fcurves")
 
         layout.separator()
         layout.prop(scn, "McpShowDisplace")
@@ -246,9 +218,6 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         if scn.McpShowFeet:
             ins = inset(layout)
             row = ins.row()
-            row.prop(scn, "McpFloorLeft")
-            row.prop(scn, "McpFloorRight")
-            row.prop(scn, "McpFloorHips")
             ins.operator("mcp.offset_toe")
             ins.operator("mcp.floor_foot")
 
@@ -271,12 +240,12 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             ins.operator("mcp.update_action_list")
             ins.separator()
             ins.prop(scn, "McpFirstAction")
-            split = ins.split(0.75)
+            split = ins.split(factor=0.75)
             split.prop(scn, "McpFirstEndFrame")
             split.operator("mcp.set_current_action").prop = "McpFirstAction"
             ins.separator()
             ins.prop(scn, "McpSecondAction")
-            split = ins.split(0.75)
+            split = ins.split(factor=0.75)
             split.prop(scn, "McpSecondStartFrame")
             split.operator("mcp.set_current_action").prop = "McpSecondAction"
             ins.separator()

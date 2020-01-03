@@ -218,17 +218,17 @@ class Simplifier:
         return new
 
 #
-#   Rescaler
+#   TimeScaler
 #
 
-class Rescaler:
-    useRescale : BoolProperty(
-        name="Rescale F-Curves",
-        description="Rescale F-curves after loading",
+class TimeScaler:
+    useTimeScale : BoolProperty(
+        name="Time-Scale F-Curves",
+        description="Scale F-curves in time after loading",
         default=False)
 
     factor : FloatProperty(
-        name="Rescale Factor",
+        name="Time-Scale Factor",
         description="Factor for rescaling time",
         min=0.01, max=100, default=1.0)
 
@@ -236,16 +236,16 @@ class Rescaler:
         self.layout.prop(self, "factor")
 
 
-    def rescaleFCurves(self, rig):
+    def timescaleFCurves(self, rig):
         from .action import getObjectAction
         act = getObjectAction(rig)
         if not act:
             return
         for fcu in act.fcurves:
-            self.rescaleFCurve(fcu)
-        print("Curves rescaled")
+            self.timescaleFCurve(fcu)
+        print("F-curves time-scaled")
 
-    def rescaleFCurve(self, fcu):
+    def timescaleFCurve(self, fcu):
         n = len(fcu.keyframe_points)
         if n < 2:
             return
@@ -323,7 +323,8 @@ def addFCurveInserts(fcu, inserts, limitData):
 
 class MCP_OT_SimplifyFCurves(BvhPropsOperator, IsArmature, Simplifier):
     bl_idname = "mcp.simplify_fcurves"
-    bl_label = "Simplify FCurves"
+    bl_label = "Simplify F-Curves"
+    bl_description = "Simplify F-curves"
     bl_options = {'UNDO'}
 
     def run(self, context):
@@ -331,14 +332,15 @@ class MCP_OT_SimplifyFCurves(BvhPropsOperator, IsArmature, Simplifier):
         self.simplifyFCurves(context, context.object)
 
 
-class MCP_OT_RescaleFCurves(BvhPropsOperator, IsArmature, Rescaler):
-    bl_idname = "mcp.rescale_fcurves"
-    bl_label = "Rescale FCurves"
+class MCP_OT_TimescaleFCurves(BvhPropsOperator, IsArmature, TimeScaler):
+    bl_idname = "mcp.timescale_fcurves"
+    bl_label = "Time-Scale F-Curves"
+    bl_description = "Scale F-curves in time"
     bl_options = {'UNDO'}
     
     def run(self, context):
-        self.useRescale = True
-        self.rescaleFCurves(context.object)
+        self.useTimeScale = True
+        self.timescaleFCurves(context.object)
 
 #----------------------------------------------------------
 #   Initialize
@@ -346,7 +348,7 @@ class MCP_OT_RescaleFCurves(BvhPropsOperator, IsArmature, Rescaler):
 
 classes = [
     MCP_OT_SimplifyFCurves,
-    MCP_OT_RescaleFCurves,
+    MCP_OT_TimescaleFCurves,
 ]
 
 def initialize():

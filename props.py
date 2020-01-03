@@ -124,18 +124,6 @@ def initialize():
 
     # Load and retarget
 
-    bpy.types.Scene.McpBvhScale = FloatProperty(
-        name="Scale",
-        description="Scale the BVH by this value",
-        min=0.0001, max=1000000.0,
-        soft_min=0.001, soft_max=100.0,
-        default=0.65)
-
-    bpy.types.Scene.McpAutoScale = BoolProperty(
-        name="Auto Scale",
-        description="Rescale skeleton to match target",
-        default=True)
-
     bpy.types.Scene.McpUseLimits = BoolProperty(
         name="Use Limits",
         description="Restrict angles to Limit Rotation constraints",
@@ -166,69 +154,11 @@ def initialize():
 
     bpy.types.Object.McpRenamed = BoolProperty(default = False)
 
-
-    # Subsample and rescale
-
-    bpy.types.Scene.McpSubsample = BoolProperty(
-        name="Subsample",
-        default=True)
-
-    bpy.types.Scene.McpSSFactor = IntProperty(
-        name="Subsample Factor",
-        description="Sample only every n:th frame",
-        min=1, default=1)
-
-    bpy.types.Scene.McpDefaultSS = BoolProperty(
-        name="Use default subsample",
-        default=True)
-
     # Inverse kinematics
 
     bpy.types.Scene.McpIkAdjustXY = BoolProperty(
         name="IK Adjust XY",
         description="Adjust XY coordinates of IK handle",
-        default=True)
-
-    bpy.types.Scene.McpFkIkArms = BoolProperty(
-        name="Arms",
-        description="Include arms in FK/IK snapping",
-        default=False)
-
-    bpy.types.Scene.McpFkIkLegs = BoolProperty(
-        name="Legs",
-        description="Include legs in FK/IK snapping",
-        default=True)
-
-    # Floor
-
-    bpy.types.Scene.McpFloorLeft = BoolProperty(
-        name="Left",
-        description="Keep left foot above floor",
-        default=True)
-
-    bpy.types.Scene.McpFloorRight = BoolProperty(
-        name="Right",
-        description="Keep right foot above floor",
-        default=True)
-
-    bpy.types.Scene.McpFloorHips = BoolProperty(
-        name="Hips",
-        description="Also adjust character COM when keeping feet above floor",
-        default=True)
-
-    bpy.types.Scene.McpBendElbows = BoolProperty(
-        name="Elbows",
-        description="Keep elbow bending positive",
-        default=True)
-
-    bpy.types.Scene.McpBendKnees = BoolProperty(
-        name="Knees",
-        description="Keep knee bending positive",
-        default=True)
-
-    bpy.types.Scene.McpDoBendPositive = BoolProperty(
-        name="Bend Positive",
-        description="Ensure that elbow and knee bending is positive",
         default=True)
 
     # Loop

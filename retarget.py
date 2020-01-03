@@ -52,9 +52,10 @@ from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
-from .simplify import Simplifier, Rescaler
+from .simplify import Simplifier, TimeScaler
 from .utils import *
-from .load import BvhFile, MultiFile, Framed
+from .load import BvhFile, MultiFile, BvhLoader, RigScaler
+from .fkik import Bender
 
 
 class CAnimation:
@@ -475,16 +476,8 @@ class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
     def sequel(self, context, data):
         restoreTargetData(data)
 
-    def invoke(self, context, event):
-        from .load import checkObjectProblems
-        return checkObjectProblems(self, context)
 
-    def draw(self, context):
-        from .load import drawObjectProblems
-        drawObjectProblems(self)
-
-
-class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed, Rescaler, Simplifier):
+class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, RigScaler, TimeScaler, Simplifier, Bender):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
@@ -502,11 +495,15 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed
 
 
     def draw(self, context):
-        Framed.draw(self, context)
+        BvhLoader.draw(self, context)
         self.layout.separator()
-        self.layout.prop(self, "useRescale")
-        if self.useRescale:
-            Rescaler.draw(self, context)
+        self.layout.prop(self, "useBendPositive")
+        self.layout.separator()
+        RigScaler.draw(self, context)
+        self.layout.separator()
+        self.layout.prop(self, "useTimeScale")
+        if self.useTimeScale:
+            TimeScaler.draw(self, context)
         self.layout.separator()
         self.layout.prop(self, "useSimplify")
         if self.useSimplify:
@@ -543,24 +540,24 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed
         
             
     def retarget(self, context, filepath):
-        from .fkik import limbsBendPositive
-        from .load import readBvhFile, renameAndRescaleBvh, deleteSourceRig
+        from .load import deleteSourceRig
 
         print("\nLoad and retarget %s" % filepath)
         scn = context.scene
         trgRig = context.object
-        srcRig = readBvhFile(context, filepath, scn, False, self.startFrame, self.endFrame)
+        srcRig = self.readBvhFile(context, filepath, scn, False)
         info = (None, 0)
         try:
-            renameAndRescaleBvh(context, srcRig, trgRig)
+            self.renameAndRescaleBvh(context, srcRig, trgRig)
             info = retargetAnimation(context, srcRig, trgRig)
             scn = context.scene
-            if scn.McpDoBendPositive:
-                limbsBendPositive(trgRig, True, True, (0,1e6))
+            if self.useBendPositive:
+                self.useKnees = self.useElbows = True
+                self.limbsBendPositive(trgRig, (0,1e6))
             if self.useSimplify:
                 self.simplifyFCurves(context, trgRig)
-            if self.useRescale:
-                self.rescaleFCurves(trgRig)
+            if self.useTimeScale:
+                self.timescaleFCurves(trgRig)
         finally:
             deleteSourceRig(context, srcRig, 'Y_')
         return info

@@ -208,23 +208,6 @@ class MCP_OT_OffsetToe(BvhOperator, IsArmature):
 #   Floor
 #-------------------------------------------------------------
 
-def floorFoot(context):
-    from .loop import getActiveFramesBetweenMarkers
-    startProgress("Keep feet above floor")
-    scn = context.scene
-    rig,plane = getRigAndPlane(context)
-    try:
-        useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
-    except KeyError:
-        useIk = False
-    frames = getActiveFramesBetweenMarkers(rig, scn)
-    if useIk:
-        floorIkFoot(rig, plane, scn, frames)
-    else:
-        floorFkFoot(rig, plane, scn, frames)
-    endProgress("Feet kept above floor")
-
-
 def getFkFeetBones(rig, suffix):
     foot = getTrgBone("foot" + suffix, rig)
     toe = getTrgBone("toe" + suffix, rig)
@@ -235,153 +218,181 @@ def getFkFeetBones(rig, suffix):
     except KeyError:
         mBall = mToe = mHeel = None
     return foot,toe,mBall,mToe,mHeel
+      
 
-
-def floorFkFoot(rig, plane, scn, frames):
-    hips = getTrgBone("hips", rig)
-    lFoot,lToe,lmBall,lmToe,lmHeel = getFkFeetBones(rig, ".L")
-    rFoot,rToe,rmBall,rmToe,rmHeel = getFkFeetBones(rig, ".R")
-    ez,origin,rot = getPlaneInfo(plane)
-
-    nFrames = len(frames)
-    for n,frame in enumerate(frames):
-        scn.frame_set(frame)
-        updateScene()
-        offset = 0
-        if scn.McpFloorLeft:
-            offset = getFkOffset(rig, ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
-        if scn.McpFloorRight:
-            rOffset = getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
-            if rOffset > offset:
-                offset = rOffset
-        showProgress(n, frame, nFrames)
-        if offset > 0:
-            addOffset(hips, offset, ez)
-
-
-def getFkOffset(rig, ez, origin, foot, toe, mBall, mToe, mHeel):
-    if mBall:
-        offset = toeOffset = getHeadOffset(mToe, ez, origin)
-        ballOffset = getHeadOffset(mBall, ez, origin)
-        if ballOffset > offset:
-            offset = ballOffset
-        heelOffset = getHeadOffset(mHeel, ez, origin)
-        if heelOffset > offset:
-            offset = heelOffset
-    elif toe:
-        offset = getTailOffset(toe, ez, origin)
-        ballOffset = getHeadOffset(toe, ez, origin)
-        if ballOffset > offset:
-            offset = ballOffset
-        ball = toe.matrix.col[3]
-        y = toe.matrix.col[1]
-        heel = ball - y*foot.length
-        heelOffset = getOffset(heel, ez, origin)
-        if heelOffset > offset:
-            offset = heelOffset
-    else:
-        offset = 0
-
-    return offset
-
-
-def floorIkFoot(rig, plane, scn, frames):
-    root = rig.pose.bones["root"]
-    lleg = rig.pose.bones["foot.ik.L"]
-    rleg = rig.pose.bones["foot.ik.R"]
-    ez,origin,rot = getPlaneInfo(plane)
-
-    fillKeyFrames(lleg, rig, frames, 3, mode='location')
-    fillKeyFrames(rleg, rig, frames, 3, mode='location')
-    if scn.McpFloorHips:
-        fillKeyFrames(root, rig, frames, 3, mode='location')
-
-    nFrames = len(frames)
-    for n,frame in enumerate(frames):
-        scn.frame_set(frame)
-        showProgress(n, frame, nFrames)
-
-        if scn.McpFloorLeft:
-            lOffset = getIkOffset(rig, ez, origin, lleg)
-            if lOffset > 0:
-                addOffset(lleg, lOffset, ez)
-        else:
-            lOffset = 0
-        if scn.McpFloorRight:
-            rOffset = getIkOffset(rig, ez, origin, rleg)
-            if rOffset > 0:
-                addOffset(rleg, rOffset, ez)
-        else:
-            rOffset = 0
-
-        hOffset = min(lOffset,rOffset)
-        if hOffset > 0 and scn.McpFloorHips:
-            addOffset(root, hOffset, ez)
-
-
-def findBoneFCurve(pb, rig, index, mode='rotation'):
-    from .edit import findFCurve
-    if mode == 'rotation':
-        if pb.rotation_mode == 'QUATERNION':
-            mode = "rotation_quaternion"
-        else:
-            mode = "rotation_euler"
-    path = 'pose.bones["%s"].%s' % (pb.name, mode)
-
-    if rig.animation_data is None:
-        return None
-    action = rig.animation_data.action
-    if action is None:
-        return None
-    return findFCurve(path, index, action.fcurves)
-
-
-def fillKeyFrames(pb, rig, frames, nIndices, mode='rotation'):
-    for index in range(nIndices):
-        fcu = findBoneFCurve(pb, rig, index, mode)
-        if fcu is None:
-            return
-        for frame in frames:
-            y = fcu.evaluate(frame)
-            fcu.keyframe_points.insert(frame, y, options={'FAST'})
-
-
-def getIkOffset(rig, ez, origin, leg):
-    offset = getHeadOffset(leg, ez, origin)
-    tailOffset = getTailOffset(leg, ez, origin)
-    if tailOffset > offset:
-        offset = tailOffset
-    return offset
-
-
-    foot = rig.pose.bones["foot.rev" + suffix]
-    toe = rig.pose.bones["toe.rev" + suffix]
-
-
-    ballOffset = getTailOffset(toe, ez, origin)
-    if ballOffset > offset:
-        offset = ballOffset
-
-    ball = foot.matrix.col[3]
-    y = toe.matrix.col[1]
-    heel = ball + y*foot.length
-    heelOffset = getOffset(heel, ez, origin)
-    if heelOffset > offset:
-        offset = heelOffset
-
-    return offset
-
-
-class MCP_OT_FloorFoot(BvhOperator, IsArmature):
+class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature):
     bl_idname = "mcp.floor_foot"
     bl_label = "Keep Feet Above Floor"
     bl_description = "Keep Feet Above Plane"
     bl_options = {'UNDO'}
 
+    useLeft : BoolProperty(
+        name="Left",
+        description="Keep left foot above floor",
+        default=True)
+
+    useRight : BoolProperty(
+        name="Right",
+        description="Keep right foot above floor",
+        default=True)
+
+    useHips : BoolProperty(
+        name="Hips",
+        description="Also adjust character COM when keeping feet above floor",
+        default=True)
+
+
     def run(self, context):
         from .target import getTargetArmature
+        from .loop import getActiveFramesBetweenMarkers
+        startProgress("Keep feet above floor")
         getTargetArmature(context.object, context)
-        floorFoot(context)
+        scn = context.scene
+        rig,plane = getRigAndPlane(context)
+        try:
+            useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
+        except KeyError:
+            useIk = False
+        frames = getActiveFramesBetweenMarkers(rig, scn)
+        if useIk:
+            self.floorIkFoot(rig, plane, scn, frames)
+        else:
+            self.floorFkFoot(rig, plane, scn, frames)
+        endProgress("Feet kept above floor")
+    
+    
+    def floorFkFoot(self, rig, plane, scn, frames):
+        hips = getTrgBone("hips", rig)
+        lFoot,lToe,lmBall,lmToe,lmHeel = getFkFeetBones(rig, ".L")
+        rFoot,rToe,rmBall,rmToe,rmHeel = getFkFeetBones(rig, ".R")
+        ez,origin,rot = getPlaneInfo(plane)
+    
+        nFrames = len(frames)
+        for n,frame in enumerate(frames):
+            scn.frame_set(frame)
+            updateScene()
+            offset = 0
+            if self.useLeft:
+                offset = getFkOffset(rig, ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
+            if self.useRight:
+                rOffset = getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
+                if rOffset > offset:
+                    offset = rOffset
+            showProgress(n, frame, nFrames)
+            if offset > 0:
+                addOffset(hips, offset, ez)
+    
+    
+    def getFkOffset(self, rig, ez, origin, foot, toe, mBall, mToe, mHeel):
+        if mBall:
+            offset = toeOffset = getHeadOffset(mToe, ez, origin)
+            ballOffset = getHeadOffset(mBall, ez, origin)
+            if ballOffset > offset:
+                offset = ballOffset
+            heelOffset = getHeadOffset(mHeel, ez, origin)
+            if heelOffset > offset:
+                offset = heelOffset
+        elif toe:
+            offset = getTailOffset(toe, ez, origin)
+            ballOffset = getHeadOffset(toe, ez, origin)
+            if ballOffset > offset:
+                offset = ballOffset
+            ball = toe.matrix.col[3]
+            y = toe.matrix.col[1]
+            heel = ball - y*foot.length
+            heelOffset = getOffset(heel, ez, origin)
+            if heelOffset > offset:
+                offset = heelOffset
+        else:
+            offset = 0
+    
+        return offset
+    
+    
+    def floorIkFoot(self, rig, plane, scn, frames):
+        root = rig.pose.bones["root"]
+        lleg = rig.pose.bones["foot.ik.L"]
+        rleg = rig.pose.bones["foot.ik.R"]
+        ez,origin,rot = getPlaneInfo(plane)
+    
+        self.fillKeyFrames(lleg, rig, frames, 3, mode='location')
+        self.fillKeyFrames(rleg, rig, frames, 3, mode='location')
+        if self.useHips:
+            self.fillKeyFrames(root, rig, frames, 3, mode='location')
+    
+        nFrames = len(frames)
+        for n,frame in enumerate(frames):
+            scn.frame_set(frame)
+            showProgress(n, frame, nFrames)
+    
+            if self.useLeft:
+                lOffset = self.getIkOffset(rig, ez, origin, lleg)
+                if lOffset > 0:
+                    addOffset(lleg, lOffset, ez)
+            else:
+                lOffset = 0
+            if self.useRight:
+                rOffset = self.getIkOffset(rig, ez, origin, rleg)
+                if rOffset > 0:
+                    addOffset(rleg, rOffset, ez)
+            else:
+                rOffset = 0
+    
+            hOffset = min(lOffset,rOffset)
+            if hOffset > 0 and self.useHips:
+                addOffset(root, hOffset, ez)
+    
+    
+    def findBoneFCurve(self, pb, rig, index, mode='rotation'):
+        from .edit import findFCurve
+        if mode == 'rotation':
+            if pb.rotation_mode == 'QUATERNION':
+                mode = "rotation_quaternion"
+            else:
+                mode = "rotation_euler"
+        path = 'pose.bones["%s"].%s' % (pb.name, mode)
+    
+        if rig.animation_data is None:
+            return None
+        action = rig.animation_data.action
+        if action is None:
+            return None
+        return findFCurve(path, index, action.fcurves)
+    
+    
+    def fillKeyFrames(self, pb, rig, frames, nIndices, mode='rotation'):
+        for index in range(nIndices):
+            fcu = self.findBoneFCurve(pb, rig, index, mode)
+            if fcu is None:
+                return
+            for frame in frames:
+                y = fcu.evaluate(frame)
+                fcu.keyframe_points.insert(frame, y, options={'FAST'})
+    
+    
+    def getIkOffset(self, rig, ez, origin, leg):
+        offset = getHeadOffset(leg, ez, origin)
+        tailOffset = getTailOffset(leg, ez, origin)
+        if tailOffset > offset:
+            offset = tailOffset
+        return offset    
+    
+        foot = rig.pose.bones["foot.rev" + suffix]
+        toe = rig.pose.bones["toe.rev" + suffix]
+    
+        ballOffset = getTailOffset(toe, ez, origin)
+        if ballOffset > offset:
+            offset = ballOffset
+    
+        ball = foot.matrix.col[3]
+        y = toe.matrix.col[1]
+        heel = ball + y*foot.length
+        heelOffset = getOffset(heel, ez, origin)
+        if heelOffset > offset:
+            offset = heelOffset
+    
+        return offset
+
 
 #----------------------------------------------------------
 #   Initialize
