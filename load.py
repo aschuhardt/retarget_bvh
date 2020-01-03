@@ -32,7 +32,7 @@ from math import sin, cos
 from mathutils import *
 from bpy.props import *
 
-from . import simplify
+from .simplify import Rescaler
 from .utils import *
 
 
@@ -597,14 +597,13 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, Framed):
 #   class MCP_OT_RenameBvh(BvhOperator):
 #
 
-class MCP_OT_RenameBvh(BvhOperator, IsArmature):
+class MCP_OT_RenameBvh(BvhOperator, IsArmature, Rescaler):
     bl_idname = "mcp.rename_bvh"
     bl_label = "Rename And Rescale BVH Rig"
     bl_description = "Rename bones of active armature and scale it to fit other armature"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        from .simplify import rescaleFCurves
         scn = context.scene
         srcRig = context.object
         trgRig = None
@@ -615,15 +614,15 @@ class MCP_OT_RenameBvh(BvhOperator, IsArmature):
         if not trgRig:
             raise MocapError("No target rig selected")
         renameAndRescaleBvh(context, srcRig, trgRig)
-        if scn.McpRescale:
-            rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
+        if self.useRescale:
+            self.rescaleFCurves(srcRig)
         print("%s renamed" % srcRig.name)
 
 #
 #   class MCP_OT_LoadAndRenameBvh(BvhOperator, ImportHelper, BvhFile):
 #
 
-class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile):
+class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Framed, Rescaler):
     bl_idname = "mcp.load_and_rename_bvh"
     bl_label = "Load And Rename BVH File (.bvh)"
     bl_description = "Load armature from bvh file and rename bones"
@@ -634,14 +633,14 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile):
         return changeTargetData(context.object, context.scene)
     
     def run(self, context):
-        from .simplify import rescaleFCurves
         checkObjectProblems(context)
         scn = context.scene
+        trgRig = context.object
         self.setupFrames(scn)
         srcRig = readBvhFile(context, self.properties.filepath, scn, False, self.startFrame, self.endFrame)
         renameAndRescaleBvh(context, srcRig, trgRig)
-        if scn.McpRescale:
-            rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
+        if self.useRescale:
+            self.rescaleFCurves(srcRig)
         print("%s loaded and renamed" % srcRig.name)
 
     def sequel(self, context, data):

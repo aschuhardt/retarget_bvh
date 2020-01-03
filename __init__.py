@@ -59,10 +59,10 @@ if "bpy" in locals():
     imp.reload(armature)
     imp.reload(source)
     imp.reload(target)
+    imp.reload(simplify)
     imp.reload(load)
     imp.reload(retarget)
     imp.reload(fkik)
-    imp.reload(simplify)
     imp.reload(action)
     imp.reload(loop)
     imp.reload(edit)
@@ -78,10 +78,10 @@ else:
     from . import armature
     from . import source
     from . import target
+    from . import simplify
     from . import load
     from . import retarget
     from . import fkik
-    from . import simplify
     from . import action
     from . import loop
     from . import edit
@@ -115,11 +115,10 @@ class MCP_PT_Main(bpy.types.Panel):
         if scn.McpShowDetailSteps:
             ins = inset(layout)
             ins.operator("mcp.rename_bvh")
+            ins.separator()
             ins.operator("mcp.load_and_rename_bvh")
-
             ins.separator()
             ins.operator("mcp.retarget_mhx")
-
             ins.separator()
             ins.operator("mcp.simplify_fcurves")
             ins.operator("mcp.rescale_fcurves")
@@ -159,8 +158,6 @@ class MCP_PT_Options(bpy.types.Panel):
         if not scn.McpDefaultSS:
             ins.prop(scn, "McpSubsample")
             ins.prop(scn, "McpSSFactor")
-            ins.prop(scn, "McpRescale")
-            ins.prop(scn, "McpRescaleFactor")
             ins.operator("mcp.rescale_fcurves")
 
         layout.separator()
@@ -214,14 +211,8 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             #ins.operator("mcp.limbs_bend_positive")
 
             ins.separator()
-            row = ins.row()
-            row.prop(scn, "McpFixX")
-            row.prop(scn, "McpFixY")
-            row.prop(scn, "McpFixZ")
             ins.operator("mcp.fixate_bone")
-
             ins.separator()
-            ins.prop(scn, "McpRescaleFactor")
             ins.operator("mcp.rescale_fcurves")
 
         layout.separator()

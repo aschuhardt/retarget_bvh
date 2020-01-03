@@ -496,45 +496,70 @@ class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature):
         endProgress("Animation shifted")
 
 
-def fixateBoneFCurves(rig, scn):
-    from .action import getObjectAction
-    act = getObjectAction(rig)
-    if not act:
-        return
-
-    frame = scn.frame_current
-    minTime,maxTime = getMarkedTime(scn)
-    if minTime is None:
-        minTime = -1e6
-    if maxTime is None:
-        maxTime = 1e6
-    fixArray = [False,False,False]
-    if scn.McpFixX:
-        fixArray[0] = True
-    if scn.McpFixY:
-        fixArray[1] = True
-    if scn.McpFixZ:
-        fixArray[2] = True
-
-    for fcu in act.fcurves:
-        (bname, mode) = fCurveIdentity(fcu)
-        pb = rig.pose.bones[bname]
-        if pb.bone.select and isLocation(mode) and fixArray[fcu.array_index]:
-            value = fcu.evaluate(frame)
-            for kp in fcu.keyframe_points:
-                if kp.co[0] >= minTime and kp.co[0] <= maxTime:
-                    kp.co[1] = value
-
-
 class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.fixate_bone"
     bl_label = "Fixate Bone Location"
     bl_description = "Keep bone location fixed (local coordinates)"
     bl_options = {'UNDO'}
 
+    fixX : BoolProperty(
+        name="X",
+        description="Fix Local X Location",
+        default=True)
+
+    fixY : BoolProperty(
+        name="Y",
+        description="Fix Local Y Location",
+        default=True)
+
+    fixZ : BoolProperty(
+        name="Z",
+        description="Fix Local Z Location",
+        default=True)
+
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+
+    def draw(self, context):
+        row = self.layout.row()
+        row.prop(self, "fixX")
+        row.prop(self, "fixY")
+        row.prop(self, "fixZ")
+
+
     def run(self, context):
+        from .action import getObjectAction
         startProgress("Fixate bone locations")
-        fixateBoneFCurves(context.object, context.scene)
+        rig = context.object
+        scn = context.scn    
+        act = getObjectAction(rig)
+        if not act:
+            return
+        frame = scn.frame_current
+        minTime,maxTime = getMarkedTime(scn)
+        if minTime is None:
+            minTime = -1e6
+        if maxTime is None:
+            maxTime = 1e6
+        fixArray = [False,False,False]
+        if self.fixX:
+            fixArray[0] = True
+        if self.fixY:
+            fixArray[1] = True
+        if self.fixZ:
+            fixArray[2] = True
+    
+        for fcu in act.fcurves:
+            (bname, mode) = fCurveIdentity(fcu)
+            pb = rig.pose.bones[bname]
+            if pb.bone.select and isLocation(mode) and fixArray[fcu.array_index]:
+                value = fcu.evaluate(frame)
+                for kp in fcu.keyframe_points:
+                    if kp.co[0] >= minTime and kp.co[0] <= maxTime:
+                        kp.co[1] = value
         endProgress("Bone locations fixed")
 
 #----------------------------------------------------------

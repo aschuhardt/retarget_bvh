@@ -193,16 +193,6 @@ def initialize():
         description="Sample only every n:th frame",
         min=1, default=1)
 
-    bpy.types.Scene.McpRescale = BoolProperty(
-        name="Rescale",
-        description="Rescale F-curves after loading",
-        default=False)
-
-    bpy.types.Scene.McpRescaleFactor = FloatProperty(
-        name="Rescale Factor",
-        description="Factor for rescaling time",
-        min=0.01, max=100, default=1.0)
-
     bpy.types.Scene.McpDefaultSS = BoolProperty(
         name="Use default subsample",
         default=True)
@@ -318,21 +308,6 @@ def initialize():
         name="Output Action Name",
         maxlen=24,
         default="Action")
-
-    bpy.types.Scene.McpFixX = BoolProperty(
-        name="X",
-        description="Fix Local X Location",
-        default=True)
-
-    bpy.types.Scene.McpFixY = BoolProperty(
-        name="Y",
-        description="Fix Local Y Location",
-        default=True)
-
-    bpy.types.Scene.McpFixZ = BoolProperty(
-        name="Z",
-        description="Fix Local Z Location",
-        default=True)
 
     # Edit
 

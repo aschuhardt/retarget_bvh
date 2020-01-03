@@ -52,7 +52,7 @@ from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
-from .simplify import simplifyFCurves, rescaleFCurves
+from .simplify import simplifyFCurves, Rescaler
 from .utils import *
 from .load import BvhFile, MultiFile, Framed
 
@@ -318,6 +318,7 @@ def retargetAnimation(context, srcRig, trgRig):
     nFrames = len(frames)
     setActiveObject(context, trgRig)
     if trgRig.animation_data:
+        print("DAT", trgRig.animation_data, trgRig.animation_data.action)
         trgRig.animation_data.action = None
 
     if isRigify(trgRig):
@@ -483,7 +484,7 @@ class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
         drawObjectProblems(self)
 
 
-class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed):
+class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed, Rescaler):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
@@ -541,8 +542,8 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed
                 limbsBendPositive(trgRig, True, True, (0,1e6))
             if scn.McpDoSimplify:
                 simplifyFCurves(context, trgRig, False, False)
-            if scn.McpRescale:
-                rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
+            if self.useRescale:
+                self.rescaleFCurves(trgRig)
         finally:
             deleteSourceRig(context, srcRig, 'Y_')
         return info

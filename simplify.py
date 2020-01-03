@@ -177,49 +177,54 @@ def iterateFCurves(points, keeps, maxErr):
     return new
 
 #
-#   rescaleFCurves(context, rig, factor):
+#   Rescaler
 #
 
-def rescaleFCurves(context, rig, factor):
-    from .action import getObjectAction
-    act = getObjectAction(context.object)
-    if not act:
-        return
-    for fcu in act.fcurves:
-        rescaleFCurve(fcu, factor)
-    print("Curves rescaled")
-    return
+class Rescaler:
+    useRescale : BoolProperty(
+        name="Rescale",
+        description="Rescale F-curves after loading",
+        default=False)
 
-#
-#   rescaleFCurve(fcu, factor):
-#
+    factor : FloatProperty(
+        name="Rescale Factor",
+        description="Factor for rescaling time",
+        min=0.01, max=100, default=1.0)
 
-def rescaleFCurve(fcu, factor):
-    n = len(fcu.keyframe_points)
-    if n < 2:
-        return
-    (t0,v0) = fcu.keyframe_points[0].co
-    (tn,vn) = fcu.keyframe_points[n-1].co
-    limitData = getFCurveLimits(fcu)
-    (mode, upper, lower, diff) = limitData
+    def rescaleFCurves(self, rig):
+        from .action import getObjectAction
+        act = getObjectAction(rig)
+        if not act:
+            return
+        for fcu in act.fcurves:
+            self.rescaleFCurve(fcu)
+        print("Curves rescaled")
 
-    tm = t0
-    vm = v0
-    inserts = []
-    for pk in fcu.keyframe_points:
-        (tk,vk) = pk.co
-        tn = factor*(tk-t0) + t0
-        if upper:
-            if (vk > upper) and (vm < lower):
-                inserts.append((tm, vm, tn, vk))
-            elif (vm > upper) and (vk < lower):
-                inserts.append((tm, vm, tn,vk))
-        pk.co = (tn,vk)
-        tm = tn
-        vm = vk
+    def rescaleFCurve(self, fcu):
+        n = len(fcu.keyframe_points)
+        if n < 2:
+            return
+        (t0,v0) = fcu.keyframe_points[0].co
+        (tn,vn) = fcu.keyframe_points[n-1].co
+        limitData = getFCurveLimits(fcu)
+        (mode, upper, lower, diff) = limitData
 
-    addFCurveInserts(fcu, inserts, limitData)
-    return
+        tm = t0
+        vm = v0
+        inserts = []
+        for pk in fcu.keyframe_points:
+            (tk,vk) = pk.co
+            tn = self.factor*(tk-t0) + t0
+            if upper:
+                if (vk > upper) and (vm < lower):
+                    inserts.append((tm, vm, tn, vk))
+                elif (vm > upper) and (vk < lower):
+                    inserts.append((tm, vm, tn,vk))
+            pk.co = (tn,vk)
+            tm = tn
+            vm = vk
+
+        addFCurveInserts(fcu, inserts, limitData)
 
 #
 #   getFCurveLimits(fcu):
@@ -280,14 +285,16 @@ class MCP_OT_SimplifyFCurves(BvhOperator, IsArmature):
         scn = context.scene
         simplifyFCurves(context, context.object, scn.McpSimplifyVisible, scn.McpSimplifyMarkers)
 
-class MCP_OT_RescaleFCurves(BvhOperator, IsArmature):
+
+class MCP_OT_RescaleFCurves(BvhPropsOperator, IsArmature, Rescaler):
     bl_idname = "mcp.rescale_fcurves"
     bl_label = "Rescale FCurves"
     bl_options = {'UNDO'}
-
+    
     def run(self, context):
         scn = context.scene
-        rescaleFCurves(context, context.object, scn.McpRescaleFactor)
+        self.useRescale = True
+        self.rescaleFCurves(context.object)
 
 #----------------------------------------------------------
 #   Initialize
