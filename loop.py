@@ -93,7 +93,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
         for n,fcu in enumerate(fcurves):
             (name, mode) = fCurveIdentity(fcu)
             if isRotation(mode):
-                loopFCurve(fcu, minTime, maxTime, scn)
+                self.loopFCurve(fcu, minTime, maxTime, scn)
     
         if self.loopInPlace:
             iknames = [pb.name for pb in self.getIkBoneList(rig)]

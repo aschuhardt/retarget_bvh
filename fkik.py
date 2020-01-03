@@ -385,33 +385,6 @@ class Transferer(Bender):
             act.fcurves.remove(fcu)
     
     
-    def setMhxIk(self, rig, value):
-        if isMhxRig(rig):
-            ikLayers = []
-            fkLayers = []
-            if self.useArms:
-                rig["MhaArmIk_L"] = value
-                rig["MhaArmIk_R"] = value
-                ikLayers += [2,18]
-                fkLayers += [3,19]
-            if self.useLegs:
-                rig["MhaLegIk_L"] = value
-                rig["MhaLegIk_R"] = value
-                ikLayers += [4,20]
-                fkLayers += [5,21]
-    
-            if value:
-                first = ikLayers
-                second = fkLayers
-            else:
-                first = fkLayers
-                second = ikLayers
-            for n in first:
-                rig.data.layers[n] = True
-            for n in second:
-                rig.data.layers[n] = False
-    
-    
     def transferMhxToFk(self, rig, context):
         from .target import getTargetArmature
         from .loop import getActiveFramesBetweenMarkers
@@ -431,7 +404,7 @@ class Transferer(Bender):
         #muteAllConstraints(rig, True)
     
         oldLayers = list(rig.data.layers)
-        self.setMhxIk(rig, 1.0)
+        setMhxIk(rig, self.useArms, self.useLegs, 1.0)
         rig.data.layers = MhxLayers
     
         lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
@@ -454,7 +427,7 @@ class Transferer(Bender):
                 snapFkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
     
         rig.data.layers = oldLayers
-        self.setMhxIk(rig, 0.0)
+        setMhxIk(rig, self.useArms, self.useLegs, 0.0)
         setInterpolation(rig)
         #muteAllConstraints(rig, False)
     
@@ -478,7 +451,7 @@ class Transferer(Bender):
         #muteAllConstraints(rig, True)
     
         oldLayers = list(rig.data.layers)
-        self.setMhxIk(rig, 0.0)
+        setMhxIk(rig, self.useArms, self.useLegs, 0.0)
         rig.data.layers = MhxLayers
     
         lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
@@ -499,7 +472,7 @@ class Transferer(Bender):
                 snapIkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
     
         rig.data.layers = oldLayers
-        self.setMhxIk(rig, 1.0)
+        setMhxIk(rig, self.useArms, self.useLegs, 1.0)
         setInterpolation(rig)
         #muteAllConstraints(rig, False)
 
@@ -673,6 +646,33 @@ def setLocRot(bname, rig):
         pb.keyframe_insert("rotation_euler", group=pb.name)
 
 
+def setMhxIk(rig, useArms, useLegs, value):
+    if isMhxRig(rig):
+        ikLayers = []
+        fkLayers = []
+        if useArms:
+            rig["MhaArmIk_L"] = value
+            rig["MhaArmIk_R"] = value
+            ikLayers += [2,18]
+            fkLayers += [3,19]
+        if useLegs:
+            rig["MhaLegIk_L"] = value
+            rig["MhaLegIk_R"] = value
+            ikLayers += [4,20]
+            fkLayers += [5,21]
+    
+        if value:
+            first = ikLayers
+            second = fkLayers
+        else:
+            first = fkLayers
+            second = ikLayers
+        for n in first:
+            rig.data.layers[n] = True
+        for n in second:
+            rig.data.layers[n] = False
+    
+    
 def setRigifyFKIK(rig, value):
     rig.pose.bones["hand.ik.L"]["ikfk_switch"] = value
     rig.pose.bones["hand.ik.R"]["ikfk_switch"] = value
@@ -698,6 +698,14 @@ def setRigify2FKIK(rig, value):
     torso = rig.pose.bones["torso"]
     torso["head_follow"] = 1.0
     torso["neck_follow"] = 1.0
+
+
+def setRigToFK(rig):    
+    setMhxIk(rig, True, True, 0.0)
+    if isRigify(rig):
+        setRigifyFKIK(rig, 0.0)
+    elif isRigify2(rig):
+        setRigify2FKIK(rig, 1.0)
 
 #------------------------------------------------------------------------
 #   Buttons
@@ -729,11 +737,11 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsArmature, Transferer):
         rig = context.object
         scn = context.scene
         if isMhxRig(rig):
-            transferMhxToFk(rig, context)
+            self.transferMhxToFk(rig, context)
         elif isRigify(rig):
-            transferRigifyToFk(rig, context, ".")
+            self.transferRigifyToFk(rig, context, ".")
         elif isRigify2(rig):
-            transferRigifyToFk(rig, context, "_")
+            self.transferRigifyToFk(rig, context, "_")
         else:
             raise MocapError("Can not transfer to FK with this rig")
         endProgress("Transfer to FK completed")
@@ -757,11 +765,11 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsArmature, Transferer):
         rig = context.object
         scn = context.scene
         if isMhxRig(rig):
-            transferMhxToIk(rig, context)
+            self.transferMhxToIk(rig, context)
         elif isRigify(rig):
-            transferRigifyToIk(rig, context, ".")
+            self.transferRigifyToIk(rig, context, ".")
         elif isRigify2(rig):
-            transferRigifyToIk(rig, context, "_")
+            self.transferRigifyToIk(rig, context, "_")
         else:
             raise MocapError("Can not transfer to IK with this rig")
         endProgress("Transfer to IK completed")
@@ -797,7 +805,7 @@ class MCP_OT_ClearAnimation(BvhOperator, IsArmature, Transferer):
                 value = 1.0
             else:
                 value = 0.0
-            self.setMhxIk(rig, value)
+            setMhxIk(rig, self.useArms, self.useLegs, value)
         elif isRigify(rig):
             self.clearAnimation(rig, context, act, self.type, SnapBonesRigify)
         else:

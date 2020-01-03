@@ -309,23 +309,19 @@ def retargetAnimation(context, srcRig, trgRig):
     from .t_pose import ensureTPoseInited
     from .source import ensureSourceInited, setSourceArmature 
     from .target import ensureTargetInited, getTargetArmature
-    from .fkik import setMhxIk, setRigifyFKIK, setRigify2FKIK
+    from .fkik import setRigToFK
     from .loop import getActiveFrames
 
-    startProgress("Retargeting")
+    startProgress("Retargeting %s => %s" % (srcRig.name, trgRig.name))
+    if srcRig.type != 'ARMATURE':
+        return None,0
     scn = context.scene
-    setMhxIk(trgRig, True, True, 0.0)
     frames = getActiveFrames(srcRig)
     nFrames = len(frames)
     setActiveObject(context, trgRig)
     if trgRig.animation_data:
-        print("DAT", trgRig.animation_data, trgRig.animation_data.action)
         trgRig.animation_data.action = None
-
-    if isRigify(trgRig):
-        setRigifyFKIK(trgRig, 0.0)
-    elif isRigify2(trgRig):
-        setRigify2FKIK(trgRig, 1.0)
+    setRigToFK(trgRig)
 
     if frames:
         scn.frame_current = frames[0]

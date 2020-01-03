@@ -51,21 +51,6 @@ class MultiFile(ImportHelper):
         subtype='DIR_PATH')
 
 
-class Framed:
-    startFrame : IntProperty(
-        name = "Start Frame",
-        description = "Starting frame for the animation",
-        default = 1)
-
-    endFrame : IntProperty(
-        name = "Last Frame",
-        description = "Last frame for the animation",
-        default = 250)
-
-    def draw(self, context):
-        self.layout.prop(self, "startFrame")
-        self.layout.prop(self, "endFrame")
-        
 ###################################################################################
 #    BVH importer.
 #    The importer that comes with Blender had memory leaks which led to instability.
@@ -147,7 +132,24 @@ Frames = 3
 
 Epsilon = 1e-5
 
-class BvhLoader(Framed):
+class BvhLoader:
+    startFrame : IntProperty(
+        name = "Start Frame",
+        description = "Starting frame for the animation",
+        default = 1)
+
+    endFrame : IntProperty(
+        name = "Last Frame",
+        description = "Last frame for the animation",
+        default = 250)
+
+    scale : FloatProperty(
+        name="Scale",
+        description="Scale the BVH by this value",
+        min=0.0001, max=1000000.0,
+        soft_min=0.001, soft_max=100.0,
+        default=0.65)
+
     ssFactor : IntProperty(
         name="Subsample Factor",
         description="Sample only every n:th frame",
@@ -159,8 +161,10 @@ class BvhLoader(Framed):
         default=True)
 
     def draw(self, context):
-        Framed.draw(self, context)
+        self.layout.prop(self, "startFrame")
+        self.layout.prop(self, "endFrame")
         self.layout.separator()
+        self.layout.prop(self, "scale")
         self.layout.prop(self, "useDefaultSS")
         if not self.useDefaultSS:
             self.layout.prop(self, "ssFactor")
@@ -168,7 +172,6 @@ class BvhLoader(Framed):
 
     def readBvhFile(self, context, filepath, scn, scan):
         setCategory("Load Bvh File")
-        scale = scn.McpBvhScale
         frameno = 1
         if scn.McpFlipYAxis:
             flipMatrix = Matrix.Rotation(math.pi, 3, 'X') @ Matrix.Rotation(math.pi, 3, 'Y')
@@ -230,7 +233,7 @@ class BvhLoader(Framed):
                     ended = False
                 elif key == 'OFFSET':
                     (x,y,z) = (float(words[1]), float(words[2]), float(words[3]))
-                    node.offset = scale * flipMatrix @ Vector((x,y,z))
+                    node.offset = self.scale * flipMatrix @ Vector((x,y,z))
                 elif key == 'END':
                     node = CNode(words, node)
                     ended = True
@@ -248,7 +251,7 @@ class BvhLoader(Framed):
                 elif key == '}':
                     if not ended:
                         node = CNode(["End", "Site"], node)
-                        node.offset = scale * flipMatrix @ Vector((0,1,0))
+                        node.offset = self.scale * flipMatrix @ Vector((0,1,0))
                         node = node.parent
                         ended = True
                     level -= 1
@@ -279,7 +282,7 @@ class BvhLoader(Framed):
                     frame <= self.endFrame and
                     frame % ssFactor == 0 and
                     frame < nFrames):
-                    addFrame(words, frameno, nodes, pbones, scale, flipMatrix)
+                    self.addFrame(words, frameno, nodes, pbones, flipMatrix)
                     showProgress(frameno, frame, nFrames, step=200)
                     frameno += 1
                 frame += 1
@@ -297,38 +300,33 @@ class BvhLoader(Framed):
         clearCategory()
         return rig
 
-#
-#    addFrame(words, frame, nodes, pbones, scale, flipMatrix):
-#
 
-def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
-    m = 0
-    first = True
-    flipInv = flipMatrix.inverted()
-    for node in nodes:
-        bname = node.name
-        if bname in pbones.keys():
-            pb = pbones[bname]
-            for (mode, indices) in node.channels:
-                if mode == Location:
-                    vec = Vector((0,0,0))
-                    for (index, sign) in indices:
-                        vec[index] = sign*float(words[m])
-                        m += 1
-                    if first:
-                        pb.location = node.inverse @ (scale * flipMatrix @ vec) - node.head
-                        pb.keyframe_insert('location', frame=frame, group=bname)
-                    first = False
-                elif mode == Rotation:
-                    mats = []
-                    for (axis, sign) in indices:
-                        angle = sign*float(words[m])*Deg2Rad
-                        mats.append(Matrix.Rotation(angle, 3, axis))
-                        m += 1
-                    mat = (node.inverse @ flipMatrix) @ mats[0] @ mats[1] @ mats[2] @ (flipInv @ node.matrix)
-                    insertRotation(pb, mat, frame)
-
-    return
+    def addFrame(self, words, frame, nodes, pbones, flipMatrix):
+        m = 0
+        first = True
+        flipInv = flipMatrix.inverted()
+        for node in nodes:
+            bname = node.name
+            if bname in pbones.keys():
+                pb = pbones[bname]
+                for (mode, indices) in node.channels:
+                    if mode == Location:
+                        vec = Vector((0,0,0))
+                        for (index, sign) in indices:
+                            vec[index] = sign*float(words[m])
+                            m += 1
+                        if first:
+                            pb.location = node.inverse @ (self.scale * flipMatrix @ vec) - node.head
+                            pb.keyframe_insert('location', frame=frame, group=bname)
+                        first = False
+                    elif mode == Rotation:
+                        mats = []
+                        for (axis, sign) in indices:
+                            angle = sign*float(words[m])*Deg2Rad
+                            mats.append(Matrix.Rotation(angle, 3, axis))
+                            m += 1
+                        mat = (node.inverse @ flipMatrix) @ mats[0] @ mats[1] @ mats[2] @ (flipInv @ node.matrix)
+                        insertRotation(pb, mat, frame)
 
 #
 #    channelYup(word):
@@ -504,14 +502,7 @@ def deleteObject(context, ob):
 #    RigScaler
 #
 
-class RigScaler:
-    scale : FloatProperty(
-        name="Scale",
-        description="Scale the BVH by this value",
-        min=0.0001, max=1000000.0,
-        soft_min=0.001, soft_max=100.0,
-        default=0.65)
-
+class RigScaler():
     useAutoScale : BoolProperty(
         name="Auto Scale",
         description="Rescale skeleton to match target",

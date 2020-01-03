@@ -199,7 +199,7 @@ class MCP_OT_OffsetToe(BvhOperator, IsArmature):
     bl_description = "Keep toes below balls"
     bl_options = {'UNDO'}
 
-    def execute(self, context):
+    def run(self, context):
         from .target import getTargetArmature
         getTargetArmature(context.object, context)
         toesBelowBall(context)
@@ -273,9 +273,9 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature):
             updateScene()
             offset = 0
             if self.useLeft:
-                offset = getFkOffset(rig, ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
+                offset = self.getFkOffset(rig, ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
             if self.useRight:
-                rOffset = getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
+                rOffset = self.getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
                 if rOffset > offset:
                     offset = rOffset
             showProgress(n, frame, nFrames)
@@ -343,26 +343,9 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature):
                 addOffset(root, hOffset, ez)
     
     
-    def findBoneFCurve(self, pb, rig, index, mode='rotation'):
-        from .edit import findFCurve
-        if mode == 'rotation':
-            if pb.rotation_mode == 'QUATERNION':
-                mode = "rotation_quaternion"
-            else:
-                mode = "rotation_euler"
-        path = 'pose.bones["%s"].%s' % (pb.name, mode)
-    
-        if rig.animation_data is None:
-            return None
-        action = rig.animation_data.action
-        if action is None:
-            return None
-        return findFCurve(path, index, action.fcurves)
-    
-    
     def fillKeyFrames(self, pb, rig, frames, nIndices, mode='rotation'):
         for index in range(nIndices):
-            fcu = self.findBoneFCurve(pb, rig, index, mode)
+            fcu = findBoneFCurve(pb, rig, index, mode)
             if fcu is None:
                 return
             for frame in frames:
@@ -393,6 +376,24 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature):
     
         return offset
 
+
+def findBoneFCurve(pb, rig, index, mode='rotation'):
+    from .edit import findFCurve
+    if mode == 'rotation':
+        if pb.rotation_mode == 'QUATERNION':
+            mode = "rotation_quaternion"
+        else:
+            mode = "rotation_euler"
+    path = 'pose.bones["%s"].%s' % (pb.name, mode)
+    
+    if rig.animation_data is None:
+        return None
+    action = rig.animation_data.action
+    if action is None:
+        return None
+    return findFCurve(path, index, action.fcurves)
+    
+    
 
 #----------------------------------------------------------
 #   Initialize
