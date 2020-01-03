@@ -70,13 +70,8 @@ def listAllActions(context):
     bpy.types.Scene.McpActions = EnumProperty(
         items = _actions,
         name = "Actions")
-    bpy.types.Scene.McpFirstAction = EnumProperty(
-        items = _actions,
-        name = "First action")
-    bpy.types.Scene.McpSecondAction = EnumProperty(
-        items = _actions,
-        name = "Second action")
     print("Actions declared")
+    return _actions
 
 
 def findActionNumber(name):

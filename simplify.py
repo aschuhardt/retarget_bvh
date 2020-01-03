@@ -37,19 +37,19 @@ from .utils import *
 #    Simplifier
 #
 
-class Simplifier:
+class FCurvesGetter:
     useSimplify : BoolProperty(
         name="Simplify F-Curves",
         description="Simplify F-curves",
         default=False)
 
     useVisible : BoolProperty(
-        name="Only Visible",
+        name="Only Visible F-Curves",
         description="Simplify only visible F-curves",
         default=False)
 
     useSelected : BoolProperty(
-        name="Only Selected",
+        name="Only Selected Bones",
         description="Simplify only F-curves for selected bones",
         default=False)
 
@@ -58,44 +58,12 @@ class Simplifier:
         description="Simplify only between markers",
         default=False)
 
-    maxErrLoc : FloatProperty(
-        name="Max Loc Error",
-        description="Max error for location FCurves when doing simplification",
-        min=0.001,
-        default=0.01)
-
-    maxErrRot : FloatProperty(
-        name="Max Rot Error",
-        description="Max error for rotation (degrees) FCurves when doing simplification",
-        min=0.001,
-        default=0.1)
-
-
     def draw(self, context):
         self.layout.prop(self, "useVisible")
         self.layout.prop(self, "useSelected")
         self.layout.prop(self, "useMarkers")
-        self.layout.prop(self, "maxErrLoc")
-        self.layout.prop(self, "maxErrRot")
 
 
-    def simplifyFCurves(self, context, rig):
-        from .action import getObjectAction
-        scn = context.scene
-        act = getObjectAction(rig)
-        if not act:
-            return
-        (fcurves, minTime, maxTime) = self.getActionFCurves(act, rig, scn)
-        if not fcurves:
-            return
-    
-        for fcu in fcurves:
-            self.simplifyFCurve(fcu, rig.animation_data.action, minTime, maxTime)
-        setInterpolation(rig)
-        print("Curves simplified")
-        return
-    
-    
     def getActionFCurves(self, act, rig, scn):
         from .loop import getMarkedTime
         
@@ -129,7 +97,42 @@ class Simplifier:
             (minTime, maxTime) = ('All', 0)
         return (fcurves, minTime, maxTime)
     
+
+class Simplifier(FCurvesGetter):
+    maxErrLoc : FloatProperty(
+        name="Max Loc Error",
+        description="Max error for location FCurves when doing simplification",
+        min=0.001,
+        default=0.01)
+
+    maxErrRot : FloatProperty(
+        name="Max Rot Error",
+        description="Max error for rotation (degrees) FCurves when doing simplification",
+        min=0.001,
+        default=0.1)
+
+    def draw(self, context):
+        FCurvesGetter.draw(self, context)
+        self.layout.prop(self, "maxErrLoc")
+        self.layout.prop(self, "maxErrRot")
+
+
+    def simplifyFCurves(self, context, rig):
+        from .action import getObjectAction
+        scn = context.scene
+        act = getObjectAction(rig)
+        if not act:
+            return
+        (fcurves, minTime, maxTime) = self.getActionFCurves(act, rig, scn)
+        if not fcurves:
+            return
     
+        for fcu in fcurves:
+            self.simplifyFCurve(fcu, rig.animation_data.action, minTime, maxTime)
+        setInterpolation(rig)
+        print("Curves simplified")
+    
+        
     def splitFCurvePoints(self, fcu, minTime, maxTime):
         if minTime == 'All':
             points = fcu.keyframe_points

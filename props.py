@@ -161,44 +161,6 @@ def initialize():
         description="Adjust XY coordinates of IK handle",
         default=True)
 
-    # Loop
-
-    bpy.types.Scene.McpLoopBlendRange = IntProperty(
-        name="Blend Range",
-        min=1,
-        default=5)
-
-    bpy.types.Scene.McpLoopInPlace = BoolProperty(
-        name="Loop in place",
-        description="Remove Location F-curves",
-        default=False)
-
-    bpy.types.Scene.McpLoopZInPlace = BoolProperty(
-        name="In Place Affects Z",
-        default=False)
-
-    bpy.types.Scene.McpRepeatNumber = IntProperty(
-        name="Repeat Number",
-        min=1,
-        default=1)
-
-    bpy.types.Scene.McpFirstEndFrame = IntProperty(
-        name="First End Frame",
-        default=1)
-
-    bpy.types.Scene.McpSecondStartFrame = IntProperty(
-        name="Second Start Frame",
-        default=1)
-
-    bpy.types.Scene.McpActionTarget = EnumProperty(
-        items = [('Stitch new', 'Stitch new', 'Stitch new'),
-                 ('Prepend second', 'Prepend second', 'Prepend second')],
-        name = "Action Target")
-
-    bpy.types.Scene.McpOutputActionName = StringProperty(
-        name="Output Action Name",
-        maxlen=24,
-        default="Action")
 
     # Edit
 

@@ -225,32 +225,8 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         layout.prop(scn, "McpShowLoop")
         if scn.McpShowLoop:
             ins = inset(layout)
-            ins.prop(scn, "McpLoopBlendRange")
-            ins.prop(scn, "McpLoopInPlace")
             ins.operator("mcp.loop_fcurves")
-
-            ins.separator()
-            ins.prop(scn, "McpRepeatNumber")
             ins.operator("mcp.repeat_fcurves")
-
-        layout.separator()
-        layout.prop(scn, "McpShowStitch")
-        if scn.McpShowStitch:
-            ins = inset(layout)
-            ins.operator("mcp.update_action_list")
-            ins.separator()
-            ins.prop(scn, "McpFirstAction")
-            split = ins.split(factor=0.75)
-            split.prop(scn, "McpFirstEndFrame")
-            split.operator("mcp.set_current_action").prop = "McpFirstAction"
-            ins.separator()
-            ins.prop(scn, "McpSecondAction")
-            split = ins.split(factor=0.75)
-            split.prop(scn, "McpSecondStartFrame")
-            split.operator("mcp.set_current_action").prop = "McpSecondAction"
-            ins.separator()
-            ins.prop(scn, "McpLoopBlendRange")
-            ins.prop(scn, "McpOutputActionName")
             ins.operator("mcp.stitch_actions")
 
 ########################################################################
