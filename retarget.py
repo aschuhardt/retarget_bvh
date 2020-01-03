@@ -52,7 +52,7 @@ from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
-from .simplify import simplifyFCurves, Rescaler
+from .simplify import Simplifier, Rescaler
 from .utils import *
 from .load import BvhFile, MultiFile, Framed
 
@@ -484,7 +484,7 @@ class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
         drawObjectProblems(self)
 
 
-class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed, Rescaler):
+class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed, Rescaler, Simplifier):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
@@ -499,6 +499,23 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed
         name = "NLA Spacing",
         description = "Number of empty keyframes between NLA actions",
         default = 1)
+
+
+    def draw(self, context):
+        Framed.draw(self, context)
+        self.layout.separator()
+        self.layout.prop(self, "useRescale")
+        if self.useRescale:
+            Rescaler.draw(self, context)
+        self.layout.separator()
+        self.layout.prop(self, "useSimplify")
+        if self.useSimplify:
+            Simplifier.draw(self, context)
+        self.layout.separator()
+        self.layout.prop(self, "useNLA")
+        if self.useNLA:
+            self.layout.prop(self, "spacing")
+        
                          
     def prequel(self, context):
         data = changeTargetData(context.object, context.scene)
@@ -540,8 +557,8 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed
             scn = context.scene
             if scn.McpDoBendPositive:
                 limbsBendPositive(trgRig, True, True, (0,1e6))
-            if scn.McpDoSimplify:
-                simplifyFCurves(context, trgRig, False, False)
+            if self.useSimplify:
+                self.simplifyFCurves(context, trgRig)
             if self.useRescale:
                 self.rescaleFCurves(trgRig)
         finally:
@@ -557,7 +574,6 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, Framed
 
 
     def invoke(self, context, event):
-        self.setupFrames(context.scene)
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 

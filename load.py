@@ -61,12 +61,11 @@ class Framed:
         name = "Last Frame",
         description = "Last frame for the animation",
         default = 250)
-             
-    def setupFrames(self, scn):
-        self.startFrame = scn.McpStartFrame
-        self.endFrame = scn.McpEndFrame
-            
 
+    def draw(self, context):
+        self.layout.prop(self, "startFrame")
+        self.layout.prop(self, "endFrame")
+        
 ###################################################################################
 #    BVH importer.
 #    The importer that comes with Blender had memory leaks which led to instability.
@@ -589,7 +588,6 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, Framed):
             readBvhFile(context, filepath, context.scene, False, self.startFrame, self.endFrame)
 
     def invoke(self, context, event):
-        self.setupFrames(context.scene)
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
@@ -627,7 +625,7 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Fr
     bl_label = "Load And Rename BVH File (.bvh)"
     bl_description = "Load armature from bvh file and rename bones"
     bl_options = {'UNDO'}
-    
+
     def prequel(self, context):
         from .retarget import changeTargetData
         return changeTargetData(context.object, context.scene)
@@ -636,7 +634,6 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Fr
         checkObjectProblems(context)
         scn = context.scene
         trgRig = context.object
-        self.setupFrames(scn)
         srcRig = readBvhFile(context, self.properties.filepath, scn, False, self.startFrame, self.endFrame)
         renameAndRescaleBvh(context, srcRig, trgRig)
         if self.useRescale:

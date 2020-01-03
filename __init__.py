@@ -115,11 +115,8 @@ class MCP_PT_Main(bpy.types.Panel):
         if scn.McpShowDetailSteps:
             ins = inset(layout)
             ins.operator("mcp.rename_bvh")
-            ins.separator()
             ins.operator("mcp.load_and_rename_bvh")
-            ins.separator()
             ins.operator("mcp.retarget_mhx")
-            ins.separator()
             ins.operator("mcp.simplify_fcurves")
             ins.operator("mcp.rescale_fcurves")
 
@@ -140,10 +137,6 @@ class MCP_PT_Options(bpy.types.Panel):
         scn = context.scene
         rig = context.object
 
-        layout.prop(scn, "McpStartFrame")
-        layout.prop(scn, "McpEndFrame")
-        layout.separator()
-
         layout.prop(scn, "McpAutoScale")
         layout.prop(scn, "McpBvhScale")
         layout.prop(scn, "McpUseLimits")
@@ -159,15 +152,6 @@ class MCP_PT_Options(bpy.types.Panel):
             ins.prop(scn, "McpSubsample")
             ins.prop(scn, "McpSSFactor")
             ins.operator("mcp.rescale_fcurves")
-
-        layout.separator()
-        layout.label(text="Simplification")
-        ins = inset(layout)
-        ins.prop(scn, "McpDoSimplify")
-        ins.prop(scn, "McpErrorLoc")
-        ins.prop(scn, "McpErrorRot")
-        ins.prop(scn, "McpSimplifyVisible")
-        ins.prop(scn, "McpSimplifyMarkers")
 
 
 ########################################################################

@@ -141,16 +141,6 @@ def initialize():
         description="Restrict angles to Limit Rotation constraints",
         default=True)
 
-    bpy.types.Scene.McpStartFrame = IntProperty(
-        name="Start Frame",
-        description="Default starting frame for the animation",
-        default=1)
-
-    bpy.types.Scene.McpEndFrame = IntProperty(
-        name="Last Frame",
-        description="Default last frame for the animation",
-        default=250)
-
     bpy.types.Scene.McpRot90Anim = BoolProperty(
         name="Rotate 90 deg",
         description="Rotate 90 degress so Z points up",
@@ -165,11 +155,6 @@ def initialize():
         name="Flix Y Axis",
         description="Rotate 180 degress so Y points down (for Ni-Mate)",
         default=False)
-
-    bpy.types.Scene.McpDoSimplify = BoolProperty(
-        name="Simplify FCurves",
-        description="Simplify FCurves",
-        default=True)
 
     bpy.types.Object.McpIsTargetRig = BoolProperty(
         name="Is Target Rig",
@@ -196,30 +181,6 @@ def initialize():
     bpy.types.Scene.McpDefaultSS = BoolProperty(
         name="Use default subsample",
         default=True)
-
-    # Simplify
-
-    bpy.types.Scene.McpSimplifyVisible = BoolProperty(
-        name="Only Visible",
-        description="Simplify only visible F-curves",
-        default=False)
-
-    bpy.types.Scene.McpSimplifyMarkers = BoolProperty(
-        name="Only Between Markers",
-        description="Simplify only between markers",
-        default=False)
-
-    bpy.types.Scene.McpErrorLoc = FloatProperty(
-        name="Max Loc Error",
-        description="Max error for location FCurves when doing simplification",
-        min=0.001,
-        default=0.01)
-
-    bpy.types.Scene.McpErrorRot = FloatProperty(
-        name="Max Rot Error",
-        description="Max error for rotation (degrees) FCurves when doing simplification",
-        min=0.001,
-        default=0.1)
 
     # Inverse kinematics
 
