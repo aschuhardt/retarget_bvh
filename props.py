@@ -61,6 +61,46 @@ class MCP_OT_Batch(bpy.types.Operator):
         return{"FINISHED"}
 
 #----------------------------------------------------------
+#   Source armature
+#----------------------------------------------------------
+
+class Source:
+    useAutoSource : BoolProperty(
+        name = "Auto Source",
+        description = "Find source rig automatically",
+        default = True)
+        
+    def draw(self, context):
+        self.layout.prop(self, "useAutoSource")
+        if not self.useAutoSource:
+            self.layout.prop(context.scene, "McpSourceRig")
+        self.layout.separator()
+
+    def findSource(self, context, rig):
+        from .source import findSourceArmature
+        return findSourceArmature(context, rig, self.useAutoSource)
+
+#----------------------------------------------------------
+#   Target armature
+#----------------------------------------------------------
+
+class Target:
+    useAutoTarget : BoolProperty(
+        name = "Auto Target",
+        description = "Find target rig automatically",
+        default = True)
+
+    def draw(self, context):
+        self.layout.prop(self, "useAutoTarget")
+        if not self.useAutoTarget:
+            self.layout.prop(context.scene, "McpTargetRig")
+        self.layout.separator()
+
+    def findTarget(self, context, rig):
+        from .target import findTargetArmature
+        return findTargetArmature(context, rig, self.useAutoTarget)
+
+#----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 

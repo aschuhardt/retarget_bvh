@@ -36,6 +36,9 @@ from mathutils import Quaternion, Matrix
 from .utils import *
 from .io_json import *
 
+#------------------------------------------------------------------
+#   
+#------------------------------------------------------------------
 
 _t_poses = {}
 
@@ -49,11 +52,48 @@ def ensureTPoseInited(scn):
         initSourceTPose(scn)
         initTargetTPose(scn)
 
+#------------------------------------------------------------------
+#   Classes
+#------------------------------------------------------------------
 
 class JsonFile:
     filename_ext = ".json"
     filter_glob : StringProperty(default="*.json", options={'HIDDEN'})
     filepath : StringProperty(name="File Path", description="Filepath to json file", maxlen=1024, default="")
+
+
+class Rigger:
+    autoRig : BoolProperty(
+        name = "Auto Rig",
+        description = "Find rig automatically",
+        default = True)
+
+    def draw(self, context):
+        self.layout.prop(self, "autoRig")
+        
+            
+    def initRig(self, context):
+        from .target import findTargetArmature
+        from .source import findSourceArmature
+        from .fkik import setRigifyFKIK, setRigify2FKIK
+    
+        rig = context.object
+        pose = [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
+    
+        if rig.McpIsSourceRig:
+            findSourceArmature(context, rig, self.autoRig)
+        else:
+            findTargetArmature(context, rig, self.autoRig)
+
+        for pb,mat in pose:
+            pb.matrix_basis = mat
+
+        if isRigify(rig):
+            setRigifyFKIK(rig, 0.0)
+        elif isRigify2(rig):
+            setRigify2FKIK(rig, 1.0)
+
+        return rig
 
 #------------------------------------------------------------------
 #   Define current pose as rest pose
@@ -111,14 +151,14 @@ def setShapeKey(ob, name, value):
     skey.value = value
 
 
-class MCP_OT_RestCurrentPose(BvhOperator, IsArmature):
+class MCP_OT_RestCurrentPose(BvhPropsOperator, IsArmature, Rigger):
     bl_idname = "mcp.rest_current_pose"
     bl_label = "Current Pose => Rest Pose"
     bl_description = "Change rest pose to current pose"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        initRig(context)
+        self.initRig(context)
         applyRestPose(context, 1.0)
         print("Set current pose to rest pose")
 
@@ -216,14 +256,14 @@ def putInTPose(rig, tpname, context):
         setTPose(rig, struct)
 
 
-class MCP_OT_PutInTPose(BvhOperator, IsArmature):
+class MCP_OT_PutInTPose(BvhPropsOperator, IsArmature, Rigger):
     bl_idname = "mcp.put_in_t_pose"
     bl_label = "Put In T-pose"
     bl_description = "Put the character into T-pose"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        rig = initRig(context)
+        rig = self.initRig(context)
         putInTPose(rig, context.scene.McpTargetTPose, context)
         print("Pose set to T-pose")
 
@@ -247,7 +287,7 @@ def defineTPose(rig):
     rig.McpTPoseDefined = True
 
 
-class MCP_OT_DefineTPose(BvhOperator, IsArmature):
+class MCP_OT_DefineTPose(BvhPropsOperator, IsArmature, Rigger):
     bl_idname = "mcp.define_t_pose"
     bl_label = "Define T-pose"
     bl_description = "Define T-pose as current pose"
@@ -258,7 +298,7 @@ class MCP_OT_DefineTPose(BvhOperator, IsArmature):
     def run(self, context):
         if self.problems:
             return
-        rig = initRig(context)
+        rig = self.initRig(context)
         defineTPose(rig)
         print("T-pose defined as current pose")
 
@@ -280,14 +320,14 @@ def setRestPose(rig):
         pb.matrix_basis = unit
 
 
-class MCP_OT_UndefineTPose(BvhOperator, IsArmature):
+class MCP_OT_UndefineTPose(BvhPropsOperator, IsArmature, Rigger):
     bl_idname = "mcp.undefine_t_pose"
     bl_label = "Undefine T-pose"
     bl_description = "Remove definition of T-pose"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        rig = initRig(context)
+        rig = self.initRig(context)
         rig.McpTPoseDefined = False
         quat = Quaternion()
         for pb in rig.pose.bones:            
@@ -333,14 +373,14 @@ def getBoneName(rig, name):
             return ""
 
 
-class MCP_OT_LoadPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
+class MCP_OT_LoadPose(BvhPropsOperator, IsArmature, ExportHelper, JsonFile, Rigger):
     bl_idname = "mcp.load_pose"
     bl_label = "Load Pose"
     bl_description = "Load pose from file"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        rig = initRig(context)
+        rig = self.initRig(context)
         filename = os.path.relpath(self.filepath, os.path.dirname(__file__))
         loadPose(rig, filename)
 
@@ -388,33 +428,6 @@ class MCP_OT_SavePose(BvhOperator, IsArmature, ExportHelper, JsonFile):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
-#------------------------------------------------------------------
-#   Utils
-#------------------------------------------------------------------
-
-def initRig(context):
-    from .target import getTargetArmature
-    from .source import findSrcArmature
-    from .fkik import setRigifyFKIK, setRigify2FKIK
-
-    rig = context.object
-    pose = [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
-
-    if rig.McpIsSourceRig:
-        findSrcArmature(context, rig)
-    else:
-        getTargetArmature(rig, context)
-
-    for pb,mat in pose:
-        pb.matrix_basis = mat
-
-    if isRigify(rig):
-        setRigifyFKIK(rig, 0.0)
-    elif isRigify2(rig):
-        setRigify2FKIK(rig, 1.0)
-
-    return rig
 
 #----------------------------------------------------------
 #   T-pose initialization

@@ -133,10 +133,10 @@ def ensureTargetInited(scn):
         initTargets(scn)
 
 #
-#   getTargetArmature(rig, context):
+#   findTargetArmature(context, rig, auto):
 #
 
-def getTargetArmature(rig, context):
+def findTargetArmature(context, rig, auto):
     from .t_pose import putInRestPose
     global _targetInfo
 
@@ -144,7 +144,7 @@ def getTargetArmature(rig, context):
     setCategory("Identify Target Rig")
     ensureTargetInited(scn)
 
-    if scn.McpTargetRig == "Automatic":
+    if auto or scn.McpTargetRig == "Automatic":
         name = guessTargetArmatureFromList(rig, scn)
     else:
         name = scn.McpTargetRig
@@ -300,7 +300,7 @@ class MCP_OT_GetTargetRig(BvhOperator, IsArmature):
     
     def run(self, context):
         context.scene.McpTargetRig = "Automatic"        
-        getTargetArmature(context.object, context)
+        findTargetArmature(context, context.object, True)
         
     def sequel(self, context, data):
         from .retarget import restoreTargetData

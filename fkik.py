@@ -87,7 +87,7 @@ class Bender:
                     kp.co[1] = y0
 
 
-class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender):
+class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, Target):
     bl_idname = "mcp.limbs_bend_positive"
     bl_label = "Bend Limbs Positive"
     bl_description = "Ensure that limbs' X rotation is positive."
@@ -98,12 +98,11 @@ class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender):
         return (rig, list(rig.data.layers))
         
     def run(self, context):
-        from .target import getTargetArmature
         from .loop import getActiveFramesBetweenMarkers
 
         scn = context.scene
         rig = context.object
-        getTargetArmature(rig, context)
+        self.findTarget(context, rig)
         frames = getActiveFramesBetweenMarkers(rig, scn)
         self.limbsBendPositive(rig, frames)
         print("Limbs bent positive")
@@ -339,7 +338,7 @@ def muteConstraints(constraints, value):
         cns.mute = value
 
 
-class Transferer(Bender):
+class Transferer(Bender, Target):
     useArms : BoolProperty(
         name="Include Arms",
         description="Include arms in FK/IK snapping",
@@ -353,13 +352,12 @@ class Transferer(Bender):
     def draw(self, context):
         self.layout.prop(self, "useArms")
         self.layout.prop(self, "useLegs")
+        Target.draw(self, context)
 
         
     def clearAnimation(self, rig, context, act, type, snapBones):
-        from .target import getTargetArmature
-    
         scn = context.scene
-        getTargetArmature(rig, context)
+        self.findTarget(context, rig)
     
         ikBones = []
         if self.useArms:
@@ -386,11 +384,10 @@ class Transferer(Bender):
     
     
     def transferMhxToFk(self, rig, context):
-        from .target import getTargetArmature
         from .loop import getActiveFramesBetweenMarkers
     
         scn = context.scene
-        getTargetArmature(rig, context)
+        self.findTarget(context, rig)
     
         lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
         lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
@@ -433,11 +430,10 @@ class Transferer(Bender):
     
     
     def transferMhxToIk(self, rig, context):
-        from .target import getTargetArmature
         from .loop import getActiveFramesBetweenMarkers
     
         scn = context.scene
-        getTargetArmature(rig, context)
+        self.findTarget(context, rig)
     
         lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
         lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")

@@ -34,6 +34,7 @@ from bpy.props import *
 
 from .simplify import TimeScaler
 from .utils import *
+from .props import Source, Target
 
 
 class BvhFile:
@@ -272,7 +273,6 @@ class BvhLoader:
                     frame = 0
                     frameno = 1
     
-                    #source.findSrcArmature(context, rig)
                     bpy.ops.object.mode_set(mode='POSE')
                     pbones = rig.pose.bones
                     for pb in pbones:
@@ -498,20 +498,21 @@ def deleteObject(context, ob):
     bpy.ops.object.delete(use_global=False)
     del ob
 
-#
-#    RigScaler
-#
+#----------------------------------------------------------
+#   Renamer
+#----------------------------------------------------------
 
-class RigScaler():
+class BvhRenamer(Source, Target):
     useAutoScale : BoolProperty(
         name="Auto Scale",
         description="Rescale skeleton to match target",
         default=True)
-
+        
     def draw(self, context):
         self.layout.prop(self, "useAutoScale")
         if not self.useAutoScale:
             self.layout.prop(self, "scale")
+        self.layout.separator()
 
     
     def rescaleRig(self, trgRig, srcRig):
@@ -550,16 +551,14 @@ class RigScaler():
         if srcRig.McpRenamed:
             raise MocapError("%s already renamed and rescaled." % srcRig.name)
     
-        from .source import findSrcArmature
-        from .target import getTargetArmature
         from .t_pose import putInTPose
         
         scn = context.scene
         scn.frame_current = 0
         setActiveObject(context, srcRig)
         #(srcRig, srcBones, action) =  renameBvhRig(rig, filepath)
-        getTargetArmature(trgRig, context)
-        findSrcArmature(context, srcRig)
+        self.findTarget(context, trgRig)
+        self.findSource(context, srcRig)
         renameBones(srcRig, context)
         putInTPose(srcRig, scn.McpSourceTPose, context)
         setInterpolation(srcRig)
@@ -617,14 +616,14 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
 #   class MCP_OT_RenameBvh(BvhOperator):
 #
 
-class MCP_OT_RenameBvh(BvhOperator, IsArmature, TimeScaler, RigScaler):
+class MCP_OT_RenameBvh(BvhOperator, IsArmature, TimeScaler, BvhRenamer):
     bl_idname = "mcp.rename_bvh"
     bl_label = "Rename And Rescale BVH Rig"
     bl_description = "Rename bones of active armature and scale it to fit other armature"
     bl_options = {'UNDO'}
 
     def draw(self, context):
-        RigScaler.draw(self, context)
+        BvhRenamer.draw(self, context)
         ReScaler.draw(self, context)
     
     def run(self, context):
@@ -646,7 +645,7 @@ class MCP_OT_RenameBvh(BvhOperator, IsArmature, TimeScaler, RigScaler):
 #   class MCP_OT_LoadAndRenameBvh(BvhOperator, ImportHelper, BvhFile):
 #
 
-class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, RigScaler, TimeScaler):
+class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, BvhRenamer, TimeScaler):
     bl_idname = "mcp.load_and_rename_bvh"
     bl_label = "Load And Rename BVH File (.bvh)"
     bl_description = "Load armature from bvh file and rename bones"
@@ -655,7 +654,7 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Bv
     def draw(self, context):
         BvhLoader.draw(self, context)
         self.layout.separator()
-        RigScaler.draw(self, context)
+        BvhRenamer.draw(self, context)
         self.layout.separator()
         self.layout.prop(self, "useTimeScale")
         if self.useTimeScale:

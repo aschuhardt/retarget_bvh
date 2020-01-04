@@ -30,6 +30,7 @@ import bpy
 from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
 from .utils import *
+from .props import Target
 
 #-------------------------------------------------------------
 #  Plane
@@ -193,15 +194,14 @@ def keepToeRotationNegative(pmat, scn):
     return pmat
 
 
-class MCP_OT_OffsetToe(BvhOperator, IsArmature):
+class MCP_OT_OffsetToe(BvhOperator, IsArmature, Target):
     bl_idname = "mcp.offset_toe"
     bl_label = "Offset Toes"
     bl_description = "Keep toes below balls"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        from .target import getTargetArmature
-        getTargetArmature(context.object, context)
+        self.findTarget(context, context.object)
         toesBelowBall(context)
 
 #-------------------------------------------------------------
@@ -220,7 +220,7 @@ def getFkFeetBones(rig, suffix):
     return foot,toe,mBall,mToe,mHeel
       
 
-class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature):
+class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
     bl_idname = "mcp.floor_foot"
     bl_label = "Keep Feet Above Floor"
     bl_description = "Keep Feet Above Plane"
@@ -243,10 +243,9 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature):
 
 
     def run(self, context):
-        from .target import getTargetArmature
         from .loop import getActiveFramesBetweenMarkers
         startProgress("Keep feet above floor")
-        getTargetArmature(context.object, context)
+        self.findTarget(context, context.object)
         scn = context.scene
         rig,plane = getRigAndPlane(context)
         try:

@@ -114,19 +114,17 @@ def guessSrcArmatureFromList(rig, scn):
         raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
 
 #
-#   findSrcArmature(context, rig):
+#   findSourceArmature(context, rig, auto):
 #
 
-def findSrcArmature(context, rig):
+def findSourceArmature(context, rig, auto):
     global _srcArmature, _sourceArmatures
     from .t_pose import autoTPose, defineTPose, putInRestPose
     scn = context.scene
 
     setCategory("Identify Source Rig")
     ensureSourceInited(scn)
-    if scn.McpSourceRig != "Automatic":
-        _srcArmature = _sourceArmatures[scn.McpSourceRig]
-    else:
+    if auto or scn.McpSourceRig == "Automatic":
         amt = _srcArmature = CArmature()
         putInRestPose(rig, True)
         amt.findArmature(rig)
@@ -134,6 +132,8 @@ def findSrcArmature(context, rig):
         #defineTPose(rig)
         _sourceArmatures["Automatic"] = amt
         amt.display("Source")
+    else:
+        _srcArmature = _sourceArmatures[scn.McpSourceRig]
 
     rig.McpArmature = _srcArmature.name
     print("Using matching armature %s." % rig.McpArmature)

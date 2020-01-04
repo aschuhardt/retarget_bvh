@@ -54,7 +54,7 @@ from bpy_extras.io_utils import ImportHelper
 
 from .simplify import Simplifier, TimeScaler
 from .utils import *
-from .load import BvhFile, MultiFile, BvhLoader, RigScaler
+from .load import BvhFile, MultiFile, BvhLoader, BvhRenamer
 from .fkik import Bender
 
 
@@ -305,10 +305,10 @@ def clearMcpProps(rig):
                 del pb[key]
 
 
-def retargetAnimation(context, srcRig, trgRig):
+def retargetAnimation(context, srcRig, trgRig, autoTarget):
     from .t_pose import ensureTPoseInited
     from .source import ensureSourceInited, setSourceArmature 
-    from .target import ensureTargetInited, getTargetArmature
+    from .target import ensureTargetInited, findTargetArmature
     from .fkik import setRigToFK
     from .loop import getActiveFrames
 
@@ -335,7 +335,7 @@ def retargetAnimation(context, srcRig, trgRig):
     print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
     ensureTargetInited(scn)
-    info = getTargetArmature(trgRig, context)
+    info = findTargetArmature(context, trgRig, autoTarget)
     anim = CAnimation(srcRig, trgRig, info, context)
     anim.putInTPoses(context)
 
@@ -448,7 +448,7 @@ def restoreTargetData(data):
 #   Buttons
 #
 
-class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
+class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target):
     bl_idname = "mcp.retarget_mhx"
     bl_label = "Retarget Selected To Active"
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armature"
@@ -458,22 +458,21 @@ class MCP_OT_RetargetMhx(BvhOperator, IsArmature):
         return changeTargetData(context.object, context.scene)
 
     def run(self, context):
-        from .target import getTargetArmature
         from .load import checkObjectProblems
         checkObjectProblems(context)
         trgRig = context.object
         rigList = list(context.selected_objects)
-        getTargetArmature(trgRig, context)
+        self.findTarget(context, trgRig)
         for srcRig in rigList:
             if srcRig != trgRig:
-                retargetAnimation(context, srcRig, trgRig)
+                retargetAnimation(context, srcRig, trgRig, self.useAutoTarget)
                 
                 
     def sequel(self, context, data):
         restoreTargetData(data)
 
 
-class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, RigScaler, TimeScaler, Simplifier, Bender):
+class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, TimeScaler, Simplifier, Bender):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
@@ -495,7 +494,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         self.layout.separator()
         self.layout.prop(self, "useBendPositive")
         self.layout.separator()
-        RigScaler.draw(self, context)
+        BvhRenamer.draw(self, context)
         self.layout.separator()
         self.layout.prop(self, "useTimeScale")
         if self.useTimeScale:
@@ -545,7 +544,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         info = (None, 0)
         try:
             self.renameAndRescaleBvh(context, srcRig, trgRig)
-            info = retargetAnimation(context, srcRig, trgRig)
+            info = retargetAnimation(context, srcRig, trgRig, self.useAutoTarget)
             scn = context.scene
             if self.useBendPositive:
                 self.useKnees = self.useElbows = True
