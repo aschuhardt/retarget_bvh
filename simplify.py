@@ -59,9 +59,12 @@ class FCurvesGetter:
         default=False)
 
     def draw(self, context):
-        self.layout.prop(self, "useVisible")
-        self.layout.prop(self, "useSelected")
-        self.layout.prop(self, "useMarkers")
+        self.layout.prop(self, "useSimplify")
+        if self.useSimplify:
+            self.layout.prop(self, "useVisible")
+            self.layout.prop(self, "useSelected")
+            self.layout.prop(self, "useMarkers")
+        self.layout.separator()
 
 
     def getActionFCurves(self, act, rig, scn):
@@ -236,7 +239,10 @@ class TimeScaler:
         min=0.01, max=100, default=1.0)
 
     def draw(self, context):
-        self.layout.prop(self, "factor")
+        self.layout.prop(self, "useTimeScale")
+        if self.useTimeScale:
+            self.layout.prop(self, "factor")
+        self.layout.separator()
 
 
     def timescaleFCurves(self, rig):

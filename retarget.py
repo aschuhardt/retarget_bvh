@@ -52,6 +52,7 @@ from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
+from .props import Target
 from .simplify import Simplifier, TimeScaler
 from .utils import *
 from .load import BvhFile, MultiFile, BvhLoader, BvhRenamer
@@ -491,19 +492,11 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
 
     def draw(self, context):
         BvhLoader.draw(self, context)
-        self.layout.separator()
+        BvhRenamer.draw(self, context)
         self.layout.prop(self, "useBendPositive")
         self.layout.separator()
-        BvhRenamer.draw(self, context)
-        self.layout.separator()
-        self.layout.prop(self, "useTimeScale")
-        if self.useTimeScale:
-            TimeScaler.draw(self, context)
-        self.layout.separator()
-        self.layout.prop(self, "useSimplify")
-        if self.useSimplify:
-            Simplifier.draw(self, context)
-        self.layout.separator()
+        TimeScaler.draw(self, context)
+        Simplifier.draw(self, context)
         self.layout.prop(self, "useNLA")
         if self.useNLA:
             self.layout.prop(self, "spacing")

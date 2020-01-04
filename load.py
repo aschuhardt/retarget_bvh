@@ -169,6 +169,7 @@ class BvhLoader:
         self.layout.prop(self, "useDefaultSS")
         if not self.useDefaultSS:
             self.layout.prop(self, "ssFactor")
+        self.layout.separator()
 
 
     def readBvhFile(self, context, filepath, scn, scan):
@@ -440,7 +441,7 @@ def renameBones(srcRig, context):
     for (eb, name) in setbones:
         eb.name = name
     #createExtraBones(ebones, trgBones)
-    bpy.ops.object.mode_set(mode='POSE')
+    bpy.ops.object.mode_set(mode='OBJECT')
 
 #
 #    renameBvhRig(srcRig, filepath):
@@ -509,6 +510,8 @@ class BvhRenamer(Source, Target):
         default=True)
         
     def draw(self, context):
+        Source.draw(self, context)
+        Target.draw(self, context)
         self.layout.prop(self, "useAutoScale")
         if not self.useAutoScale:
             self.layout.prop(self, "scale")
@@ -535,7 +538,7 @@ class BvhRenamer(Source, Target):
             oldlen = eb.length
             eb.head *= scale
             eb.tail *= scale
-        bpy.ops.object.mode_set(mode='POSE')
+        bpy.ops.object.mode_set(mode='OBJECT')
         adata = srcRig.animation_data
         if adata is None:
             return
@@ -607,6 +610,7 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
         for file_elem in self.files:
             filepath = os.path.join(self.directory, file_elem.name)
             self.readBvhFile(context, filepath, context.scene, False)
+            bpy.ops.object.mode_set(mode='OBJECT')
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -624,7 +628,7 @@ class MCP_OT_RenameBvh(BvhOperator, IsArmature, TimeScaler, BvhRenamer):
 
     def draw(self, context):
         BvhRenamer.draw(self, context)
-        ReScaler.draw(self, context)
+        TimeScaler.draw(self, context)
     
     def run(self, context):
         scn = context.scene
@@ -639,6 +643,7 @@ class MCP_OT_RenameBvh(BvhOperator, IsArmature, TimeScaler, BvhRenamer):
         self.renameAndRescaleBvh(context, srcRig, trgRig)
         if self.useTimeScale:
             self.timescaleFCurves(srcRig)
+        bpy.ops.object.mode_set(mode='OBJECT')
         print("%s renamed" % srcRig.name)
 
 #
@@ -653,12 +658,8 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Bv
 
     def draw(self, context):
         BvhLoader.draw(self, context)
-        self.layout.separator()
         BvhRenamer.draw(self, context)
-        self.layout.separator()
-        self.layout.prop(self, "useTimeScale")
-        if self.useTimeScale:
-            TimeScaler.draw(self, context)
+        TimeScaler.draw(self, context)
 
     def prequel(self, context):
         from .retarget import changeTargetData
@@ -672,6 +673,7 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Bv
         self.renameAndRescaleBvh(context, srcRig, trgRig)
         if self.useTimeScale:
             self.timescaleFCurves(srcRig)
+        bpy.ops.object.mode_set(mode='OBJECT')
         print("%s loaded and renamed" % srcRig.name)
 
     def sequel(self, context, data):

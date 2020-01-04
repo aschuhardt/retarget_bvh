@@ -232,14 +232,12 @@ class MocapError(Exception):
         global _errorLines
         self.value = value
         _errorLines = (
-            ["Category: %s" % _category] +
             value.split("\n") +
             ["" +
              "For corrective actions see:",
-             "http://www.makehuman.org/doc/node/",
-             "  makewalk_errors_and_corrective_actions.html"]
+             "http://diffeomorphic.blogspot.com/p/bvh-retargeter.html"]
             )
-        print("*** Mocap error ***")
+        print("*** BVH Retargeter Error ***")
         for line in _errorLines:
             print(line)
 
@@ -249,7 +247,7 @@ class MocapError(Exception):
 
 class ErrorOperator(bpy.types.Operator):
     bl_idname = "mcp.error"
-    bl_label = "Mocap error"
+    bl_label = "BVH Retargeter Error"
 
     def execute(self, context):
         clearCategory()

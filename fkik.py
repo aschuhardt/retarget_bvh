@@ -30,6 +30,7 @@ import bpy
 from mathutils import Vector, Matrix
 from bpy.props import *
 from .utils import *
+from .props import Target
 
 #-------------------------------------------------------------
 #   Limbs bend positive
