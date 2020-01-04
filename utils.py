@@ -93,13 +93,6 @@ def isRigify(rig):
 def isRigify2(rig):
     return hasAllBones(["MCH-forearm_ik.L"], rig)
 
-def isGenesis38(rig):
-    return (hasAllBones(["abdomenLower", "lShldrBend"], rig) and
-            not isGenesis12(rig))
-
-def isGenesis12(rig):
-    return hasAllBones(["abdomen2", "lShldr"], rig)
-
 #
 #   nameOrNone(string):
 #

@@ -156,6 +156,7 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         layout.prop(scn, "McpShowIK")
         if scn.McpShowIK:
             ins = inset(layout)
+            ins.operator("mcp.offset_toes")
             ins.operator("mcp.transfer_to_ik")
             ins.operator("mcp.transfer_to_fk")
             ins.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
@@ -166,6 +167,7 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         if scn.McpShowGlobal:
             ins = inset(layout)
             ins.operator("mcp.shift_bone")
+            ins.operator("mcp.floor_foot")
             ins.operator("mcp.limbs_bend_positive")
             ins.operator("mcp.fixate_bone")
             ins.operator("mcp.simplify_fcurves")
@@ -212,14 +214,6 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             props.last = True
 
             ins.operator("mcp.confirm_edit")
-
-        layout.separator()
-        layout.prop(scn, "McpShowFeet")
-        if scn.McpShowFeet:
-            ins = inset(layout)
-            row = ins.row()
-            ins.operator("mcp.offset_toe")
-            ins.operator("mcp.floor_foot")
 
         layout.separator()
         layout.prop(scn, "McpShowLoop")

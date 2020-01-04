@@ -194,15 +194,19 @@ def keepToeRotationNegative(pmat, scn):
     return pmat
 
 
-class MCP_OT_OffsetToe(BvhOperator, IsArmature, Target):
-    bl_idname = "mcp.offset_toe"
+class MCP_OT_OffsetToes(BvhOperator, IsArmature, Target):
+    bl_idname = "mcp.offset_toes"
     bl_label = "Offset Toes"
-    bl_description = "Keep toes below balls"
+    bl_description = "Keep toes below the ball of the feet"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        self.findTarget(context, context.object)
-        toesBelowBall(context)
+        rig = context.object
+        if isMhxRig(rig):
+            self.findTarget(context, rig)
+            toesBelowBall(context)
+        else:
+            raise MocapError("Can not offset toes with this rig")
 
 #-------------------------------------------------------------
 #   Floor
@@ -399,7 +403,7 @@ def findBoneFCurve(pb, rig, index, mode='rotation'):
 #----------------------------------------------------------
 
 classes = [
-    MCP_OT_OffsetToe,
+    MCP_OT_OffsetToes,
     MCP_OT_FloorFoot,
 ]
 

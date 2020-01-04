@@ -97,7 +97,7 @@ class FCurvesGetter:
                 print("Need two selected markers")
                 return ([], 0, 0)
         else:
-            (minTime, maxTime) = ('All', 0)
+            (minTime, maxTime) = (-10000,10000)
         return (fcurves, minTime, maxTime)
     
 

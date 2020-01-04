@@ -187,12 +187,19 @@ def guessTargetArmatureFromList(rig, scn):
         return "Rigify"
     elif isMhx7Rig(rig):
         return "MH-alpha7"
-    elif isGenesis12(rig):
+    elif hasAllBones(["abdomen2", "lShldr"], rig) and matchAllBones(rig, "Genesis 1,2"):
         return "Genesis 1,2"
-    elif isGenesis38(rig):
+    elif hasAllBones(["abdomenLower", "lShldrBend"], rig) and matchAllBones(rig, "Genesis 3,8"):
         return "Genesis 3,8"
     else:
         return "Automatic"
+
+def matchAllBones(rig, key):
+    for bname,_mhx in _targetInfo[key].bones:
+        if bname not in rig.data.bones.keys():
+            print("MISS", bname)
+            return False
+    return True
 
 #
 #   findTargetKeys(mhx, list):

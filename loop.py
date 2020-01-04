@@ -64,13 +64,19 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
         default=5)
 
     loopInPlace : BoolProperty(
-        name="Loop in place",
+        name="Loop In Place",
         description="Remove Location F-curves",
         default=False)
+        
+    deleteOutside : BoolProperty(
+        name="Delete Outside Keyframes",
+        description="Delete all keyframes outside the looped region",
+        default = False)        
 
     def draw(self, context):
         self.layout.prop(self, "blendRange")
         self.layout.prop(self, "loopInPlace")
+        self.layout.prop(self, "deleteOutside")
         FCurvesGetter.draw(self, context)
 
     def run(self, context):
@@ -81,6 +87,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
         act = getObjectAction(rig)
         if not act:
             return
+        self.useMarkers = True
         (fcurves, minTime, maxTime) = self.getActionFCurves(act, rig, scn)
         if not fcurves:
             return
@@ -128,6 +135,15 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                     pb.location = restInv @ diff
                     pb.keyframe_insert("location", group=pb.name)
     
+        if self.deleteOutside:
+            for fcu in fcurves:
+                kpts = list(fcu.keyframe_points)
+                kpts.reverse()
+                for kp in kpts:
+                    t = kp.co[0]
+                    if t < minTime or t > maxTime:
+                        fcu.keyframe_points.remove(kp)
+            
         endProgress("F-curves looped")
         return
         for fcu in fcurves:
@@ -246,6 +262,7 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
         act = getObjectAction(context.object)
         if not act:
             return
+        self.useMarkers = True
         (fcurves, minTime, maxTime) = self.getActionFCurves(act, context.object, context.scene)
         if not fcurves:
             return

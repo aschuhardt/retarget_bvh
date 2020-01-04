@@ -149,7 +149,7 @@ class BvhLoader:
         description="Scale the BVH by this value",
         min=0.0001, max=1000000.0,
         soft_min=0.001, soft_max=100.0,
-        default=0.65)
+        default=1.0)
 
     ssFactor : IntProperty(
         name="Subsample Factor",
@@ -165,7 +165,6 @@ class BvhLoader:
         self.layout.prop(self, "startFrame")
         self.layout.prop(self, "endFrame")
         self.layout.separator()
-        self.layout.prop(self, "scale")
         self.layout.prop(self, "useDefaultSS")
         if not self.useDefaultSS:
             self.layout.prop(self, "ssFactor")
