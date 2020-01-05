@@ -170,6 +170,13 @@ class MCP_OT_SetFakeUser(BvhOperator, IsArmature, ActionList):
         for act,select in self.getActions(context):
             act.use_fake_user = select        
 
+
+def getObjectAction(rig):
+    if rig and rig.animation_data:
+        return rig.animation_data.action
+    else:
+        return None
+
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
