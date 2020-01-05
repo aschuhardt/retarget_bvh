@@ -32,8 +32,6 @@ from bpy_extras.io_utils import ExportHelper
 import math
 import os
 
-from . import utils
-from . import t_pose
 from .utils import *
 from .armature import CArmature
 
@@ -48,7 +46,8 @@ class CTargetInfo:
 
     def readFile(self, filepath):
         import json
-        print("Read target file", filepath)
+        if theVerbose:
+            print("Read target file", filepath)
         self.filepath = filepath
         with open(filepath, "r") as fp:
             struct = json.load(fp)
@@ -90,10 +89,12 @@ class CTargetInfo:
         for bname,pname in self.parents.items():
             pb = rig.pose.bones[bname]
             pb.McpParent = pname
-        print("Parents")
-        for pb in rig.pose.bones:
-            if pb.McpBone:
-                print("  ", pb.name, pb.McpParent)
+    
+        if theVerbose:
+            print("Parents")
+            for pb in rig.pose.bones:
+                if pb.McpBone:
+                    print("  ", pb.name, pb.McpParent)
           
 
     def testRig(self, name, rig):
@@ -197,7 +198,8 @@ def guessTargetArmatureFromList(rig, scn):
 def matchAllBones(rig, key):
     for bname,_mhx in _targetInfo[key].bones:
         if bname not in rig.data.bones.keys():
-            print("MISS", bname)
+            if theVerbose:
+                print("Missing bone:", bname)
             return False
     return True
 
@@ -306,6 +308,7 @@ class MCP_OT_GetTargetRig(BvhOperator, IsArmature):
         return changeTargetData(context.object, context.scene)
     
     def run(self, context):
+        setVerbose(True)
         context.scene.McpTargetRig = "Automatic"        
         findTargetArmature(context, context.object, True)
         

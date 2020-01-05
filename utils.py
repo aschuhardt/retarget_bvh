@@ -36,6 +36,15 @@ from mathutils import *
 Deg2Rad = pi/180
 Rad2Deg = 180/pi
 
+#-------------------------------------------------------------
+#   Verbosity
+#-------------------------------------------------------------
+
+theVerbose = False
+
+def setVerbose(verbose):
+    global theVerbose
+    theVerbose = verbose
 
 #-------------------------------------------------------------
 #   Blender 2.8 compatibility

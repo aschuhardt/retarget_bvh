@@ -44,43 +44,35 @@ class ActionGroup(bpy.types.PropertyGroup):
 
 
 class ActionList:
-    useFilter : BoolProperty(
+    filter : StringProperty(
         name="Filter",
-        description="Filter action names",
-        default=False)
+        description="Filter action names with this",
+        default="")
 
     actions : CollectionProperty(type = ActionGroup)
     
     def draw(self, context):
-        #self.layout.prop(self, "useFilter")
         split = self.layout.split(factor = 0.5)
         split.label(text="Action")
         split.label(text="Select")
-        split.label(text="Fake")
         split.label(text="Users")
         for act in self.actions:
-            split = self.layout.split(factor = 0.6)
-            split.label(text=act.name)
-            split.prop(act, "bool", text="")
-            split.prop(act, "fake", text="")
-            split.label(text = str(act.users))
+            if self.filter in act.name:
+                split = self.layout.split(factor = 0.6)
+                split.label(text=act.name)
+                split.prop(act, "bool", text="")
+                split.label(text = str(act.users))
+        self.layout.separator()
+        self.layout.prop(self, "filter")
+
 
     def invoke(self, context, event):
-        if self.useFilter:
-            filter = context.object.name
-            if len(filter) > 4:
-                filter = filter[0:4]
-                flen = 4
-            else:
-                flen = len(filter)
-
+        animdata = context.object.animation_data
         self.actions.clear()
         for act in bpy.data.actions:
-            if self.useFilter and act.name[0:flen] != filter:
-                continue                
             item = self.actions.add()
             item.name = act.name
-            item.bool = False
+            item.bool = self.selected(animdata, act)
             item.fake = act.use_fake_user
             item.users = act.users
 
@@ -105,6 +97,9 @@ class MCP_OT_DeleteAction(BvhOperator, IsArmature, ActionList):
     bl_description = "Delete the action selected in the action list"
     bl_options = {'UNDO'}
 
+    def selected(self, animdata, act):
+        return False
+        
     def run(self, context):
         self.failed = []
         for act,select in self.getActions(context):
@@ -113,7 +108,6 @@ class MCP_OT_DeleteAction(BvhOperator, IsArmature, ActionList):
         if self.failed:       
             msg = ("Could not delete all actions.\n%s" % [act.name for act in self.failed])     
             raise MocapError(msg)
-
 
     def deleteAction(self, act):            
         act.use_fake_user = False
@@ -153,6 +147,9 @@ class MCP_OT_SetCurrentAction(BvhOperator, IsArmature, ActionList):
     bl_description = "Set the action selected in the action list as the current action"
     bl_options = {'UNDO'}
 
+    def selected(self, animdata, act):
+        return (animdata and animdata.action == act)
+
     def run(self, context):
         for act,select in self.getActions(context):        
             if select:
@@ -165,6 +162,9 @@ class MCP_OT_SetFakeUser(BvhOperator, IsArmature, ActionList):
     bl_label = "Set Fake User"
     bl_description = "Make selected actions fake and others unfake"
     bl_options = {'UNDO'}
+
+    def selected(self, animdata, act):
+        return act.use_fake_user
 
     def run(self, context):
         for act,select in self.getActions(context):

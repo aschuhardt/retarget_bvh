@@ -47,6 +47,8 @@ class CArmature:
 
 
     def display(self, type):
+        if not theVerbose:
+            return
         print("%s Armature: %s" % (type, self.name))
         for bname,mhx in self.boneNames.items():
             print("  %14s %14s" % (bname, mhx))
@@ -87,15 +89,16 @@ class CArmature:
                 counts = self.getChildCount(hipsChildren)
                 hipsChildren = [counts[-3][2], counts[-2][2], counts[-1][2]]
                 nChildren = 3
-            if hips is not None:
+            if theVerbose and (hips is not None):
                 print("  Try hips: %s, children: %d" % (hips.name, nChildren))
             first = False
 
         if hips is None:
             raise MocapError("Found no candidate hip bone")
 
-        print("Mapping bones automatically:")
-        print("  hips:", hips.name)
+        if theVerbose:
+            print("Mapping bones automatically:")
+            print("  hips:", hips.name)
         self.setBone("hips", hips)
         hiphead,hiptail,_ = getHeadTailDir(hips)
 
@@ -132,9 +135,10 @@ class CArmature:
         _,spine = limbs[1]
         _,leftLeg = limbs[2]
 
-        print("  spine:", spine.name)
-        print("  right leg:", rightLeg.name)
-        print("  left leg:", leftLeg.name)
+        if theVerbose:
+            print("  spine:", spine.name)
+            print("  right leg:", rightLeg.name)
+            print("  left leg:", leftLeg.name)
         self.findSpine(spine)
         self.findLeg(leftLeg, ".L")
         self.findLeg(rightLeg, ".R")
@@ -179,7 +183,8 @@ class CArmature:
     def findLeg(self, hip, suffix):
         bnames = ["hip"+suffix, "thigh"+suffix, "shin"+suffix, "foot"+suffix, "toe"+suffix]
         prefnames = ["X", "X", "X", "foot", "toe"]
-        print("  hip%s:" % suffix, hip.name)
+        if theVerbose:
+            print("  hip%s:" % suffix, hip.name)
         try:
             thigh = self.validChildren(hip)[0]
         except IndexError:
@@ -190,8 +195,9 @@ class CArmature:
         elif len(shins) > 1:
             shin = thigh
             thigh = hip
-            print("  thigh%s:" % suffix, thigh.name)
-            print("  shin%s:" % suffix, shin.name)
+            if theVerbose:
+                print("  thigh%s:" % suffix, thigh.name)
+                print("  shin%s:" % suffix, shin.name)
             bnames = bnames[1:]
             prefnames = prefnames[1:]
         else:
@@ -207,31 +213,36 @@ class CArmature:
                 feet = self.validChildren(shin)
                 if feet:
                     foot = feet[0]
-            print("  thigh%s:" % suffix, thigh.name)
-            print("  shin%s:" % suffix, shin.name)
-            if foot:
-                print("  foot%s:" % suffix, foot.name)
+            if theVerbose:
+                print("  thigh%s:" % suffix, thigh.name)
+                print("  shin%s:" % suffix, shin.name)
+                if foot:
+                    print("  foot%s:" % suffix, foot.name)
 
         self.findTerminal(hip, bnames, prefnames)
 
 
     def findArm(self, shoulder, suffix):
         bnames = ["shoulder"+suffix, "upper_arm"+suffix, "forearm"+suffix, "hand"+suffix]
-        print("  shoulder%s:" % suffix, shoulder.name)
+        if theVerbose:
+            print("  shoulder%s:" % suffix, shoulder.name)
         try:
             upperarm = self.validChildren(shoulder)[0]
         except IndexError:
             raise MocapError("Shoulder %s has no children" % shoulder.name)
-        print("  upper_arm%s:" % suffix, upperarm.name)
+        if theVerbose:
+            print("  upper_arm%s:" % suffix, upperarm.name)
         try:
             forearm = self.validChildren(upperarm, True)[0]
         except IndexError:
             raise MocapError("Upper arm %s has no children" % upperarm.name)
-        print("  forearm%s:" % suffix, forearm.name)
+        if theVerbose:
+            print("  forearm%s:" % suffix, forearm.name)
         hands = self.validChildren(forearm)
         if hands:
             hand = hands[0]
-            print("  hand%s:" % suffix, hand.name)
+            if theVerbose:
+                print("  hand%s:" % suffix, hand.name)
             if upperarm.bone.length < hand.bone.length:
                 bnames = ["shoulder"+suffix, ""] + bnames[1:]
         self.findTerminal(shoulder, bnames)
@@ -239,14 +250,16 @@ class CArmature:
 
     def findHead(self, neck):
         bnames = ["neck", "head"]
-        print("  neck:", neck.name)
+        if theVerbose:
+            print("  neck:", neck.name)
         self.findTerminal(neck, bnames)
 
 
     def findSpine(self, spine1):
         n,spine2 = self.spineEnd(spine1)
-        print("  spine:", spine1.name)
-        print("  chest:", spine2.name)
+        if theVerbose:
+            print("  spine:", spine1.name)
+            print("  chest:", spine2.name)
         if n == 1:
             bnames = ["spine"]
         elif n == 2:

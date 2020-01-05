@@ -509,7 +509,8 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         
 
     def run(self, context):
-        from .load import checkObjectProblems
+        from .load import checkObjectProblems        
+        setVerbose(False)
         checkObjectProblems(context)
         rig = context.object
         infos = []
@@ -526,12 +527,13 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
                 track.strips.new(act.name, start, act)
                 start += size + self.spacing
             rig.animation_data.action = None                
+        print("---------------")
         
             
     def retarget(self, context, filepath):
         from .load import deleteSourceRig
 
-        print("\nLoad and retarget %s" % filepath)
+        print("\n---------------\nLoad and retarget %s" % filepath)
         scn = context.scene
         trgRig = context.object
         srcRig = self.readBvhFile(context, filepath, scn, False)
