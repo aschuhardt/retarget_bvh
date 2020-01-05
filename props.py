@@ -29,37 +29,6 @@
 import bpy
 from bpy.props import *
 
-#
-#    readDirectory(directory, prefix):
-#    class MCP_OT_Batch(bpy.types.Operator):
-#
-
-def readDirectory(directory, prefix):
-    import os
-    realdir = os.path.realpath(os.path.expanduser(directory))
-    files = os.listdir(realdir)
-    n = len(prefix)
-    paths = []
-    for fileName in files:
-        (name, ext) = os.path.splitext(fileName)
-        if name[:n] == prefix and ext == ".bvh":
-            paths.append("%s/%s" % (realdir, fileName))
-    return paths
-
-
-class MCP_OT_Batch(bpy.types.Operator):
-    bl_idname = "mcp.batch"
-    bl_label = "Batch run"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        paths = readDirectory(context.scene.McpDirectory, context.scene.McpPrefix)
-        trgRig = context.object
-        for filepath in paths:
-            setActiveObject(context, trgRig)
-            loadRetargetSimplify(context, filepath)
-        return{"FINISHED"}
-
 #----------------------------------------------------------
 #   Source armature
 #----------------------------------------------------------
@@ -104,10 +73,6 @@ class Target:
 #   Initialize
 #----------------------------------------------------------
 
-classes = [
-    MCP_OT_Batch,
-]
-
 def initialize():
     # Showing
 
@@ -131,19 +96,9 @@ def initialize():
         description="Show local edit",
         default=False)
 
-    bpy.types.Scene.McpShowFeet = BoolProperty(
-        name="Feet",
-        description="Show feet",
-        default=False)
-
     bpy.types.Scene.McpShowLoop = BoolProperty(
         name="Loop And Repeat",
         description="Show loop and repeat",
-        default=False)
-
-    bpy.types.Scene.McpShowStitch = BoolProperty(
-        name="Stitching",
-        description="Show stitching",
         default=False)
 
     bpy.types.Scene.McpShowDefaultSettings = BoolProperty(
@@ -210,19 +165,6 @@ def initialize():
     bpy.types.Object.McpActionName = StringProperty(
         default="")
 
-    # Props
-
-    bpy.types.Scene.McpDirectory = StringProperty(
-        name="Directory",
-        description="Directory",
-        maxlen=1024,
-        default="")
-
-    bpy.types.Scene.McpPrefix = StringProperty(
-        name="Prefix",
-        description="Prefix",
-        maxlen=24,
-        default="")
 
     # T_Pose
 
@@ -276,39 +218,12 @@ def initialize():
         default = "")
 
 
-    # Manage actions
-
-    bpy.types.Scene.McpFilterActions = BoolProperty(
-        name="Filter",
-        description="Filter action names",
-        default=False)
-
-    bpy.types.Scene.McpReallyDelete = BoolProperty(
-        name="Really Delete",
-        description="Delete button deletes action permanently",
-        default=False)
-
-    bpy.types.Scene.McpActions = EnumProperty(
-        items = [],
-        name = "Actions")
-
-    bpy.types.Scene.McpFirstAction = EnumProperty(
-        items = [],
-        name = "First Action")
-
-    bpy.types.Scene.McpSecondAction = EnumProperty(
-        items = [],
-        name = "Second Action")
-
     bpy.types.Object.McpArmature = StringProperty()
     bpy.types.Object.McpLimitsOn = BoolProperty(default=True)
     bpy.types.Object.McpChildOfsOn = BoolProperty(default=False)
     bpy.types.Object.MhAlpha8 = BoolProperty(default=False)
 
-    for cls in classes:
-        bpy.utils.register_class(cls)
-
 
 def uninitialize():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+    pass
+

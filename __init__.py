@@ -214,6 +214,8 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             props.last = True
 
             ins.operator("mcp.confirm_edit")
+            ins.separator()
+            ins.operator("mcp.clear_temp_props")
 
         layout.separator()
         layout.prop(scn, "McpShowLoop")
@@ -370,23 +372,10 @@ class MCP_PT_Actions(bpy.types.Panel, utils.IsArmature):
         scn = context.scene
         rig = context.object
 
-        layout.prop_menu_enum(context.scene, "McpActions")
-        layout.prop(scn, 'McpFilterActions')
         layout.operator("mcp.update_action_list")
-        layout.operator("mcp.set_current_action").prop = 'McpActions'
-        layout.operator("mcp.delete")
+        layout.operator("mcp.set_current_action")
+        layout.operator("mcp.delete_action")
         layout.operator("mcp.delete_hash")
-
-        layout.separator()
-        layout.operator("mcp.clear_temp_props")
-
-        return
-
-        layout.separator()
-        layout.label(text="Batch conversion")
-        layout.prop(scn, "McpDirectory")
-        layout.prop(scn, "McpPrefix")
-        layout.operator("mcp.batch")
 
 #----------------------------------------------------------
 #   Initialize
