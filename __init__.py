@@ -372,8 +372,8 @@ class MCP_PT_Actions(bpy.types.Panel, utils.IsArmature):
         scn = context.scene
         rig = context.object
 
-        layout.operator("mcp.update_action_list")
         layout.operator("mcp.set_current_action")
+        layout.operator("mcp.set_fake_user")
         layout.operator("mcp.delete_action")
         layout.operator("mcp.delete_hash")
 
