@@ -359,6 +359,26 @@ class MCP_OT_SaveTargetFile(BvhOperator, IsArmature, ExportHelper):
         return {'RUNNING_MODAL'}
 
 #----------------------------------------------------------
+#   Target armature
+#----------------------------------------------------------
+
+class Target:
+    useAutoTarget : BoolProperty(
+        name = "Auto Target",
+        description = "Find target rig automatically",
+        default = True)
+
+    def draw(self, context):
+        self.layout.prop(self, "useAutoTarget")
+        if not self.useAutoTarget:
+            self.layout.prop(context.scene, "McpTargetRig")
+        self.layout.separator()
+
+    def findTarget(self, context, rig):
+        from .target import findTargetArmature
+        return findTargetArmature(context, rig, self.useAutoTarget)
+
+#----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
@@ -378,6 +398,30 @@ def initialize():
         items = [("Default", "Default", "Default")],
         name = "Target T-pose",
         default = "Default")              
+
+    bpy.types.Object.McpReverseHip = BoolProperty(
+        name = "Reverse Hip",
+        description = "The rig has a reverse hip",
+        default = False)
+
+    bpy.types.Scene.McpIgnoreHiddenLayers = BoolProperty(
+        name = "Ignore Hidden Layers",
+        description = "Ignore bones on hidden layers when identifying target rig",
+        default = True)
+
+    bpy.types.Scene.McpSaveTargetTPose = BoolProperty(
+        name = "Save T-Pose",
+        description = "Save the current pose as T-pose when saving target file",
+        default = False)
+
+    bpy.types.PoseBone.McpBone = StringProperty(
+        description = "MakeHuman bone corresponding to this bone",
+        default = "")
+
+    bpy.types.PoseBone.McpParent = StringProperty(
+        description = "Parent of this bone for retargeting purposes",
+        default = "")
+
 
     for cls in classes:
         bpy.utils.register_class(cls)

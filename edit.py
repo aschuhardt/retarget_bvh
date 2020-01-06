@@ -531,6 +531,12 @@ classes = [
 ]
 
 def initialize():
+    bpy.types.Object.McpUndoAction = StringProperty(
+        default="")
+
+    bpy.types.Object.McpActionName = StringProperty(
+        default="")
+        
     for cls in classes:
         bpy.utils.register_class(cls)
 

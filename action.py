@@ -38,7 +38,7 @@ from .utils import *
 
 class ActionGroup(bpy.types.PropertyGroup):
     name : StringProperty()
-    bool : BoolProperty()
+    select : BoolProperty()
     fake : BoolProperty()
     users : IntProperty()
 
@@ -49,6 +49,16 @@ class ActionList:
         description="Filter action names with this",
         default="")
 
+    useAll : BoolProperty(
+        name = "All",
+        description = "Select all actions",
+        default = False)
+        
+    useNone : BoolProperty(
+        name = "None",
+        description = "Unselect all actions",
+        default = False)        
+        
     actions : CollectionProperty(type = ActionGroup)
     
     def draw(self, context):
@@ -60,10 +70,13 @@ class ActionList:
             if self.filter in act.name:
                 split = self.layout.split(factor = 0.6)
                 split.label(text=act.name)
-                split.prop(act, "bool", text="")
+                split.prop(act, "select", text="")
                 split.label(text = str(act.users))
         self.layout.separator()
         self.layout.prop(self, "filter")
+        row = self.layout.row()
+        row.prop(self, "useAll")
+        row.prop(self, "useNone")
 
 
     def invoke(self, context, event):
@@ -72,7 +85,7 @@ class ActionList:
         for act in bpy.data.actions:
             item = self.actions.add()
             item.name = act.name
-            item.bool = self.selected(animdata, act)
+            item.select = self.selected(animdata, act)
             item.fake = act.use_fake_user
             item.users = act.users
 
@@ -84,7 +97,10 @@ class ActionList:
         for agrp in self.actions:
             if agrp.name in bpy.data.actions.keys():
                 act = bpy.data.actions[agrp.name]
-                acts.append((act, agrp.bool))
+                select = (True if self.useAll else 
+                          False if self.useNone else 
+                          agrp.select)                         
+                acts.append((act, select))
         return acts                
 
 #

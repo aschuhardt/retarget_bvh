@@ -30,7 +30,7 @@ import bpy
 from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
 from .utils import *
-from .props import Target
+from .target import Target
 
 #-------------------------------------------------------------
 #  Plane

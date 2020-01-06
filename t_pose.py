@@ -489,6 +489,13 @@ classes = [
 ]
 
 def initialize():
+    bpy.types.Object.McpTPoseDefined = BoolProperty(default = False)
+    bpy.types.Object.McpTPoseFile = StringProperty(default = "")
+    bpy.types.Object.McpArmatureName = StringProperty(default = "")
+    bpy.types.Object.McpArmatureModifier = StringProperty(default = "")
+    bpy.types.PoseBone.McpQuat = FloatVectorProperty(size=4, default=(1,0,0,0))
+    bpy.types.Object.McpIsSourceRig = BoolProperty(default=False)
+
     for cls in classes:
         bpy.utils.register_class(cls)
 

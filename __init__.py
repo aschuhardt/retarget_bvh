@@ -54,11 +54,10 @@ if "bpy" in locals():
     import imp
     imp.reload(utils)
     imp.reload(io_json)
-    imp.reload(props)
-    imp.reload(t_pose)
     imp.reload(armature)
     imp.reload(source)
     imp.reload(target)
+    imp.reload(t_pose)
     imp.reload(simplify)
     imp.reload(load)
     imp.reload(fkik)
@@ -73,11 +72,10 @@ else:
 
     from . import utils
     from . import io_json
-    from . import props
-    from . import t_pose
     from . import armature
     from . import source
     from . import target
+    from . import t_pose
     from . import simplify
     from . import load
     from . import fkik
@@ -111,12 +109,9 @@ class MCP_PT_Main(bpy.types.Panel):
         layout.separator()
         layout.operator("mcp.load_bvh")        
         layout.separator()
-        layout.prop(scn, "McpShowDetailSteps")
-        if scn.McpShowDetailSteps:
-            ins = inset(layout)
-            ins.operator("mcp.rename_bvh")
-            ins.operator("mcp.load_and_rename_bvh")
-            ins.operator("mcp.retarget_mhx")
+        layout.operator("mcp.rename_bvh")
+        layout.operator("mcp.load_and_rename_bvh")
+        layout.operator("mcp.retarget_mhx")
 
 ########################################################################
 #
@@ -294,7 +289,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
 
         layout.separator()
         layout.prop(scn, "McpIgnoreHiddenLayers")
-        layout.prop(rig, "MhReverseHip")
+        layout.prop(rig, "McpReverseHip")
         layout.operator("mcp.get_target_rig")
         layout.separator()
         layout.prop(scn, "McpSaveTargetTPose")
@@ -394,13 +389,34 @@ classes = [
 ]
 
 def register():
+    from bpy.props import BoolProperty
+    
+    bpy.types.Scene.McpShowIK = BoolProperty(
+        name="Inverse Kinematics",
+        description="Show inverse kinematics",
+        default=False)
+
+    bpy.types.Scene.McpShowGlobal = BoolProperty(
+        name="Global Edit",
+        description="Show global edit",
+        default=False)
+
+    bpy.types.Scene.McpShowDisplace = BoolProperty(
+        name="Local Edit",
+        description="Show local edit",
+        default=False)
+
+    bpy.types.Scene.McpShowLoop = BoolProperty(
+        name="Loop And Repeat",
+        description="Show loop and repeat",
+        default=False)
+        
     action.initialize()
     edit.initialize()
     fkik.initialize()
     floor.initialize()
     load.initialize()
     loop.initialize()
-    props.initialize()
     retarget.initialize()
     simplify.initialize()
     source.initialize()
@@ -418,7 +434,6 @@ def unregister():
     floor.uninitialize()
     load.uninitialize()
     loop.uninitialize()
-    props.uninitialize()
     retarget.uninitialize()
     simplify.uninitialize()
     source.uninitialize()

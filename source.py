@@ -164,6 +164,26 @@ def findSourceKey(bname, struct):
     return None
 
 #----------------------------------------------------------
+#   Class
+#----------------------------------------------------------
+
+class Source:
+    useAutoSource : BoolProperty(
+        name = "Auto Source",
+        description = "Find source rig automatically",
+        default = True)
+        
+    def draw(self, context):
+        self.layout.prop(self, "useAutoSource")
+        if not self.useAutoSource:
+            self.layout.prop(context.scene, "McpSourceRig")
+        self.layout.separator()
+
+    def findSource(self, context, rig):
+        from .source import findSourceArmature
+        return findSourceArmature(context, rig, self.useAutoSource)
+
+#----------------------------------------------------------
 #   Source initialization
 #----------------------------------------------------------
 
@@ -238,6 +258,8 @@ def initialize():
         items = [("Default", "Default", "Default")],
         name = "Source T-pose",
         default = "Default")              
+
+    bpy.types.Object.McpArmature = StringProperty()
 
     for cls in classes:
         bpy.utils.register_class(cls)

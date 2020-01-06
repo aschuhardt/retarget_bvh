@@ -32,9 +32,10 @@ from math import sin, cos
 from mathutils import *
 from bpy.props import *
 
-from .simplify import TimeScaler
 from .utils import *
-from .props import Source, Target
+from .source import Source
+from .target import Target
+from .simplify import TimeScaler
 
 
 class BvhFile:
@@ -50,6 +51,7 @@ class MultiFile(ImportHelper):
 
     directory : StringProperty(
         subtype='DIR_PATH')
+
 
 
 ###################################################################################
@@ -605,7 +607,6 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        checkObjectProblems(context)
         for file_elem in self.files:
             filepath = os.path.join(self.directory, file_elem.name)
             self.readBvhFile(context, filepath, context.scene, False)
@@ -690,6 +691,19 @@ classes = [
 ]
 
 def initialize():
+
+    bpy.types.Scene.McpRot90Anim = BoolProperty(
+        name="Rotate 90 deg",
+        description="Rotate 90 degress so Z points up",
+        default=True)
+
+    bpy.types.Scene.McpFlipYAxis = BoolProperty(
+        name="Flix Y Axis",
+        description="Rotate 180 degress so Y points down (for Ni-Mate)",
+        default=False)
+
+    bpy.types.Object.McpRenamed = BoolProperty(default = False)
+
     for cls in classes:
         bpy.utils.register_class(cls)
 

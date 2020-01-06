@@ -70,7 +70,7 @@ class CArmature:
         first = True
         hips = None
         while first or nChildren != 3:
-            if not first and nChildren == 2 and rig.MhReverseHip:
+            if not first and nChildren == 2 and rig.McpReverseHip:
                 break
             elif nChildren == 0:
                 raise MocapError("Hip bone must have children: %s" % hips.name)
@@ -102,7 +102,7 @@ class CArmature:
         self.setBone("hips", hips)
         hiphead,hiptail,_ = getHeadTailDir(hips)
 
-        if rig.MhReverseHip and len(hipsChildren) == 2:
+        if rig.McpReverseHip and len(hipsChildren) == 2:
             legroot = hipsChildren[1]
             spine = hipsChildren[0]
             _,terminal = self.chainEnd(legroot)

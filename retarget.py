@@ -52,9 +52,9 @@ from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
-from .props import Target
-from .simplify import Simplifier, TimeScaler
 from .utils import *
+from .target import Target
+from .simplify import Simplifier, TimeScaler
 from .load import BvhFile, MultiFile, BvhLoader, BvhRenamer
 from .fkik import Bender
 
@@ -586,6 +586,18 @@ classes = [
 ]
 
 def initialize():
+    bpy.types.Scene.McpUseLimits = BoolProperty(
+        name="Use Limits",
+        description="Restrict angles to Limit Rotation constraints",
+        default=True)
+
+    bpy.types.Scene.McpClearLocks = BoolProperty(
+        name="Unlock Rotation",
+        description="Clear X and Z rotation locks",
+        default=False)
+
+    bpy.types.Object.MhAlpha8 = BoolProperty(default=False)
+
     for cls in classes:
         bpy.utils.register_class(cls)
 
