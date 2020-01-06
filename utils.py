@@ -30,11 +30,11 @@
 
 import bpy
 from bpy.props import *
-from math import sin, cos, atan, pi
+import math
 from mathutils import *
 
-Deg2Rad = pi/180
-Rad2Deg = 180/pi
+D = math.pi/180
+R = 180/math.pi
 
 #-------------------------------------------------------------
 #   Verbosity
@@ -130,7 +130,7 @@ def getRollMat(mat):
     if abs(quat.w) < 1e-4:
         roll = pi
     else:
-        roll = -2*atan(quat.y/quat.w)
+        roll = -2*math.atan(quat.y/quat.w)
     return roll
 
 

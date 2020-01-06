@@ -228,6 +228,8 @@ def putInRestPose(rig, useSetKeys):
         pb.matrix_basis = Matrix()
         if useSetKeys:
             setKeys(pb)
+    updateScene()            
+                
 
 
 def setKeys(pb):        
@@ -254,7 +256,8 @@ def putInTPose(rig, tpname, context):
             struct = loadPose(rig, filepath)
             _t_poses[tpname] = struct
         setTPose(rig, struct)
-
+    updateScene()
+    
 
 class MCP_OT_PutInTPose(BvhPropsOperator, IsArmature, Rigger):
     bl_idname = "mcp.put_in_t_pose"

@@ -153,17 +153,23 @@ class BvhLoader:
         soft_min=0.001, soft_max=100.0,
         default=1.0)
 
-    zrot : EnumProperty(
+    x : EnumProperty(
         items = [(x,x,x) for x in ["0", "90", "180", "270"]],
-        name = "Vertical Rotation",
-        description = "Rotated rest pose around vertical axis",
-        default = "0")
-        
-    xrot : EnumProperty(
-        items = [(x,x,x) for x in ["0", "90", "180", "270"]],
-        name = "Horizontal Rotation",
-        description = "Rotated rest pose around horizontal axis",
+        name = "X",
+        description = "X Euler Angle",
         default = "90")
+
+    y : EnumProperty(
+        items = [(y,y,y) for y in ["0", "90", "180", "270"]],
+        name = "Y",
+        description = "Y Euler Angle",
+        default = "0")
+
+    z : EnumProperty(
+        items = [(z,z,z) for z in ["0", "90", "180", "270"]],
+        name = "Z",
+        description = "Z Euler Angle",
+        default = "0")
         
     ssFactor : IntProperty(
         name="Subsample Factor",
@@ -179,10 +185,16 @@ class BvhLoader:
         self.layout.prop(self, "startFrame")
         self.layout.prop(self, "endFrame")
         self.layout.separator()
-        self.layout.label(text="Vertical Orientation:")
-        self.layout.prop(self, "zrot", expand=True)
-        self.layout.label(text="Horizontal Orientation:")
-        self.layout.prop(self, "xrot", expand=True)
+        self.layout.label(text="Source Rig Orientation:")
+        row = self.layout.row()
+        row.label(text="X:")
+        row.prop(self, "x", expand=True)
+        row = self.layout.row()
+        row.label(text="Y:")
+        row.prop(self, "y", expand=True)
+        row = self.layout.row()
+        row.label(text="Z:")
+        row.prop(self, "z", expand=True)
         self.layout.separator()
         self.layout.prop(self, "useDefaultSS")
         if not self.useDefaultSS:
@@ -193,11 +205,8 @@ class BvhLoader:
     def readBvhFile(self, context, filepath, scn, scan):
         setCategory("Load Bvh File")
         frameno = 1
-        
-        angles = {"0": 0, "90": math.pi/2, "180": math.pi, "270": -math.pi/2}
-        zrot = Matrix.Rotation(angles[self.zrot], 3, 'Y')
-        xrot = Matrix.Rotation(angles[self.xrot], 3, 'X')
-        flipMatrix = xrot @ zrot
+        euler = Euler((int(self.x)*D, int(self.y)*D, int(self.z)*D))
+        flipMatrix = euler.to_matrix()        
         ssFactor = self.ssFactor
     
         fileName = os.path.realpath(os.path.expanduser(filepath))
@@ -340,7 +349,7 @@ class BvhLoader:
                     elif mode == Rotation:
                         mats = []
                         for (axis, sign) in indices:
-                            angle = sign*float(words[m])*Deg2Rad
+                            angle = sign*float(words[m])*D
                             mats.append(Matrix.Rotation(angle, 3, axis))
                             m += 1
                         mat = (node.inverse @ flipMatrix) @ mats[0] @ mats[1] @ mats[2] @ (flipInv @ node.matrix)
