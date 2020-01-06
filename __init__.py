@@ -48,6 +48,7 @@ bl_info = {
     'wiki_url': "http://diffeomorphic.blogspot.com/retarget-bvh/",
     "category": "Animation"}
 
+
 # To support reload properly, try to access a package var, if it's there, reload everything
 if "bpy" in locals():
     print("Reloading BVH Retargeter")
@@ -84,6 +85,9 @@ else:
     from . import loop
     from . import edit
     from . import floor
+
+from bpy.props import BoolProperty
+    
 
 def inset(layout):
     split = layout.split(factor=0.05)
@@ -389,8 +393,6 @@ classes = [
 ]
 
 def register():
-    from bpy.props import BoolProperty
-    
     bpy.types.Scene.McpShowIK = BoolProperty(
         name="Inverse Kinematics",
         description="Show inverse kinematics",

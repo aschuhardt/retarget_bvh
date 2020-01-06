@@ -31,7 +31,7 @@
 import bpy
 from math import pi, sqrt
 from mathutils import *
-from . import load, simplify, props, action
+
 from .utils import *
 from .simplify import FCurvesGetter
 

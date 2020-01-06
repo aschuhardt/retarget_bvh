@@ -28,8 +28,6 @@
 
 import bpy
 from bpy.props import EnumProperty, StringProperty
-
-from . import utils
 from .utils import *
 
 #

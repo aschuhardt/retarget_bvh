@@ -30,8 +30,6 @@ import bpy
 from bpy.props import *
 from math import pi, sqrt
 from mathutils import *
-from . import load, simplify, props, action
-#from .target_rigs import rig_mhx
 from .utils import *
 
 _Markers = []

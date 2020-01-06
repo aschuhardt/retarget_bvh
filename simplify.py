@@ -30,7 +30,6 @@
 
 import bpy
 from math import pi
-from . import utils
 from .utils import *
 
 #
