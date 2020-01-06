@@ -282,9 +282,12 @@ class CArmature:
             self.findHead(limbs[1][1])
             self.findArm(limbs[2][1], ".L")
         else:
-            string = ("Could not auto-detect armature because:\nTop of spine %s has %d children:\n" % (spine2.name, len(spine2Children)))
+            string = ("Could not auto-detect armature because:\n" +
+                      "Top of spine %s has %d children\n" % (spine2.name, len(spine2Children)))
             for child in spine2Children:
                 string += "  %s\n" % child.name
+            string += ("Is the source rig oriented correctly?\n" + 
+                       "Try to change vertical or horizonal orientation.")
             raise MocapError(string)
 
 

@@ -153,6 +153,18 @@ class BvhLoader:
         soft_min=0.001, soft_max=100.0,
         default=1.0)
 
+    zrot : EnumProperty(
+        items = [(x,x,x) for x in ["0", "90", "180", "270"]],
+        name = "Vertical Rotation",
+        description = "Rotated rest pose around vertical axis",
+        default = "0")
+        
+    xrot : EnumProperty(
+        items = [(x,x,x) for x in ["0", "90", "180", "270"]],
+        name = "Horizontal Rotation",
+        description = "Rotated rest pose around horizontal axis",
+        default = "90")
+        
     ssFactor : IntProperty(
         name="Subsample Factor",
         description="Sample only every n:th frame",
@@ -167,6 +179,11 @@ class BvhLoader:
         self.layout.prop(self, "startFrame")
         self.layout.prop(self, "endFrame")
         self.layout.separator()
+        self.layout.label(text="Vertical Orientation:")
+        self.layout.prop(self, "zrot", expand=True)
+        self.layout.label(text="Horizontal Orientation:")
+        self.layout.prop(self, "xrot", expand=True)
+        self.layout.separator()
         self.layout.prop(self, "useDefaultSS")
         if not self.useDefaultSS:
             self.layout.prop(self, "ssFactor")
@@ -176,12 +193,11 @@ class BvhLoader:
     def readBvhFile(self, context, filepath, scn, scan):
         setCategory("Load Bvh File")
         frameno = 1
-        if scn.McpFlipYAxis:
-            flipMatrix = Matrix.Rotation(math.pi, 3, 'X') @ Matrix.Rotation(math.pi, 3, 'Y')
-        else:
-            flipMatrix = Matrix.Rotation(0, 3, 'X')
-        if True or scn.McpRot90Anim:
-            flipMatrix = Matrix.Rotation(math.pi/2, 3, 'X') @ flipMatrix
+        
+        angles = {"0": 0, "90": math.pi/2, "180": math.pi, "270": -math.pi/2}
+        zrot = Matrix.Rotation(angles[self.zrot], 3, 'Y')
+        xrot = Matrix.Rotation(angles[self.xrot], 3, 'X')
+        flipMatrix = xrot @ zrot
         ssFactor = self.ssFactor
     
         fileName = os.path.realpath(os.path.expanduser(filepath))
@@ -620,7 +636,7 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
 #   class MCP_OT_RenameBvh(BvhOperator):
 #
 
-class MCP_OT_RenameBvh(BvhOperator, IsArmature, TimeScaler, BvhRenamer):
+class MCP_OT_RenameBvh(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
     bl_idname = "mcp.rename_bvh"
     bl_label = "Rename And Rescale BVH Rig"
     bl_description = "Rename bones of active armature and scale it to fit other armature"
@@ -691,16 +707,6 @@ classes = [
 ]
 
 def initialize():
-
-    bpy.types.Scene.McpRot90Anim = BoolProperty(
-        name="Rotate 90 deg",
-        description="Rotate 90 degress so Z points up",
-        default=True)
-
-    bpy.types.Scene.McpFlipYAxis = BoolProperty(
-        name="Flix Y Axis",
-        description="Rotate 180 degress so Y points down (for Ni-Mate)",
-        default=False)
 
     bpy.types.Object.McpRenamed = BoolProperty(default = False)
 

@@ -492,7 +492,6 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
 
     def draw(self, context):
         BvhLoader.draw(self, context)
-        self.layout.separator()
         BvhRenamer.draw(self, context)
         self.layout.prop(self, "useBendPositive")
         self.layout.separator()
