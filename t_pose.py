@@ -31,7 +31,7 @@ from bpy.props import *
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 
 import os
-import math
+from math import sqrt, pi
 from mathutils import Quaternion, Matrix
 from .utils import *
 from .io_json import *
