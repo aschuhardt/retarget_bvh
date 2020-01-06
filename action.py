@@ -47,16 +47,6 @@ class ActionList:
         description="Filter action names with this",
         default="")
 
-    useAll : BoolProperty(
-        name = "All",
-        description = "Select all actions",
-        default = False)
-        
-    useNone : BoolProperty(
-        name = "None",
-        description = "Unselect all actions",
-        default = False)        
-        
     actions : CollectionProperty(type = ActionGroup)
     
     def draw(self, context):
@@ -72,9 +62,6 @@ class ActionList:
                 split.label(text = str(act.users))
         self.layout.separator()
         self.layout.prop(self, "filter")
-        row = self.layout.row()
-        row.prop(self, "useAll")
-        row.prop(self, "useNone")
 
 
     def invoke(self, context, event):
@@ -95,10 +82,7 @@ class ActionList:
         for agrp in self.actions:
             if agrp.name in bpy.data.actions.keys():
                 act = bpy.data.actions[agrp.name]
-                select = (True if self.useAll else 
-                          False if self.useNone else 
-                          agrp.select)                         
-                acts.append((act, select))
+                acts.append((act, agrp.select))
         return acts                
 
 #
@@ -136,10 +120,25 @@ def deleteAction(act):
     if act.users == 0:
         bpy.data.actions.remove(act)
     else:
-        print("%s has %d users" % (act, act.users))
+        print("Action %s has %d users" % (act.name, act.users))
+
+
+class MCP_OT_DeleteAllActions(BvhPropsOperator):
+    bl_idname = "mcp.delete_all_actions"
+    bl_label = "Delete All Actions"
+    bl_description = "Delete all action"
+    bl_options = {'UNDO'}
+
+    def draw(self, context):
+        self.layout.label(text="Really delete all actions?")
+        
+    def run(self, context):
+        for act in bpy.data.actions:
+            deleteAction(act)
 
 
 class MCP_OT_DeleteHash(BvhOperator):
+
     bl_idname = "mcp.delete_hash"
     bl_label = "Delete Temporary Actions"
     bl_description = (
@@ -153,6 +152,7 @@ class MCP_OT_DeleteHash(BvhOperator):
         for act in bpy.data.actions:
             if act.name[0] == '#':
                 deleteAction(act)
+
 
 
 class MCP_OT_SetCurrentAction(BvhOperator, IsArmature, ActionList):
@@ -169,6 +169,25 @@ class MCP_OT_SetCurrentAction(BvhOperator, IsArmature, ActionList):
             if select:
                 context.object.animation_data.action = act
                 print("Action set to %s" % act)
+
+
+class MCP_OT_SetAllFakeUser(BvhPropsOperator, IsArmature):
+    bl_idname = "mcp.set_all_fake_user"
+    bl_label = "Set All Fake Users"
+    bl_description = "Add or remove fake users from all actions"
+    bl_options = {'UNDO'}
+
+    fake : BoolProperty(
+        name = "Add Fake User",
+        description = "Add or remove fake user",
+        default = False)
+
+    def draw(self, context):
+        self.layout.prop(self, "fake")
+    
+    def run(self, context):
+        for act in bpy.data.actions:
+            act.use_fake_user = self.fake
 
 
 class MCP_OT_SetFakeUser(BvhOperator, IsArmature, ActionList):
@@ -199,9 +218,11 @@ classes = [
     ActionGroup,
     
     MCP_OT_DeleteAction,
+    MCP_OT_DeleteAllActions,
     MCP_OT_DeleteHash,
     MCP_OT_SetCurrentAction,
     MCP_OT_SetFakeUser,
+    MCP_OT_SetAllFakeUser,
 ]
 
 def initialize():

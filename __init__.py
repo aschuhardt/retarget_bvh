@@ -373,7 +373,9 @@ class MCP_PT_Actions(bpy.types.Panel, utils.IsArmature):
 
         layout.operator("mcp.set_current_action")
         layout.operator("mcp.set_fake_user")
+        layout.operator("mcp.set_all_fake_user")
         layout.operator("mcp.delete_action")
+        layout.operator("mcp.delete_all_actions")
         layout.operator("mcp.delete_hash")
 
 #----------------------------------------------------------
