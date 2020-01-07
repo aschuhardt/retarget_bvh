@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
 #   
-#   Copyright (c) 2019, Thomas Larsson
+#   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
 #   
 #   Redistribution and use in source and binary forms, with or without
