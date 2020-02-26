@@ -26,17 +26,6 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-"""
-Abstract
-Tool for loading bvh files onto the MHX rig in Blender 2.5x
-
-Place the script in the .blender/scripts/addons dir
-Activate the script in the "Add-Ons" tab (user preferences).
-Access from UI panel (N-key) when MHX rig is active.
-
-Alternatively, run the script in the script editor (Alt-P), and access from UI panel.
-"""
-
 bl_info = {
     "name": "Retarget BVH",
     "author": "Thomas Larsson",
@@ -45,7 +34,7 @@ bl_info = {
     "location": "View3D > Tools > Retarget BVH",
     "description": "Mocap retargeting tool",
     "warning": "",
-    'wiki_url': "http://diffeomorphic.blogspot.com/retarget-bvh/",
+    'wiki_url': "https://diffeomorphic.blogspot.com/p/bvh-retargeter.html",
     "category": "Animation"}
 
 
