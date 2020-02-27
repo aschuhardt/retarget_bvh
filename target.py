@@ -391,7 +391,7 @@ classes = [
 def initialize():
     bpy.types.Scene.McpTargetRig = EnumProperty(
         items = [("Automatic", "Automatic", "Automatic")],
-        name = "Target rig",
+        name = "Target Rig",
         default = "Automatic")    
         
     bpy.types.Scene.McpTargetTPose = EnumProperty(
@@ -415,10 +415,12 @@ def initialize():
         default = False)
 
     bpy.types.PoseBone.McpBone = StringProperty(
+        name = "MakeHuman Bone",
         description = "MakeHuman bone corresponding to this bone",
         default = "")
 
     bpy.types.PoseBone.McpParent = StringProperty(
+        name = "Parent",
         description = "Parent of this bone for retargeting purposes",
         default = "")
 

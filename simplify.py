@@ -63,7 +63,6 @@ class FCurvesGetter:
             self.layout.prop(self, "useVisible")
             self.layout.prop(self, "useSelected")
             self.layout.prop(self, "useMarkers")
-        self.layout.separator()
 
 
     def getActionFCurves(self, act, rig, scn):
@@ -115,8 +114,10 @@ class Simplifier(FCurvesGetter):
 
     def draw(self, context):
         FCurvesGetter.draw(self, context)
-        self.layout.prop(self, "maxErrLoc")
-        self.layout.prop(self, "maxErrRot")
+        if self.useSimplify:
+            self.layout.prop(self, "maxErrLoc")
+            self.layout.prop(self, "maxErrRot")
+        self.layout.separator()
 
 
     def simplifyFCurves(self, context, rig):

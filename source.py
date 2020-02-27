@@ -251,7 +251,7 @@ classes = [
 def initialize():
     bpy.types.Scene.McpSourceRig = EnumProperty(
         items = [("Automatic", "Automatic", "Automatic")],
-        name = "Source rig",
+        name = "Source Rig",
         default = "Automatic")  
         
     bpy.types.Scene.McpSourceTPose = EnumProperty(

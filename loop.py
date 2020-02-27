@@ -78,6 +78,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
         self.layout.prop(self, "loopInPlace")
         self.layout.prop(self, "deleteOutside")
         FCurvesGetter.draw(self, context)
+        self.layout.separator()
 
     def run(self, context):
         startProgress("Loop F-curves")
@@ -255,6 +256,7 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
     def draw(self, context):
         self.layout.prop(self, "repeatNumber")
         FCurvesGetter.draw(self, context)        
+        self.layout.separator()
         
     def run(self, context):
         from .action import getObjectAction

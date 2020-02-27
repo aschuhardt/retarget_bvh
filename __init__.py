@@ -27,7 +27,7 @@
 # ------------------------------------------------------------------------------
 
 bl_info = {
-    "name": "Retarget BVH",
+    "name": "BVH Retargeter",
     "author": "Thomas Larsson",
     "version": (2,0),
     "blender": (2,80,0),
