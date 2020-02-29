@@ -291,6 +291,10 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
 #   stitchActions(context):
 #
 
+def getActionItems(self, context):
+    return [(act.name, act.name, act.name) for act in bpy.data.actions]
+            
+
 class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
     bl_idname = "mcp.stitch_actions"
     bl_label = "Stitch Actions"
@@ -303,11 +307,11 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
         default=5)
 
     firstAction : EnumProperty(
-        items = [],
+        items = getActionItems,
         name = "First Action")
 
     secondAction : EnumProperty(
-        items = [],
+        items = getActionItems,
         name = "Second Action")
 
     firstEndFrame : IntProperty(
@@ -326,29 +330,17 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
     outputActionName : StringProperty(
         name="Output Action Name",
         maxlen=24,
-        default="Action")
-
-
-    def invoke(self, context, event):
-        from .action import listAllActions
-        actions = listAllActions(context)
-        setattr(self, "firstAction",
-            EnumProperty(items = actions, name = "First action"))
-        setattr(self, "secondAction",
-            EnumProperty(items = actions, name = "Second action"))
-        return BvhPropsOperator.invoke(self, context, event)
+        default="Stitched")
 
 
     def run(self, context):
-        from .action import getActionFromName
         from .retarget import getLocks, correctMatrixForLocks
     
         startProgress("Stitch actions")
-        action.listAllActions(context)
         scn = context.scene
         rig = context.object
-        act1 = getActionFromName(self.firstAction)
-        act2 = getActionFromName(self.secondAction)
+        act1 = bpy.data.actions[self.firstAction]
+        act2 = bpy.data.actions[self.secondAction]
         frame1 = self.firstEndFrame
         frame2 = self.secondStartFrame
         delta = self.blendRange
