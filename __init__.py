@@ -220,7 +220,7 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
 
 class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
-    bl_label = "Source armature"
+    bl_label = "Source Armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -245,7 +245,7 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
 
 class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
-    bl_label = "Target armature"
+    bl_label = "Target Armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -269,9 +269,6 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.get_target_rig")
         layout.operator("mcp.verify_target_rig")
         layout.operator("mcp.list_target_rig")
-        layout.separator()
-        layout.prop(scn, "McpSaveTargetTPose")
-        layout.operator("mcp.save_target_file")
 
 ########################################################################
 #

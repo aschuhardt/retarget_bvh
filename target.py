@@ -271,47 +271,6 @@ class MCP_OT_GetTargetRig(BvhOperator, IsArmature):
         restoreTargetData(data)
 
 
-def saveTargetFile(filepath, context):
-    from collections import OrderedDict
-    from .t_pose import saveTPose
-    from .json import saveJson
-
-    rig = context.object
-    scn = context.scene
-    fname,ext = os.path.splitext(filepath)
-    name = os.path.basename(fname).capitalize().replace(" ","_")
-    arm = OrderedDict()
-    struct = {"name" : name, "url" : "", "armature" : arm}
-    for pb in rig.pose.bones:
-        if pb.McpBone:
-            arm[pb.name] = pb.McpBone
-
-    filepath = fname + ".json"
-    saveJson(struct, filepath)  
-    print("Saved %s" % filepath)
-
-    if scn.McpSaveTargetTPose:
-        tposePath = fname + "-tpose.json"
-        saveTPose(context, tposePath)
-
-
-class MCP_OT_SaveTargetFile(BvhOperator, IsArmature, ExportHelper):
-    bl_idname = "mcp.save_target_file"
-    bl_label = "Save Target File"
-    bl_description = "Save a .json file for this character"
-    bl_options = {'UNDO'}
-
-    filename_ext = ".trg"
-    filter_glob : StringProperty(default="*.trg", options={'HIDDEN'})
-    filepath : StringProperty(name="File Path", description="Filepath to target file", maxlen=1024, default="")
-
-    def run(self, context):
-        saveTargetFile(self.properties.filepath, context)
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
 #----------------------------------------------------------
 #   List Rig
 #----------------------------------------------------------
@@ -386,7 +345,6 @@ class Target:
 classes = [
     MCP_OT_InitTargets,
     MCP_OT_GetTargetRig,
-    MCP_OT_SaveTargetFile,
     MCP_OT_ListTargetRig,
     MCP_OT_VerifyTargetRig,
 ]
@@ -411,11 +369,6 @@ def initialize():
         name = "Ignore Hidden Layers",
         description = "Ignore bones on hidden layers when identifying target rig",
         default = True)
-
-    bpy.types.Scene.McpSaveTargetTPose = BoolProperty(
-        name = "Save T-Pose",
-        description = "Save the current pose as T-pose when saving target file",
-        default = False)
 
     bpy.types.PoseBone.McpBone = StringProperty(
         name = "MakeHuman Bone",
