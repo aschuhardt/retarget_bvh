@@ -262,6 +262,8 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.separator()
         layout.prop(scn, "McpTargetRig")
         layout.prop(scn, "McpTargetTPose")
+        layout.operator("mcp.list_target_rig")
+        layout.operator("mcp.verify_target_rig")
 
         layout.separator()
         layout.prop(scn, "McpIgnoreHiddenLayers")
@@ -270,7 +272,6 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.separator()
         layout.prop(scn, "McpSaveTargetTPose")
         layout.operator("mcp.save_target_file")
-        layout.operator("mcp.list_target_rig")
 
 ########################################################################
 #

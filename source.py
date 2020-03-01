@@ -238,8 +238,9 @@ def readSrcArmature(filepath, name):
 ListedBones = [
     ('hips',         'Root bone'),
     ('spine',        'Lower spine'),
-    ('spine-1',      'Middle spine'),
+    ('spine-1',      'Lower spine 2'),
     ('chest',        'Upper spine'),
+    ('chest-1',      'Upper spine 2'),
     ('neck',         'Neck'),
     ('head',         'Head'),
     None,
@@ -318,9 +319,6 @@ class ListRig:
                     row = box.row()
                     row.label(text=text)
                     row.label(text="-")
-
-    def run(self, context):
-        pass
 
 
 class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):

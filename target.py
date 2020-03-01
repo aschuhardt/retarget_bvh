@@ -337,6 +337,24 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
         else:
             return []
 
+
+class MCP_OT_VerifyTargetRig(BvhOperator):
+    bl_idname = "mcp.verify_target_rig"
+    bl_label = "Verify Target Rig"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        ob = context.object
+        return (context.scene.McpTargetRig and ob and ob.type == 'ARMATURE')
+        
+    def run(self, context):   
+        rigtype = context.scene.McpTargetRig     
+        info = _targetInfo[rigtype]
+        rig = context.object
+        info.testRig(rigtype, rig)
+        print("Target armature %s verified" % rigtype)
+        
 #----------------------------------------------------------
 #   Target armature
 #----------------------------------------------------------
@@ -366,6 +384,7 @@ classes = [
     MCP_OT_GetTargetRig,
     MCP_OT_SaveTargetFile,
     MCP_OT_ListTargetRig,
+    MCP_OT_VerifyTargetRig,
 ]
 
 def initialize():

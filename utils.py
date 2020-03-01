@@ -302,6 +302,9 @@ class BvhOperator(bpy.types.Operator):
     def sequel(self, context, data):
         pass        
 
+    def run(self, context):
+        pass
+
 
 class BvhPropsOperator(BvhOperator):
     def invoke(self, context, event):
