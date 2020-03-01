@@ -75,7 +75,9 @@
 
     "optional" : [
         "spine lower b",
-	    "spine upper b"
+	    "spine upper b",
+	    "arm left finger 1a",
+	    "arm right finger 1a"
     ],
     
     "parents" : {
