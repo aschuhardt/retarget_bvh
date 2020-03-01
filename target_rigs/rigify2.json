@@ -1,6 +1,7 @@
 {
     "name"  : "Rigify 2",
     "url"   : "",
+    "fingerprint" : ["MCH-forearm_ik.L"],
     
     "bones" : {
         "torso" : "hips",

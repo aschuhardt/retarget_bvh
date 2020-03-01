@@ -1,6 +1,7 @@
 {
     "name"  : "Rigify",
     "url"   : "",
+    "fingerprint" : ["MCH-spine.flex"],
     
     "bones" : {
         "torso" : "hips",

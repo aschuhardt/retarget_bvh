@@ -1,6 +1,7 @@
 {
     "name"  : "Genesis 3,8",
     "url"   : "www.daz3d.com",
+    "fingerprint" : ["abdomenLower", "lShldrBend"],
     
     "bones" : {
         "hip" : "hips",

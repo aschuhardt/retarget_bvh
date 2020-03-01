@@ -1,6 +1,7 @@
 {
     "name"  : "Genesis 1,2",
     "url"   : "www.daz3d.com",
+    "fingerprint" : ["abdomen2", "lShldr"],
     
     "bones" : {
         "hip" : "hips",

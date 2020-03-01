@@ -43,6 +43,7 @@ class CTargetInfo:
         self.bones = []
         self.parents = {}
         self.optional = []
+        self.fingerprint = []
         
 
     def readFile(self, filepath):
@@ -58,6 +59,8 @@ class CTargetInfo:
             self.parents = struct["parents"]
         if "optional" in struct.keys():
             self.optional = struct["optional"]
+        if "fingerprint" in struct.keys():
+            self.fingerprint = struct["fingerprint"]
         
 
     def addAutoBones(self, rig):
@@ -183,27 +186,18 @@ def findTargetArmature(context, rig, auto):
 def guessTargetArmatureFromList(rig, scn):
     ensureTargetInited(scn)
     print("Guessing target")
-    if isMhxRig(rig):
-        return "MHX"
-    elif isMakeHuman(rig):
-        return "Makehuman"
-    elif isRigify2(rig):
-        return "Rigify 2"
-    elif isRigify(rig):
-        return "Rigify"
-    elif isMhx7Rig(rig):
-        return "MH-alpha7"
-    elif hasAllBones(["abdomen2", "lShldr"], rig) and matchAllBones(rig, "Genesis 1,2"):
-        return "Genesis 1,2"
-    elif hasAllBones(["abdomenLower", "lShldrBend"], rig) and matchAllBones(rig, "Genesis 3,8"):
-        return "Genesis 3,8"
-    elif hasAllBones(["root hips", "arm left shoulder 1"], rig) and matchAllBones(rig, "XPS Xnalara"):
-        return "XPS Xnalara"
+    for name,info in _targetInfo.items():
+        if name == "Automatic":
+            continue
+        elif matchAllBones(rig, info):
+            return name
     else:
         return "Automatic"
 
-def matchAllBones(rig, key):
-    info = _targetInfo[key]
+
+def matchAllBones(rig, info):
+    if not hasAllBones(info.fingerprint, rig):
+        return False
     for bname,_mhx in info.bones:
         if bname in info.optional:
             continue

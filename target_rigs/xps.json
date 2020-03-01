@@ -1,6 +1,7 @@
 {
     "name"  : "XPS Xnalara",
     "url"   : "",
+    "fingerprint" : ["root hips", "arm left shoulder 1"],
     
     "bones" : {
         "root hips" : "hips",

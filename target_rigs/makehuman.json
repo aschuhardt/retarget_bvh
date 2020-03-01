@@ -1,6 +1,7 @@
 {
     "name"  : "MakeHuman",
     "url"   : "www.makehuman.org",
+    "fingerprint" : ["risorius03.R"],
     
     "bones" : {
         "root" : "hips",
