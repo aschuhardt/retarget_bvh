@@ -28,7 +28,48 @@
 	    "thigh.fk.R" : "thigh.R",
     	"shin.fk.R" : "shin.R",
 	    "foot.fk.R" : "foot.R", 
-	    "toe.fk.R" : "toe.R"
+	    "toe.fk.R" : "toe.R",
+	    
+	    "thumb.01.L" : "thumb.01.L",
+	    "thumb.02.L" : "thumb.02.L",
+	    "thumb.03.L" : "thumb.03.L",
+	    
+	    "f_index.01.L" : "f_index.01.L",
+	    "f_index.02.L" : "f_index.02.L",
+	    "f_index.03.L" : "f_index.03.L",
+	    
+	    "f_middle.01.L" : "f_middle.01.L",
+	    "f_middle.02.L" : "f_middle.02.L",
+	    "f_middle.03.L" : "f_middle.03.L",
+	    
+	    "f_ring.01.L" : "f_ring.01.L",
+	    "f_ring.02.L" : "f_ring.02.L",
+	    "f_ring.03.L" : "f_ring.03.L",
+	    
+	    "f_pinky.01.L" : "f_pinky.01.L",
+	    "f_pinky.02.L" : "f_pinky.02.L",
+	    "f_pinky.03.L" : "f_pinky.03.L",
+	    
+	    "thumb.01.R" : "thumb.01.R",
+	    "thumb.02.R" : "thumb.02.R",
+	    "thumb.03.R" : "thumb.03.R",
+	    
+	    "f_index.01.R" : "f_index.01.R",
+	    "f_index.02.R" : "f_index.02.R",
+	    "f_index.03.R" : "f_index.03.R",
+	    
+	    "f_middle.01.R" : "f_middle.01.R",
+	    "f_middle.02.R" : "f_middle.02.R",
+	    "f_middle.03.R" : "f_middle.03.R",
+	    
+	    "f_ring.01.R" : "f_ring.01.R",
+	    "f_ring.02.R" : "f_ring.02.R",
+	    "f_ring.03.R" : "f_ring.03.R",
+	    
+	    "f_pinky.01.R" : "f_pinky.01.R",
+	    "f_pinky.02.R" : "f_pinky.02.R",
+	    "f_pinky.03.R" : "f_pinky.03.R"
+
     },
         
     "parents" : {
@@ -57,7 +98,20 @@
 	    "thigh.fk.R" : "root",
     	"shin.fk.R" : "thigh.fk.R",
 	    "foot.fk.R" : "shin.fk.R", 
-	    "toe.fk.R" : "foot.fk.R"
+	    "toe.fk.R" : "foot.fk.R",
+	    
+	    "thumb.01.L" : "hand.fk.L",
+	    "f_index.01.L" : "hand.fk.L",
+	    "f_middle.01.L" : "hand.fk.L",
+	    "f_ring.01.L" : "hand.fk.L",
+	    "f_pinky.01.L" : "hand.fk.L",	    
+	    
+	    "thumb.01.R" : "hand.fk.R",
+	    "f_index.01.R" : "hand.fk.R",
+	    "f_middle.01.R" : "hand.fk.R",
+	    "f_ring.01.R" : "hand.fk.R",
+	    "f_pinky.01.R" : "hand.fk.R"
+	    	    
     }
     
 }
