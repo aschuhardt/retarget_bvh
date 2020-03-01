@@ -203,56 +203,6 @@ def matchAllBones(rig, key):
             return False
     return True
 
-#
-#   findTargetKeys(mhx, list):
-#
-
-def findTargetKeys(mhx, list):
-    bones = []
-    for (bone, mhx1) in list:
-        if mhx1 == mhx:
-            bones.append(bone)
-    return bones
-
-###############################################################################
-#
-#    Target armatures
-#
-###############################################################################
-
-#    (mhx bone, text)
-
-TargetBoneNames = [
-    ('hips',         'Root bone'),
-    ('spine',        'Lower spine'),
-    ('spine-1',      'Middle spine'),
-    ('chest',        'Upper spine'),
-    ('neck',         'Neck'),
-    ('head',         'Head'),
-    None,
-    ('shoulder.L',   'L shoulder'),
-    ('upper_arm.L',  'L upper arm'),
-    ('forearm.L',    'L forearm'),
-    ('hand.L',       'L hand'),
-    None,
-    ('shoulder.R',   'R shoulder'),
-    ('upper_arm.R',  'R upper arm'),
-    ('forearm.R',    'R forearm'),
-    ('hand.R',       'R hand'),
-    None,
-    ('hip.L',        'L hip'),
-    ('thigh.L',      'L thigh'),
-    ('shin.L',       'L shin'),
-    ('foot.L',       'L foot'),
-    ('toe.L',        'L toes'),
-    None,
-    ('hip.R',        'R hip'),
-    ('thigh.R',      'R thigh'),
-    ('shin.R',       'R shin'),
-    ('foot.R',       'R foot'),
-    ('toe.R',        'R toes'),
-]
-
 ###############################################################################
 #
 #    Target initialization
@@ -359,6 +309,35 @@ class MCP_OT_SaveTargetFile(BvhOperator, IsArmature, ExportHelper):
         return {'RUNNING_MODAL'}
 
 #----------------------------------------------------------
+#   List Rig
+#----------------------------------------------------------
+
+from .source import ListRig
+
+class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
+    bl_idname = "mcp.list_target_rig"
+    bl_label = "List Target Rig"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        return context.scene.McpTargetRig
+
+    def findKeys(self, mhx, bones):
+        keys = []
+        for (bone, mhx1) in bones:
+            if mhx1 == mhx:
+                keys.append(bone)
+        return keys
+
+    def getBones(self, context):
+        info = getTargetInfo(context.scene.McpTargetRig)    
+        if info:
+            return info.bones
+        else:
+            return []
+
+#----------------------------------------------------------
 #   Target armature
 #----------------------------------------------------------
 
@@ -386,6 +365,7 @@ classes = [
     MCP_OT_InitTargets,
     MCP_OT_GetTargetRig,
     MCP_OT_SaveTargetFile,
+    MCP_OT_ListTargetRig,
 ]
 
 def initialize():

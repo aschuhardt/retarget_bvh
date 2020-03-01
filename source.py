@@ -153,16 +153,6 @@ def setSourceArmature(rig, scn):
     _srcArmature = _sourceArmatures[name]
     print("Set source armature to %s" % name)
 
-#
-#   findSourceKey(mhx, struct):
-#
-
-def findSourceKey(bname, struct):
-    for bone in struct.keys():
-        if bname == struct[bone]:
-            return bone
-    return None
-
 #----------------------------------------------------------
 #   Class
 #----------------------------------------------------------
@@ -239,13 +229,129 @@ def readSrcArmature(filepath, name):
         bones[canonicalName(key)] = nameOrNone(value)
     return armature
 
+#----------------------------------------------------------
+#   List Rig
+#
+#   (mhx bone, text)
+#----------------------------------------------------------
 
+ListedBones = [
+    ('hips',         'Root bone'),
+    ('spine',        'Lower spine'),
+    ('spine-1',      'Middle spine'),
+    ('chest',        'Upper spine'),
+    ('neck',         'Neck'),
+    ('head',         'Head'),
+    None,
+    ('shoulder.L',   'L shoulder'),
+    ('upper_arm.L',  'L upper arm'),
+    ('forearm.L',    'L forearm'),
+    ('hand.L',       'L hand'),
+    None,
+    ('shoulder.R',   'R shoulder'),
+    ('upper_arm.R',  'R upper arm'),
+    ('forearm.R',    'R forearm'),
+    ('hand.R',       'R hand'),
+    None,
+    ('hip.L',        'L hip'),
+    ('thigh.L',      'L thigh'),
+    ('shin.L',       'L shin'),
+    ('foot.L',       'L foot'),
+    ('toe.L',        'L toes'),
+    None,
+    ('hip.R',        'R hip'),
+    ('thigh.R',      'R thigh'),
+    ('shin.R',       'R shin'),
+    ('foot.R',       'R foot'),
+    ('toe.R',        'R toes'),
+    None,
+	("thumb.01.L",   "L thumb 1"),
+	("thumb.02.L",   "L thumb 2"),
+	("thumb.03.L",   "L thumb 3"),
+	("f_index.01.L",   "L index 1"),
+	("f_index.02.L",   "L index 2"),
+	("f_index.03.L",   "L index 3"),
+	("f_middle.01.L",   "L middle 1"),
+	("f_middle.02.L",   "L middle 2"),
+	("f_middle.03.L",   "L middle 3"),
+	("f_ring.01.L",   "L ring 1"),
+	("f_ring.02.L",   "L ring 2"),
+	("f_ring.03.L",   "L ring 3"),
+	("f_pinky.01.L",   "L pinky 1"),
+	("f_pinky.02.L",   "L pinky 2"),
+	("f_pinky.03.L",   "L pinky 3"),
+    None,
+	("thumb.01.R",   "R thumb 1"),
+	("thumb.02.R",   "R thumb 2"),
+	("thumb.03.R",   "R thumb 3"),
+	("f_index.01.R",   "R index 1"),
+	("f_index.02.R",   "R index 2"),
+	("f_index.03.R",   "R index 3"),
+	("f_middle.01.R",   "R middle 1"),
+	("f_middle.02.R",   "R middle 2"),
+	("f_middle.03.R",   "R middle 3"),
+	("f_ring.01.R",   "R ring 1"),
+	("f_ring.02.R",   "R ring 2"),
+	("f_ring.03.R",   "R ring 3"),
+	("f_pinky.01.R",   "R pinky 1"),
+	("f_pinky.02.R",   "R pinky 2"),
+	("f_pinky.03.R",   "R pinky 3"),
+]
+
+class ListRig:
+    def draw(self, context):
+        bones = self.getBones(context)
+        if bones:
+            box = self.layout.box()
+            for boneText in ListedBones:
+                if not boneText:
+                    box.separator()
+                    continue
+                (mhx, text) = boneText
+                bnames = self.findKeys(mhx, bones)
+                if bnames:
+                    for bname in bnames:
+                        row = box.row()
+                        row.label(text=text)
+                        row.label(text=bname)
+                else:
+                    row = box.row()
+                    row.label(text=text)
+                    row.label(text="-")
+
+    def run(self, context):
+        pass
+
+
+class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
+    bl_idname = "mcp.list_source_rig"
+    bl_label = "List Source Rig"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        return context.scene.McpSourceRig
+
+    def findKeys(self, mhx, bones):
+        for bone in bones.keys():
+            if mhx == bones[bone]:
+                return [bone]
+        return []
+
+    def getBones(self, context):  
+        amt = getSourceArmature(context.scene.McpSourceRig)
+        if amt:
+            return amt.boneNames
+        else:
+            return []
+        
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 
 classes = [
     MCP_OT_InitSources,
+    MCP_OT_ListSourceRig,
 ]
 
 def initialize():

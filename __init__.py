@@ -236,25 +236,8 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
         layout.prop(scn, "McpSourceRig")
         layout.prop(scn, "McpSourceTPose")
+        layout.operator("mcp.list_source_rig")
         
-        if scn.McpSourceRig:
-            from .source import getSourceArmature
-
-            amt = getSourceArmature(scn.McpSourceRig)
-            if amt:
-                bones = amt.boneNames
-                box = layout.box()
-                for boneText in target.TargetBoneNames:
-                    if not boneText:
-                        box.separator()
-                        continue
-                    (mhx, text) = boneText
-                    bone = source.findSourceKey(mhx, bones)
-                    if bone:
-                        row = box.row()
-                        row.label(text=text)
-                        row.label(text=bone)
-
 ########################################################################
 #
 #    class MCP_PT_MhxTargetBones(bpy.types.Panel):
@@ -287,31 +270,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.separator()
         layout.prop(scn, "McpSaveTargetTPose")
         layout.operator("mcp.save_target_file")
-
-        layout.separator()
-
-        if scn.McpTargetRig:
-            from .target import getTargetInfo, TargetBoneNames, findTargetKeys
-
-            info = getTargetInfo(scn.McpTargetRig)
-
-            layout.label(text="Bones")
-            box = layout.box()
-            for boneText in TargetBoneNames:
-                if not boneText:
-                    box.separator()
-                    continue
-                (mhx, text) = boneText
-                bnames = findTargetKeys(mhx, info.bones)
-                if bnames:
-                    for bname in bnames:
-                        row = box.row()
-                        row.label(text=text)
-                        row.label(text=bname)
-                else:
-                    row = box.row()
-                    row.label(text=text)
-                    row.label(text="-")
+        layout.operator("mcp.list_target_rig")
 
 ########################################################################
 #
