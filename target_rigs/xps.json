@@ -5,7 +5,9 @@
     "bones" : {
         "root hips" : "hips",
 	    "spine lower" : "spine",
+	    "spine lower b" : "spine-1",
 	    "spine upper" : "chest",
+	    "spine upper b" : "chest-1",
 	    "head neck lower" : "neck",
 	    "head neck upper" : "head", 
 
@@ -71,6 +73,11 @@
 
     },
 
+    "optional" : [
+        "spine lower b",
+	    "spine upper b"
+    ],
+    
     "parents" : {
     }
 }

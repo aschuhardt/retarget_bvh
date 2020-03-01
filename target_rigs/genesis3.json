@@ -73,6 +73,8 @@
 
     },
     
+    "optional" : [],
+    
     "parents" : {
       	"lShin" : "lThighBend"      
     }

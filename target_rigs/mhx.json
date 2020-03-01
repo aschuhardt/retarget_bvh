@@ -72,6 +72,8 @@
 
     },
         
+    "optional" : [],
+    
     "parents" : {
         "root" : "",
 	    "spine" : "root",
@@ -110,8 +112,7 @@
 	    "f_index.01.R" : "hand.fk.R",
 	    "f_middle.01.R" : "hand.fk.R",
 	    "f_ring.01.R" : "hand.fk.R",
-	    "f_pinky.01.R" : "hand.fk.R"
-	    	    
+	    "f_pinky.01.R" : "hand.fk.R"	    	    
     }
     
 }

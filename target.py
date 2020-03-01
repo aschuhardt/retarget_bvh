@@ -42,6 +42,7 @@ class CTargetInfo:
         self.filepath = "None"
         self.bones = []
         self.parents = {}
+        self.optional = []
         
 
     def readFile(self, filepath):
@@ -55,6 +56,8 @@ class CTargetInfo:
         self.bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
         if "parents" in struct.keys():
             self.parents = struct["parents"]
+        if "optional" in struct.keys():
+            self.optional = struct["optional"]
         
 
     def addAutoBones(self, rig):
@@ -101,6 +104,8 @@ class CTargetInfo:
         from .armature import validBone
         print("Testing %s" % name)
         for (bname, mhxname) in self.bones:
+            if bname in self.optional:
+                continue
             try:
                 pb = rig.pose.bones[bname]
             except KeyError:
@@ -192,11 +197,16 @@ def guessTargetArmatureFromList(rig, scn):
         return "Genesis 1,2"
     elif hasAllBones(["abdomenLower", "lShldrBend"], rig) and matchAllBones(rig, "Genesis 3,8"):
         return "Genesis 3,8"
+    elif hasAllBones(["root hips", "arm left shoulder 1"], rig) and matchAllBones(rig, "XPS Xnalara"):
+        return "XPS Xnalara"
     else:
         return "Automatic"
 
 def matchAllBones(rig, key):
-    for bname,_mhx in _targetInfo[key].bones:
+    info = _targetInfo[key]
+    for bname,_mhx in info.bones:
+        if bname in info.optional:
+            continue
         if bname not in rig.data.bones.keys():
             if theVerbose:
                 print("Missing bone:", bname)
