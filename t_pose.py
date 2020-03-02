@@ -167,34 +167,67 @@ class MCP_OT_RestCurrentPose(BvhPropsOperator, IsArmature, Rigger):
 #------------------------------------------------------------------
 
 TPose = {
-    "shoulder.L" : (0, 0, -pi/2, 'XYZ'),
-    "upper_arm.L" : (0, 0, -pi/2, 'XYZ'),
-    "forearm.L" :   (0, 0, -pi/2, 'XYZ'),
-    #"hand.L" :      (0, 0, -pi/2, 'XYZ'),
+    "shoulder.L" : (0, 0, -90*D, 'XYZ'),
+    "upper_arm.L" : (0, 0, -90*D, 'XYZ'),
+    "forearm.L" :   (0, 0, -90*D, 'XYZ'),
+    "hand.L" :      (0, 0, -90*D, 'XYZ'),
 
-    "shoulder.R" : (0, 0, pi/2, 'XYZ'),
-    "upper_arm.R" : (0, 0, pi/2, 'XYZ'),
-    "forearm.R" :   (0, 0, pi/2, 'XYZ'),
-    #"hand.R" :      (0, 0, pi/2, 'XYZ'),
+    "shoulder.R" : (0, 0, 90*D, 'XYZ'),
+    "upper_arm.R" : (0, 0, 90*D, 'XYZ'),
+    "forearm.R" :   (0, 0, 90*D, 'XYZ'),
+    "hand.R" :      (0, 0, 90*D, 'XYZ'),
 
-    "thigh.L" :     (-pi/2, 0, 0, 'XYZ'),
-    "shin.L" :      (-pi/2, 0, 0, 'XYZ'),
+    "thigh.L" :     (-90*D, 0, 0, 'XYZ'),
+    "shin.L" :      (-90*D, 0, 0, 'XYZ'),
     #"foot.L" :      (None, 0, 0, 'XYZ'),
     #"toe.L" :       (pi, 0, 0, 'XYZ'),
 
-    "thigh.R" :     (-pi/2, 0, 0, 'XYZ'),
-    "shin.R" :      (-pi/2, 0, 0, 'XYZ'),
+    "thigh.R" :     (-90*D, 0, 0, 'XYZ'),
+    "shin.R" :      (-90*D, 0, 0, 'XYZ'),
     #"foot.R" :      (None, 0, 0, 'XYZ'),
     #"toe.R" :       (pi, 0, 0, 'XYZ'),
+    
+    "f_thumb.01.L": (0, 0, -120*D, 'XYZ'),
+    "f_thumb.02.L": (0, 0, -120*D, 'XYZ'),
+    "f_thumb.03.L": (0, 0, -120*D, 'XYZ'),
+    "f_index.01.L": (0, 0, -105*D, 'XYZ'),
+    "f_index.02.L": (0, 0, -105*D, 'XYZ'),
+    "f_index.03.L": (0, 0, -105*D, 'XYZ'),
+    "f_middle.01.L": (0, 0, -90*D, 'XYZ'),
+    "f_middle.02.L": (0, 0, -90*D, 'XYZ'),
+    "f_middle.03.L": (0, 0, -90*D, 'XYZ'),
+    "f_ring.01.L": (0, 0, -75*D, 'XYZ'),
+    "f_ring.02.L": (0, 0, -75*D, 'XYZ'),
+    "f_ring.03.L": (0, 0, -75*D, 'XYZ'),
+    "f_pinky.01.L": (0, 0, -60*D, 'XYZ'),
+    "f_pinky.02.L": (0, 0, -60*D, 'XYZ'),
+    "f_pinky.03.L": (0, 0, -60*D, 'XYZ'),
+    
+    "f_thumb.01.R": (0, 0, 120*D, 'XYZ'),
+    "f_thumb.02.R": (0, 0, 120*D, 'XYZ'),
+    "f_thumb.03.R": (0, 0, 120*D, 'XYZ'),
+    "f_index.01.R": (0, 0, 105*D, 'XYZ'),
+    "f_index.02.R": (0, 0, 105*D, 'XYZ'),
+    "f_index.03.R": (0, 0, 105*D, 'XYZ'),
+    "f_middle.01.R": (0, 0, 90*D, 'XYZ'),
+    "f_middle.02.R": (0, 0, 90*D, 'XYZ'),
+    "f_middle.03.R": (0, 0, 90*D, 'XYZ'),
+    "f_ring.01.R": (0, 0, 75*D, 'XYZ'),
+    "f_ring.02.R": (0, 0, 75*D, 'XYZ'),
+    "f_ring.03.R": (0, 0, 75*D, 'XYZ'),
+    "f_pinky.01.R": (0, 0, 60*D, 'XYZ'),
+    "f_pinky.02.R": (0, 0, 60*D, 'XYZ'),
+    "f_pinky.03.R": (0, 0, 60*D, 'XYZ'),
+    
 }
 
 def autoTPose(rig, context):
     print("Auto T-pose", rig.name)
     putInRestPose(rig, True)
     for pb in rig.pose.bones:
-        try:
+        if pb.McpBone in TPose.keys():
             ex,ey,ez,order = TPose[pb.McpBone]
-        except KeyError:
+        else:
             continue
 
         euler = pb.matrix.to_euler(order)

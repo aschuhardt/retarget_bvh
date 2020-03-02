@@ -318,6 +318,9 @@ class MCP_OT_VerifyTargetRig(BvhPropsOperator):
         ob = context.object
         return (context.scene.McpTargetRig and ob and ob.type == 'ARMATURE')
         
+    def draw(self, context):
+        self.layout.prop(self, "skipFingers")
+                
     def run(self, context):   
         rigtype = context.scene.McpTargetRig     
         info = _targetInfo[rigtype]
