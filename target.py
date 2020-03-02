@@ -198,8 +198,8 @@ def guessTargetArmatureFromList(rig, scn):
 def matchAllBones(rig, info):
     if not hasAllBones(info.fingerprint, rig):
         return False
-    for bname,_mhx in info.bones:
-        if bname in info.optional:
+    for bname,mhx in info.bones:
+        if bname in info.optional or mhx[0:2] == "f_":
             continue
         if bname not in rig.data.bones.keys():
             if theVerbose:
