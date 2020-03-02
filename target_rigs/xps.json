@@ -32,9 +32,9 @@
 	    "leg right ankle" : "foot.R", 
 	    "leg right toes" : "toe.R",
 	    
-	    "arm left finger 1a" : "thumb.01.L",
-	    "arm left finger 1b" : "thumb.02.L",
-	    "arm left finger 1c" : "thumb.03.L",
+	    "arm left finger 1a" : "f_thumb.01.L",
+	    "arm left finger 1b" : "f_thumb.02.L",
+	    "arm left finger 1c" : "f_thumb.03.L",
 	    
 	    "arm left finger 2a" : "f_index.01.L",
 	    "arm left finger 2b" : "f_index.02.L",
@@ -52,9 +52,9 @@
 	    "arm left finger 5b" : "f_pinky.02.L",
 	    "arm left finger 5c" : "f_pinky.03.L",	
 	        
-	    "arm right finger 1a" : "thumb.01.R",
-	    "arm right finger 1b" : "thumb.02.R",
-	    "arm right finger 1c" : "thumb.03.R",
+	    "arm right finger 1a" : "f_thumb.01.R",
+	    "arm right finger 1b" : "f_thumb.02.R",
+	    "arm right finger 1c" : "f_thumb.03.R",
 	    
 	    "arm right finger 2a" : "f_index.01.R",
 	    "arm right finger 2b" : "f_index.02.R",

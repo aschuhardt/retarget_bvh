@@ -31,9 +31,9 @@
 	    "foot.fk.R" : "foot.R", 
 	    "toe.fk.R" : "toe.R",
 	    
-	    "thumb.01.L" : "thumb.01.L",
-	    "thumb.02.L" : "thumb.02.L",
-	    "thumb.03.L" : "thumb.03.L",
+	    "thumb.01.L" : "f_thumb.01.L",
+	    "thumb.02.L" : "f_thumb.02.L",
+	    "thumb.03.L" : "f_thumb.03.L",
 	    
 	    "f_index.01.L" : "f_index.01.L",
 	    "f_index.02.L" : "f_index.02.L",
@@ -51,9 +51,9 @@
 	    "f_pinky.02.L" : "f_pinky.02.L",
 	    "f_pinky.03.L" : "f_pinky.03.L",
 	    
-	    "thumb.01.R" : "thumb.01.R",
-	    "thumb.02.R" : "thumb.02.R",
-	    "thumb.03.R" : "thumb.03.R",
+	    "thumb.01.R" : "f_thumb.01.R",
+	    "thumb.02.R" : "f_thumb.02.R",
+	    "thumb.03.R" : "f_thumb.03.R",
 	    
 	    "f_index.01.R" : "f_index.01.R",
 	    "f_index.02.R" : "f_index.02.R",
