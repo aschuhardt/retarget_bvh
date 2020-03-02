@@ -103,11 +103,13 @@ class CTargetInfo:
                     print("  ", pb.name, pb.McpParent)
           
 
-    def testRig(self, name, rig):
+    def testRig(self, name, rig, skipFingers):
         from .armature import validBone
         print("Testing %s" % name)
         for (bname, mhxname) in self.bones:
             if bname in self.optional:
+                continue
+            if skipFingers and bname[0:2] == "f_":
                 continue
             try:
                 pb = rig.pose.bones[bname]
@@ -175,7 +177,7 @@ def findTargetArmature(context, rig, auto):
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
         info = _targetInfo[name]
-        if not info.testRig(name, rig):
+        if not info.testRig(name, rig, True):
             pass
         print("Target armature %s" % name)
         info.addManualBones(rig)
@@ -201,7 +203,7 @@ def matchAllBones(rig, info):
     for bname,mhx in info.bones:
         if bname in info.optional or mhx[0:2] == "f_":
             continue
-        if bname not in rig.data.bones.keys():
+        elif bname not in rig.data.bones.keys():
             if theVerbose:
                 print("Missing bone:", bname)
             return False
@@ -301,11 +303,16 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
             return []
 
 
-class MCP_OT_VerifyTargetRig(BvhOperator):
+class MCP_OT_VerifyTargetRig(BvhPropsOperator):
     bl_idname = "mcp.verify_target_rig"
     bl_label = "Verify Target Rig"
     bl_options = {'UNDO'}
 
+    skipFingers : BoolProperty(
+        name = "Skip Fingers",
+        description = "Ignore finger bones when checking armature",
+        default = True)
+    
     @classmethod
     def poll(self, context):
         ob = context.object
@@ -315,7 +322,7 @@ class MCP_OT_VerifyTargetRig(BvhOperator):
         rigtype = context.scene.McpTargetRig     
         info = _targetInfo[rigtype]
         rig = context.object
-        info.testRig(rigtype, rig)
+        info.testRig(rigtype, rig, self.skipFingers)
         print("Target armature %s verified" % rigtype)
         
 #----------------------------------------------------------
@@ -335,7 +342,6 @@ class Target:
         self.layout.separator()
 
     def findTarget(self, context, rig):
-        from .target import findTargetArmature
         return findTargetArmature(context, rig, self.useAutoTarget)
 
 #----------------------------------------------------------
