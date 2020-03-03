@@ -68,8 +68,14 @@ class Rigger:
         description = "Find rig automatically",
         default = True)
 
+    includeFingers : BoolProperty(
+        name = "Include Fingers",
+        description = "Include finger bones",
+        default = False)
+
     def draw(self, context):
         self.layout.prop(self, "autoRig")
+        self.layout.prop(self, "includeFingers")
         
             
     def initRig(self, context):
@@ -81,9 +87,9 @@ class Rigger:
         pose = [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
     
         if rig.McpIsSourceRig:
-            findSourceArmature(context, rig, self.autoRig)
+            findSourceArmature(context, rig, self.autoRig, self.includeFingers)
         else:
-            findTargetArmature(context, rig, self.autoRig)
+            findTargetArmature(context, rig, self.autoRig, self.includeFingers)
 
         for pb,mat in pose:
             pb.matrix_basis = mat
@@ -221,10 +227,12 @@ TPose = {
     
 }
 
-def autoTPose(rig, context):
+def autoTPose(rig, context, includeFingers):
     print("Auto T-pose", rig.name)
     putInRestPose(rig, True)
     for pb in rig.pose.bones:
+        if pb.McpBone[0:2] == "f_" and not includeFingers:
+            continue
         if pb.McpBone in TPose.keys():
             ex,ey,ez,order = TPose[pb.McpBone]
         else:
@@ -275,12 +283,12 @@ def setKeys(pb):
     #pb.keyframe_insert('location', group=pb.name)
         
 
-def putInTPose(rig, tpname, context):
+def putInTPose(rig, tpname, context, includeFingers):
     global _t_poses
     if rig.McpTPoseDefined:
         getStoredTPose(rig)
     elif tpname == "Default":
-        autoTPose(rig, context)
+        autoTPose(rig, context, includeFingers)
     else:
         if tpname in _t_poses.keys():
             struct = _t_poses[tpname]
@@ -300,7 +308,7 @@ class MCP_OT_PutInTPose(BvhPropsOperator, IsArmature, Rigger):
 
     def run(self, context):
         rig = self.initRig(context)
-        putInTPose(rig, context.scene.McpTargetTPose, context)
+        putInTPose(rig, context.scene.McpTargetTPose, context, self.includeFingers)
         print("Pose set to T-pose")
 
 #------------------------------------------------------------------
@@ -323,7 +331,7 @@ def defineTPose(rig):
     rig.McpTPoseDefined = True
 
 
-class MCP_OT_DefineTPose(BvhPropsOperator, IsArmature, Rigger):
+class MCP_OT_DefineTPose(BvhOperator, IsArmature, Rigger):
     bl_idname = "mcp.define_t_pose"
     bl_label = "Define T-pose"
     bl_description = "Define T-pose as current pose"
@@ -332,19 +340,11 @@ class MCP_OT_DefineTPose(BvhPropsOperator, IsArmature, Rigger):
     problems = ""
 
     def run(self, context):
-        if self.problems:
-            return
+        from .load import checkObjectProblems
+        checkObjectProblems(context)
         rig = self.initRig(context)
         defineTPose(rig)
         print("T-pose defined as current pose")
-
-    def invoke(self, context, event):
-        from .load import checkObjectProblems
-        return checkObjectProblems(self, context)
-
-    def draw(self, context):
-        from .load import drawObjectProblems
-        drawObjectProblems(self)
 
 #------------------------------------------------------------------
 #   Undefine stored T-pose

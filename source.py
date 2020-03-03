@@ -114,10 +114,10 @@ def guessSrcArmatureFromList(rig, scn):
         raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
 
 #
-#   findSourceArmature(context, rig, auto):
+#   findSourceArmature(context, rig, auto, includeFingers):
 #
 
-def findSourceArmature(context, rig, auto):
+def findSourceArmature(context, rig, auto, includeFingers):
     global _srcArmature, _sourceArmatures
     from .t_pose import autoTPose, defineTPose, putInRestPose
     scn = context.scene
@@ -128,7 +128,7 @@ def findSourceArmature(context, rig, auto):
         amt = _srcArmature = CArmature()
         putInRestPose(rig, True)
         amt.findArmature(rig)
-        autoTPose(rig, context)
+        autoTPose(rig, context, includeFingers)
         #defineTPose(rig)
         _sourceArmatures["Automatic"] = amt
         amt.display("Source")
@@ -170,8 +170,7 @@ class Source:
         self.layout.separator()
 
     def findSource(self, context, rig):
-        from .source import findSourceArmature
-        return findSourceArmature(context, rig, self.useAutoSource)
+        return findSourceArmature(context, rig, self.useAutoSource, self.includeFingers)
 
 #----------------------------------------------------------
 #   Source initialization

@@ -103,13 +103,13 @@ class CTargetInfo:
                     print("  ", pb.name, pb.McpParent)
           
 
-    def testRig(self, name, rig, skipFingers):
+    def testRig(self, name, rig, includeFingers):
         from .armature import validBone
         print("Testing %s" % name)
         for (bname, mhxname) in self.bones:
             if bname in self.optional:
                 continue
-            if skipFingers and bname[0:2] == "f_":
+            if bname[0:2] == "f_" and not includeFingers:
                 continue
             try:
                 pb = rig.pose.bones[bname]
@@ -144,10 +144,10 @@ def ensureTargetInited(scn):
         initTargets(scn)
 
 #
-#   findTargetArmature(context, rig, auto):
+#   findTargetArmature(context, rig, auto, includeFingers):
 #
 
-def findTargetArmature(context, rig, auto):
+def findTargetArmature(context, rig, auto, includeFingers):
     from .t_pose import putInRestPose
     global _targetInfo
 
@@ -177,7 +177,7 @@ def findTargetArmature(context, rig, auto):
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
         info = _targetInfo[name]
-        if not info.testRig(name, rig, True):
+        if not info.testRig(name, rig, includeFingers):
             pass
         print("Target armature %s" % name)
         info.addManualBones(rig)
@@ -253,7 +253,7 @@ class MCP_OT_InitTargets(BvhOperator):
         initTargets(context.scene)
         
 
-class MCP_OT_GetTargetRig(BvhOperator, IsArmature):
+class MCP_OT_GetTargetRig(BvhOperator, IsArmature, IncludeFingers):
     bl_idname = "mcp.get_target_rig"
     bl_label = "Identify Target Rig"
     bl_description = "Identify the target rig type of the active armature."
@@ -266,7 +266,7 @@ class MCP_OT_GetTargetRig(BvhOperator, IsArmature):
     def run(self, context):
         setVerbose(True)
         context.scene.McpTargetRig = "Automatic"        
-        findTargetArmature(context, context.object, True)
+        findTargetArmature(context, context.object, True, self.includeFingers)
         
     def sequel(self, context, data):
         from .retarget import restoreTargetData
@@ -308,24 +308,24 @@ class MCP_OT_VerifyTargetRig(BvhPropsOperator):
     bl_label = "Verify Target Rig"
     bl_options = {'UNDO'}
 
-    skipFingers : BoolProperty(
-        name = "Skip Fingers",
-        description = "Ignore finger bones when checking armature",
-        default = True)
-    
+    includeFingers : BoolProperty(
+        name = "Include Fingers",
+        description = "Include finger bones",
+        default = False)    
+
+    def draw(self, context):
+        self.layout.prop(self, "includeFingers")
+        
     @classmethod
     def poll(self, context):
         ob = context.object
         return (context.scene.McpTargetRig and ob and ob.type == 'ARMATURE')
-        
-    def draw(self, context):
-        self.layout.prop(self, "skipFingers")
                 
     def run(self, context):   
         rigtype = context.scene.McpTargetRig     
         info = _targetInfo[rigtype]
         rig = context.object
-        info.testRig(rigtype, rig, self.skipFingers)
+        info.testRig(rigtype, rig, self.includeFingers)
         print("Target armature %s verified" % rigtype)
         
 #----------------------------------------------------------
@@ -338,14 +338,21 @@ class Target:
         description = "Find target rig automatically",
         default = True)
 
+    includeFingers : BoolProperty(
+        name = "Include Fingers",
+        description = "Include finger bones",
+        default = False)
+
     def draw(self, context):
         self.layout.prop(self, "useAutoTarget")
         if not self.useAutoTarget:
             self.layout.prop(context.scene, "McpTargetRig")
         self.layout.separator()
+        self.layout.prop(self, "includeFingers")
+        self.layout.separator()        
 
     def findTarget(self, context, rig):
-        return findTargetArmature(context, rig, self.useAutoTarget)
+        return findTargetArmature(context, rig, self.useAutoTarget, self.includeFingers)
 
 #----------------------------------------------------------
 #   Initialize

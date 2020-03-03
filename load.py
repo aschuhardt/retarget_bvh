@@ -589,7 +589,7 @@ class BvhRenamer(Source, Target):
         self.findTarget(context, trgRig)
         self.findSource(context, srcRig)
         renameBones(srcRig, context)
-        putInTPose(srcRig, scn.McpSourceTPose, context)
+        putInTPose(srcRig, scn.McpSourceTPose, context, self.includeFingers)
         setInterpolation(srcRig)
         self.rescaleRig(trgRig, srcRig)
         srcRig.McpRenamed = True

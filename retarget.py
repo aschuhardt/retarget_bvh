@@ -98,14 +98,14 @@ class CAnimation:
             banim.printResult(frame)
 
 
-    def putInTPoses(self, context):
+    def putInTPoses(self, context, includeFingers):
         from .t_pose import putInTPose, putInRestPose
         scn = context.scene
         scn.frame_set(0)
         putInRestPose(self.srcRig, True)
-        putInTPose(self.srcRig, scn.McpSourceTPose, context)
+        putInTPose(self.srcRig, scn.McpSourceTPose, context, includeFingers)
         putInRestPose(self.trgRig, True)
-        putInTPose(self.trgRig, scn.McpTargetTPose, context)
+        putInTPose(self.trgRig, scn.McpTargetTPose, context, includeFingers)
         updateScene()
         for banim in self.boneAnims.values():
             banim.getTPoseMatrix()
@@ -306,7 +306,7 @@ def clearMcpProps(rig):
                 del pb[key]
 
 
-def retargetAnimation(context, srcRig, trgRig, autoTarget):
+def retargetAnimation(context, srcRig, trgRig, autoTarget, includeFingers):
     from .t_pose import ensureTPoseInited
     from .source import ensureSourceInited, setSourceArmature 
     from .target import ensureTargetInited, findTargetArmature
@@ -336,9 +336,9 @@ def retargetAnimation(context, srcRig, trgRig, autoTarget):
     print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
     ensureTargetInited(scn)
-    info = findTargetArmature(context, trgRig, autoTarget)
+    info = findTargetArmature(context, trgRig, autoTarget, includeFingers)
     anim = CAnimation(srcRig, trgRig, info, context)
-    anim.putInTPoses(context)
+    anim.putInTPoses(context, includeFingers)
 
     setCategory("Retarget")
     frameBlock = frames[0:100]
@@ -466,7 +466,7 @@ class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target):
         self.findTarget(context, trgRig)
         for srcRig in rigList:
             if srcRig != trgRig:
-                retargetAnimation(context, srcRig, trgRig, self.useAutoTarget)
+                retargetAnimation(context, srcRig, trgRig, self.useAutoTarget, self.includeFingers)
                 
                 
     def sequel(self, context, data):
@@ -539,7 +539,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         info = (None, 0)
         try:
             self.renameAndRescaleBvh(context, srcRig, trgRig)
-            info = retargetAnimation(context, srcRig, trgRig, self.useAutoTarget)
+            info = retargetAnimation(context, srcRig, trgRig, self.useAutoTarget, self.includeFingers)
             scn = context.scene
             if self.useBendPositive:
                 self.useKnees = self.useElbows = True

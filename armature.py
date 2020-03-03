@@ -377,3 +377,5 @@ def getHeadTailDir(pb):
     vec = Vector(mat.col[1][:3])
     tail = head + pb.bone.length * vec
     return head, tail, vec
+
+    
