@@ -215,7 +215,7 @@ class BvhLoader:
             raise MocapError("Not a bvh file: " + fileName)
         startProgress( "Loading BVH file "+ fileName )
     
-        time1 = time.clock()
+        time1 = time.perf_counter()
         level = 0
         nErrors = 0
         coll = context.scene.collection
@@ -318,7 +318,7 @@ class BvhLoader:
         if not rig:
             raise MocapError("Bvh file \n%s\n is corrupt: No rig defined" % filepath)
         setInterpolation(rig)
-        time2 = time.clock()
+        time2 = time.perf_counter()
         endProgress("Bvh file %s loaded in %.3f s" % (filepath, time2-time1))
         if frameno == 1:
             print("Warning: No frames in range %d -- %d." % (self.startFrame, self.endFrame))

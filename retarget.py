@@ -504,7 +504,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
                          
     def prequel(self, context):
         data = changeTargetData(context.object, context.scene)
-        return (time.clock(), data)
+        return (time.perf_counter(), data)
         
 
     def run(self, context):
@@ -556,7 +556,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
     def sequel(self, context, stuff):
         time1,data = stuff
         restoreTargetData(data)
-        time2 = time.clock()
+        time2 = time.perf_counter()
         print("Retargeting finished in %.3f s" % (time2-time1))
 
 
