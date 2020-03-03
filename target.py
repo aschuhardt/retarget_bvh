@@ -251,7 +251,17 @@ class MCP_OT_InitTargets(BvhOperator):
         initTPoses()
         initTargetTPose(context.scene)
         initTargets(context.scene)
-        
+
+
+class IncludeFingers:
+    includeFingers : BoolProperty(
+        name = "Include Fingers",
+        description = "Include finger bones",
+        default = False)    
+
+    def draw(self, context):
+        self.layout.prop(self, "includeFingers")
+
 
 class MCP_OT_GetTargetRig(BvhOperator, IsArmature, IncludeFingers):
     bl_idname = "mcp.get_target_rig"
@@ -303,18 +313,10 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
             return []
 
 
-class MCP_OT_VerifyTargetRig(BvhPropsOperator):
+class MCP_OT_VerifyTargetRig(BvhPropsOperator, IncludeFingers):
     bl_idname = "mcp.verify_target_rig"
     bl_label = "Verify Target Rig"
     bl_options = {'UNDO'}
-
-    includeFingers : BoolProperty(
-        name = "Include Fingers",
-        description = "Include finger bones",
-        default = False)    
-
-    def draw(self, context):
-        self.layout.prop(self, "includeFingers")
         
     @classmethod
     def poll(self, context):
