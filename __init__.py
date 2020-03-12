@@ -141,34 +141,37 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         scn = context.scene
         rig = context.object
 
-        layout.prop(scn, "McpShowIK")
-        if scn.McpShowIK:
-            ins = inset(layout)
-            ins.operator("mcp.offset_toes")
-            ins.operator("mcp.transfer_to_ik")
-            ins.operator("mcp.transfer_to_fk")
-            ins.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
-            ins.operator("mcp.clear_animation", text="Clear FK Animation").type = "FK"
+        if not scn.McpShowIK:
+            layout.prop(scn, "McpShowIK", icon="RIGHTARROW", emboss=False)
+        else:
+            layout.prop(scn, "McpShowIK", icon="DOWNARROW_HLT", emboss=False)
+            layout.operator("mcp.offset_toes")
+            layout.operator("mcp.transfer_to_ik")
+            layout.operator("mcp.transfer_to_fk")
+            layout.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
+            layout.operator("mcp.clear_animation", text="Clear FK Animation").type = "FK"
 
         layout.separator()
-        layout.prop(scn, "McpShowGlobal")
-        if scn.McpShowGlobal:
-            ins = inset(layout)
-            ins.operator("mcp.shift_bone")
-            ins.operator("mcp.floor_foot")
-            ins.operator("mcp.limbs_bend_positive")
-            ins.operator("mcp.fixate_bone")
-            ins.operator("mcp.simplify_fcurves")
-            ins.operator("mcp.timescale_fcurves")
+        if not scn.McpShowGlobal:
+            layout.prop(scn, "McpShowGlobal", icon="RIGHTARROW", emboss=False)
+        else:
+            layout.prop(scn, "McpShowGlobal", icon="DOWNARROW_HLT", emboss=False)
+            layout.operator("mcp.shift_bone")
+            layout.operator("mcp.floor_foot")
+            layout.operator("mcp.limbs_bend_positive")
+            layout.operator("mcp.fixate_bone")
+            layout.operator("mcp.simplify_fcurves")
+            layout.operator("mcp.timescale_fcurves")
 
         layout.separator()
-        layout.prop(scn, "McpShowDisplace")
-        if scn.McpShowDisplace:
-            ins = inset(layout)
-            ins.operator("mcp.start_edit")
-            ins.operator("mcp.undo_edit")
+        if not scn.McpShowDisplace:
+            layout.prop(scn, "McpShowDisplace", icon="RIGHTARROW", emboss=False)
+        else:
+            layout.prop(scn, "McpShowDisplace", icon="DOWNARROW_HLT", emboss=False)
+            layout.operator("mcp.start_edit")
+            layout.operator("mcp.undo_edit")
 
-            row = ins.row()
+            row = layout.row()
             props = row.operator("mcp.insert_key", text="Loc")
             props.loc = True
             props.rot = False
@@ -177,7 +180,7 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             props.loc = False
             props.rot = True
             props.delete = False
-            row = ins.row()
+            row = layout.row()
             props = row.operator("mcp.insert_key", text="LocRot")
             props.loc = True
             props.rot = True
@@ -187,7 +190,7 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             props.rot = True
             props.delete = True
 
-            row = ins.row()
+            row = layout.row()
             props = row.operator("mcp.move_to_marker", text="|<")
             props.left = True
             props.last = True
@@ -201,17 +204,18 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             props.left = False
             props.last = True
 
-            ins.operator("mcp.confirm_edit")
-            ins.separator()
-            ins.operator("mcp.clear_temp_props")
+            layout.operator("mcp.confirm_edit")
+            layout.separator()
+            layout.operator("mcp.clear_temp_props")
 
         layout.separator()
-        layout.prop(scn, "McpShowLoop")
-        if scn.McpShowLoop:
-            ins = inset(layout)
-            ins.operator("mcp.loop_fcurves")
-            ins.operator("mcp.repeat_fcurves")
-            ins.operator("mcp.stitch_actions")
+        if not scn.McpShowLoop:
+            layout.prop(scn, "McpShowLoop", icon="RIGHTARROW", emboss=False)
+        else:
+            layout.prop(scn, "McpShowLoop", icon="DOWNARROW_HLT", emboss=False)
+            layout.operator("mcp.loop_fcurves")
+            layout.operator("mcp.repeat_fcurves")
+            layout.operator("mcp.stitch_actions")
 
 ########################################################################
 #
