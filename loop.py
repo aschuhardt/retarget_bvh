@@ -474,7 +474,7 @@ def getBaseMatrices(act, frames, rig, useAll):
         fcu0,fcu1,fcu2 = fcurves
         rmats = basemats[bname] = []
         for frame in frames:
-            euler = Euler((fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame)))
+            euler = Euler((fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame)), order)
             rmats.append(euler.to_matrix().to_4x4())
 
     for bname,fcurves in quatFcurves.items():
@@ -507,52 +507,50 @@ def getBaseMatrices(act, frames, rig, useAll):
     return basemats, useLoc
 
 
-def shiftBoneFCurves(rig, context):
-    from .action import getObjectAction
-    from .retarget import getLocks, correctMatrixForLocks
-
-    scn = context.scene
-    frames = [scn.frame_current] + getActiveFrames(rig)
-    nFrames = len(frames)
-    act = getObjectAction(rig)
-    if not act:
-        return
-    basemats, useLoc = getBaseMatrices(act, frames, rig, False)
-
-    deltaMat = {}
-    orders = {}
-    locks = {}
-    for bname,bmats in basemats.items():
-        pb = rig.pose.bones[bname]
-        bmat = bmats[0]
-        deltaMat[pb.name] = pb.matrix_basis @ bmat.inverted()
-        orders[pb.name], locks[pb.name] = getLocks(pb, context)
-
-    for n,frame in enumerate(frames[1:]):
-        scn.frame_set(frame)
-        showProgress(n, frame, nFrames)
-        for bname,bmats in basemats.items():
-            pb = rig.pose.bones[bname]
-            mat = deltaMat[pb.name] @ bmats[n+1]
-            mat = correctMatrixForLocks(mat, orders[bname], locks[bname], pb, scn.McpUseLimits)
-            if useLoc[bname]:
-                insertLocation(pb, mat)
-            insertRotation(pb, mat)
-
-
 def printmat(mat):
     print("   (%.4f %.4f %.4f %.4f)" % tuple(mat.to_quaternion()))
 
 
 class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature):
-    bl_idname = "mcp.shift_bone"
+    bl_idname = "mcp.shift_animation"
     bl_label = "Shift Animation"
     bl_description = "Shift the animation globally for selected boens"
     bl_options = {'UNDO'}
 
     def run(self, context):
+        from .action import getObjectAction
+        from .retarget import getLocks, correctMatrixForLocks
+
         startProgress("Shift animation")
-        shiftBoneFCurves(context.object, context)
+        scn = context.scene
+        rig = context.object
+        frames = [scn.frame_current] + getActiveFrames(rig)
+        nFrames = len(frames)
+        act = getObjectAction(rig)
+        if not act:
+            return
+        basemats, useLoc = getBaseMatrices(act, frames, rig, False)
+
+        deltaMat = {}
+        orders = {}
+        locks = {}
+        for bname,bmats in basemats.items():
+            pb = rig.pose.bones[bname]
+            bmat = bmats[0]
+            deltaMat[pb.name] = pb.matrix_basis @ bmat.inverted()
+            orders[pb.name], locks[pb.name] = getLocks(pb, context)
+
+        for n,frame in enumerate(frames[1:]):
+            scn.frame_set(frame)
+            showProgress(n, frame, nFrames)
+            for bname,bmats in basemats.items():
+                pb = rig.pose.bones[bname]
+                mat = deltaMat[pb.name] @ bmats[n+1]
+                mat = correctMatrixForLocks(mat, orders[bname], locks[bname], pb, scn.McpUseLimits)
+                if useLoc[bname]:
+                    insertLocation(pb, mat)
+                insertRotation(pb, mat)
+        
         endProgress("Animation shifted")
 
 

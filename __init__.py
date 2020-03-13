@@ -156,7 +156,7 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             layout.prop(scn, "McpShowGlobal", icon="RIGHTARROW", emboss=False)
         else:
             layout.prop(scn, "McpShowGlobal", icon="DOWNARROW_HLT", emboss=False)
-            layout.operator("mcp.shift_bone")
+            layout.operator("mcp.shift_animation")
             layout.operator("mcp.floor_foot")
             layout.operator("mcp.limbs_bend_positive")
             layout.operator("mcp.fixate_bone")
