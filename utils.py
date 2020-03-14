@@ -202,14 +202,20 @@ def setInterpolation(rig):
 class Progress:
     def startProgress(self, string):
         print(string + " (0%)")
+        wm = bpy.context.window_manager
+        wm.progress_begin(0, 100)
 
     def endProgress(self, string):
         print(string + " (100%)")
-
+        wm = bpy.context.window_manager
+        wm.progress_end()
+        
     def showProgress(self, n, frame, nFrames, step=20):
-        pct = (100.0*n)/nFrames
         if n % step == 0:
+            pct = (100.0*n)/nFrames
             print("%d (%.1f " % (int(frame), pct) + "%)")
+            wm = bpy.context.window_manager
+            wm.progress_update(int(pct))
 
 #-------------------------------------------------------------
 #   Error handling
