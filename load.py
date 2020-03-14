@@ -310,7 +310,7 @@ class BvhLoader:
                     frame % ssFactor == 0 and
                     frame < nFrames):
                     self.addFrame(words, frameno, nodes, pbones, flipMatrix)
-                    showProgress(frameno, frame, nFrames, step=200)
+                    self.showProgress(frameno, frame, nFrames, step=200)
                     frameno += 1
                 frame += 1
     
@@ -625,7 +625,7 @@ def checkObjectProblems(context):
 #   class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
 #
 
-class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
+class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader, Progress):
     bl_idname = "mcp.load_bvh"
     bl_label = "Load BVH File (.bvh)"
     bl_description = "Load an armature from a bvh file"
@@ -675,7 +675,7 @@ class MCP_OT_RenameBvh(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
 #   class MCP_OT_LoadAndRenameBvh(BvhOperator, ImportHelper, BvhFile):
 #
 
-class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, BvhRenamer, TimeScaler):
+class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, BvhRenamer, TimeScaler, Progress):
     bl_idname = "mcp.load_and_rename_bvh"
     bl_label = "Load And Rename BVH File (.bvh)"
     bl_description = "Load armature from bvh file and rename bones"

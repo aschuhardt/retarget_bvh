@@ -195,21 +195,21 @@ def setInterpolation(rig):
         fcu.extrapolation = 'CONSTANT'
     return
 
-#
-#   showProgress(n, frame):
-#
+#-------------------------------------------------------------
+#   Progress
+#-------------------------------------------------------------
 
-def startProgress(string):
-    print("%s (0 pct)" % string)
+class Progress:
+    def startProgress(self, string):
+        print(string + " (0%)")
 
+    def endProgress(self, string):
+        print(string + " (100%)")
 
-def endProgress(string):
-    print("%s (100 pct)" % string)
-
-
-def showProgress(n, frame, nFrames, step=20):
-    if n % step == 0:
-        print("%d (%.1f pct)" % (int(frame), (100.0*n)/nFrames))
+    def showProgress(self, n, frame, nFrames, step=20):
+        pct = (100.0*n)/nFrames
+        if n % step == 0:
+            print("%d (%.1f " % (int(frame), pct) + "%)")
 
 #-------------------------------------------------------------
 #   Error handling

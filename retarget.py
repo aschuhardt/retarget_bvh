@@ -306,63 +306,64 @@ def clearMcpProps(rig):
                 del pb[key]
 
 
-def retargetAnimation(context, srcRig, trgRig, autoTarget, includeFingers):
-    from .t_pose import ensureTPoseInited
-    from .source import ensureSourceInited, setSourceArmature 
-    from .target import ensureTargetInited, findTargetArmature
-    from .fkik import setRigToFK
-    from .loop import getActiveFrames
+class Retargeter:
+    def retargetAnimation(self, context, srcRig, trgRig):
+        from .t_pose import ensureTPoseInited
+        from .source import ensureSourceInited, setSourceArmature 
+        from .target import ensureTargetInited, findTargetArmature
+        from .fkik import setRigToFK
+        from .loop import getActiveFrames
 
-    startProgress("Retargeting %s => %s" % (srcRig.name, trgRig.name))
-    if srcRig.type != 'ARMATURE':
-        return None,0
-    scn = context.scene
-    frames = getActiveFrames(srcRig)
-    nFrames = len(frames)
-    setActiveObject(context, trgRig)
-    if trgRig.animation_data:
-        trgRig.animation_data.action = None
-    setRigToFK(trgRig)
+        self.startProgress("Retargeting %s => %s" % (srcRig.name, trgRig.name))
+        if srcRig.type != 'ARMATURE':
+            return None,0
+        scn = context.scene
+        frames = getActiveFrames(srcRig)
+        nFrames = len(frames)
+        setActiveObject(context, trgRig)
+        if trgRig.animation_data:
+            trgRig.animation_data.action = None
+        setRigToFK(trgRig)
 
-    if frames:
-        scn.frame_current = frames[0]
-    else:
-        raise MocapError("No frames found.")
-    oldData = changeTargetData(trgRig, scn)
+        if frames:
+            scn.frame_current = frames[0]
+        else:
+            raise MocapError("No frames found.")
+        oldData = changeTargetData(trgRig, scn)
 
-    ensureTPoseInited(scn)
-    ensureSourceInited(scn)
-    setSourceArmature(srcRig, scn)
-    print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
+        ensureTPoseInited(scn)
+        ensureSourceInited(scn)
+        setSourceArmature(srcRig, scn)
+        print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
-    ensureTargetInited(scn)
-    info = findTargetArmature(context, trgRig, autoTarget, includeFingers)
-    anim = CAnimation(srcRig, trgRig, info, context)
-    anim.putInTPoses(context, includeFingers)
+        ensureTargetInited(scn)
+        info = findTargetArmature(context, trgRig, self.useAutoTarget, self.includeFingers)
+        anim = CAnimation(srcRig, trgRig, info, context)
+        anim.putInTPoses(context, self.includeFingers)
 
-    setCategory("Retarget")
-    frameBlock = frames[0:100]
-    index = 0
-    try:
-        while frameBlock:
-            showProgress(index, frames[index], nFrames)
-            anim.retarget(frameBlock, context)
-            index += 100
-            frameBlock = frames[index:index+100]
+        setCategory("Retarget")
+        frameBlock = frames[0:100]
+        index = 0
+        try:
+            while frameBlock:
+                self.showProgress(index, frames[index], nFrames)
+                anim.retarget(frameBlock, context)
+                index += 100
+                frameBlock = frames[index:index+100]
 
-        scn.frame_current = frames[0]
-    finally:
-        restoreTargetData(oldData)
+            scn.frame_current = frames[0]
+        finally:
+            restoreTargetData(oldData)
 
-    #anim.printResult(scn, 1)
+        #anim.printResult(scn, 1)
 
-    setInterpolation(trgRig)
-    act = trgRig.animation_data.action
-    act.name = trgRig.name[:4] + srcRig.name[2:]
-    act.use_fake_user = True
-    clearCategory()
-    endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
-    return act,nFrames
+        setInterpolation(trgRig)
+        act = trgRig.animation_data.action
+        act.name = trgRig.name[:4] + srcRig.name[2:]
+        act.use_fake_user = True
+        clearCategory()
+        self.endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
+        return act,nFrames
 
 #
 #   changeTargetData(rig, scn):
@@ -449,7 +450,7 @@ def restoreTargetData(data):
 #   Buttons
 #
 
-class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target):
+class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target, Retargeter, Progress):
     bl_idname = "mcp.retarget_mhx"
     bl_label = "Retarget Selected To Active"
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armature"
@@ -466,14 +467,14 @@ class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target):
         self.findTarget(context, trgRig)
         for srcRig in rigList:
             if srcRig != trgRig:
-                retargetAnimation(context, srcRig, trgRig, self.useAutoTarget, self.includeFingers)
+                self.retargetAnimation(context, srcRig, trgRig)
                 
                 
     def sequel(self, context, data):
         restoreTargetData(data)
 
 
-class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, TimeScaler, Simplifier, Bender):
+class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender, Progress):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
@@ -539,7 +540,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         info = (None, 0)
         try:
             self.renameAndRescaleBvh(context, srcRig, trgRig)
-            info = retargetAnimation(context, srcRig, trgRig, self.useAutoTarget, self.includeFingers)
+            info = self.retargetAnimation(context, srcRig, trgRig)
             scn = context.scene
             if self.useBendPositive:
                 self.useKnees = self.useElbows = True
