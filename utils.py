@@ -263,6 +263,7 @@ class ErrorOperator(bpy.types.Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
+        wm.progress_end()
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
@@ -298,6 +299,10 @@ class BvhOperator(bpy.types.Operator):
             self.run(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
+        except KeyboardInterrupt:
+            global _errorLines
+            _errorLines = ["Keyboard interrupt"]
+            bpy.ops.mcp.error('INVOKE_DEFAULT')        
         finally:
             self.sequel(context, data)
         return{'FINISHED'}    
