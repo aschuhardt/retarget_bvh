@@ -211,11 +211,11 @@ class Progress:
         wm.progress_end()
         
     def showProgress(self, n, frame, nFrames, step=20):
+        pct = (100.0*n)/nFrames
         if n % step == 0:
-            pct = (100.0*n)/nFrames
             print("%d (%.1f " % (int(frame), pct) + "%)")
-            wm = bpy.context.window_manager
-            wm.progress_update(int(pct))
+        wm = bpy.context.window_manager
+        wm.progress_update(int(pct))
 
 #-------------------------------------------------------------
 #   Error handling

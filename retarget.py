@@ -111,12 +111,13 @@ class CAnimation:
             banim.getTPoseMatrix()
 
 
-    def retarget(self, frames, context):
+    def retarget(self, frames, context, caller, offset, nFrames):
         objects = hideObjects(context, self.srcRig)
         scn = context.scene
         try:
-            for frame in frames:
-                scn.frame_set(frame)
+            for n,frame in enumerate(frames):
+                scn.frame_set(frame)             
+                caller.showProgress(n+offset, frames[n], nFrames)                   
                 for banim in self.boneAnims.values():
                     banim.retarget(frame)
         finally:
@@ -346,8 +347,7 @@ class Retargeter:
         index = 0
         try:
             while frameBlock:
-                self.showProgress(index, frames[index], nFrames)
-                anim.retarget(frameBlock, context)
+                anim.retarget(frameBlock, context, self, index, nFrames)
                 index += 100
                 frameBlock = frames[index:index+100]
 
