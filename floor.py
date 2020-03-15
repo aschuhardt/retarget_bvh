@@ -106,7 +106,7 @@ def addOffset(pb, offset, ez):
 #   Toe below ball
 #-------------------------------------------------------------
 
-class MCP_OT_OffsetToes(BvhOperator, IsArmature, Target, Progress):
+class MCP_OT_OffsetToes(BvhOperator, IsArmature, Target):
     bl_idname = "mcp.offset_toes"
     bl_label = "Offset Toes"
     bl_description = "Keep toes below the ball of the feet"
@@ -128,13 +128,13 @@ class MCP_OT_OffsetToes(BvhOperator, IsArmature, Target, Progress):
             raise MocapError("Toe Below Ball only for FK feet")
 
         layers = list(rig.data.layers)
-        self.startProgress("Keep toes down")
+        startProgress("Keep toes down")
         frames = getActiveFramesBetweenMarkers(rig, scn)
         print("Left toe")
         self.toeBelowBall(context, frames, rig, plane, ".L")
         print("Right toe")
         self.toeBelowBall(context, frames, rig, plane, ".R")
-        self.endProgress("Toes kept down")
+        endProgress("Toes kept down")
         rig.data.layers = layers
 
 
@@ -151,29 +151,29 @@ class MCP_OT_OffsetToes(BvhOperator, IsArmature, Target, Progress):
         if mBall:
             for n,frame in enumerate(frames):
                 scn.frame_set(frame)
-                self.showProgress(n, frame, nFrames)
+                showProgress(n, frame, nFrames)
                 zToe = getProjection(mToe.matrix.col[3], ez)
                 zBall = getProjection(mBall.matrix.col[3], ez)
                 if zToe > zBall:
-                    pmat = offsetToeRotation(toe, ez, factor, order, lock, context)
+                    pmat = self.offsetToeRotation(toe, ez, factor, order, lock, context)
                 else:
                     pmat = getPoseMatrix(toe.matrix, toe)
-                pmat = keepToeRotationNegative(pmat, scn)
+                pmat = self.keepToeRotationNegative(pmat, scn)
                 insertRotation(toe, pmat)
         else:
             for n,frame in enumerate(frames):
                 scn.frame_set(frame)
-                self.showProgress(n, frame, nFrames)
+                showProgress(n, frame, nFrames)
                 dzToe = getProjection(toe.matrix.col[1], ez)
                 if dzToe > 0:
-                    pmat = offsetToeRotation(toe, ez, factor, order, lock, context)
+                    pmat = self.offsetToeRotation(toe, ez, factor, order, lock, context)
                 else:
                     pmat = getPoseMatrix(toe.matrix, toe)
-                pmat = keepToeRotationNegative(pmat, scn)
+                pmat = self.keepToeRotationNegative(pmat, scn)
                 insertRotation(toe, pmat)
 
 
-    def offsetToeRotation(toe, ez, factor, order, lock, context):
+    def offsetToeRotation(self, toe, ez, factor, order, lock, context):
         from .retarget import correctMatrixForLocks
         from .fkik import getPoseMatrix
 
@@ -194,7 +194,7 @@ class MCP_OT_OffsetToes(BvhOperator, IsArmature, Target, Progress):
         return correctMatrixForLocks(pmat, order, lock, toe, context.scene.McpUseLimits)
 
 
-    def keepToeRotationNegative(pmat, scn):
+    def keepToeRotationNegative(self, pmat, scn):
         euler = pmat.to_3x3().to_euler('YZX')
         if euler.x > 0:
             pmat0 = pmat
@@ -219,7 +219,7 @@ def getFkFeetBones(rig, suffix):
     return foot,toe,mBall,mToe,mHeel
       
 
-class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target, Progress):
+class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
     bl_idname = "mcp.floor_foot"
     bl_label = "Keep Feet Above Floor"
     bl_description = "Keep Feet Above Plane"
@@ -243,7 +243,7 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target, Progress):
 
     def run(self, context):
         from .loop import getActiveFramesBetweenMarkers
-        self.startProgress("Keep feet above floor")
+        startProgress("Keep feet above floor")
         self.findTarget(context, context.object)
         scn = context.scene
         rig,plane = getRigAndPlane(context)
@@ -256,7 +256,7 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target, Progress):
             self.floorIkFoot(rig, plane, scn, frames)
         else:
             self.floorFkFoot(rig, plane, scn, frames)
-        self.endProgress("Feet kept above floor")
+        endProgress("Feet kept above floor")
     
     
     def floorFkFoot(self, rig, plane, scn, frames):
@@ -276,7 +276,7 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target, Progress):
                 rOffset = self.getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
                 if rOffset > offset:
                     offset = rOffset
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
             if offset > 0:
                 addOffset(hips, offset, ez)
     
@@ -321,7 +321,7 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target, Progress):
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
     
             if self.useLeft:
                 lOffset = self.getIkOffset(rig, ez, origin, lleg)

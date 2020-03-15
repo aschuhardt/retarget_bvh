@@ -414,7 +414,7 @@ class Transferer(Bender, Target):
         self.limbsBendPositive(rig, frames)
     
         for n,frame in enumerate(frames):
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
             scn.frame_set(frame)
             updateScene()
             if self.useArms:
@@ -458,7 +458,7 @@ class Transferer(Bender, Target):
         #frames = range(scn.frame_start, scn.frame_end+1)
         nFrames = len(frames)
         for n,frame in enumerate(frames):
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
             scn.frame_set(frame)
             updateScene()
             if self.useArms:
@@ -482,7 +482,7 @@ class Transferer(Bender, Target):
         frames = getActiveFramesBetweenMarkers(rig, scn)
         nFrames = len(frames)
         for n,frame in enumerate(frames):
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
             scn.frame_set(frame)
             updateScene()
     
@@ -538,7 +538,7 @@ class Transferer(Bender, Target):
         frames = getActiveFramesBetweenMarkers(rig, scn)
         nFrames = len(frames)
         for n,frame in enumerate(frames):
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
             scn.frame_set(frame)
             updateScene()
     
@@ -720,7 +720,7 @@ def restoreGlobalUndo(context, undo):
     context.user_preferences.edit.use_global_undo = undo
 
 
-class MCP_OT_TransferToFk(BvhPropsOperator, IsArmature, Transferer, Progress):
+class MCP_OT_TransferToFk(BvhPropsOperator, IsArmature, Transferer):
     bl_idname = "mcp.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
@@ -730,7 +730,7 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsArmature, Transferer, Progress):
         return disableGlobalUndo(context)
         
     def run(self, context):
-        self.startProgress("Transfer to FK")
+        startProgress("Transfer to FK")
         rig = context.object
         scn = context.scene
         if isMhxRig(rig):
@@ -741,14 +741,14 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsArmature, Transferer, Progress):
             self.transferRigifyToFk(rig, context, "_")
         else:
             raise MocapError("Can not transfer to FK with this rig")
-        self.endProgress("Transfer to FK completed")
+        endProgress("Transfer to FK completed")
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)
         
 
 
-class MCP_OT_TransferToIk(BvhPropsOperator, IsArmature, Transferer, Progress):
+class MCP_OT_TransferToIk(BvhPropsOperator, IsArmature, Transferer):
     bl_idname = "mcp.transfer_to_ik"
     bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
@@ -758,7 +758,7 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsArmature, Transferer, Progress):
         return disableGlobalUndo(context)
         
     def run(self, context):
-        self.startProgress("Transfer to IK")
+        startProgress("Transfer to IK")
         rig = context.object
         scn = context.scene
         if isMhxRig(rig):
@@ -769,13 +769,13 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsArmature, Transferer, Progress):
             self.transferRigifyToIk(rig, context, "_")
         else:
             raise MocapError("Can not transfer to IK with this rig")
-        self.endProgress("Transfer to IK completed")
+        endProgress("Transfer to IK completed")
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)
         
 
-class MCP_OT_ClearAnimation(BvhOperator, IsArmature, Transferer, Progress):
+class MCP_OT_ClearAnimation(BvhOperator, IsArmature, Transferer):
     bl_idname = "mcp.clear_animation"
     bl_label = "Clear Animation"
     bl_description = "Clear Animation For FK or IK Bones"
@@ -787,7 +787,7 @@ class MCP_OT_ClearAnimation(BvhOperator, IsArmature, Transferer, Progress):
         return disableGlobalUndo(context)
         
     def run(self, context):
-        self.startProgress("Clear animation")
+        startProgress("Clear animation")
         rig = context.object
         scn = context.scene
         if not rig.animation_data:
@@ -807,7 +807,7 @@ class MCP_OT_ClearAnimation(BvhOperator, IsArmature, Transferer, Progress):
             self.clearAnimation(rig, context, act, self.type, SnapBonesRigify)
         else:
             raise MocapError("Can not clear %s animation with this rig" % self.type)
-        self.endProgress("Animation cleared")
+        endProgress("Animation cleared")
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)

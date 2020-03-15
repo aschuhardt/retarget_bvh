@@ -213,7 +213,7 @@ class BvhLoader:
         (shortName, ext) = os.path.splitext(fileName)
         if ext.lower() != ".bvh":
             raise MocapError("Not a bvh file: " + fileName)
-        self.startProgress( "Loading BVH file "+ fileName )
+        startProgress( "Loading BVH file "+ fileName )
     
         time1 = time.perf_counter()
         level = 0
@@ -310,7 +310,7 @@ class BvhLoader:
                     frame % ssFactor == 0 and
                     frame < nFrames):
                     self.addFrame(words, frameno, nodes, pbones, flipMatrix)
-                    self.showProgress(frameno, frame, nFrames, step=200)
+                    showProgress(frameno, frame, nFrames, step=200)
                     frameno += 1
                 frame += 1
     
@@ -319,7 +319,7 @@ class BvhLoader:
             raise MocapError("Bvh file \n%s\n is corrupt: No rig defined" % filepath)
         setInterpolation(rig)
         time2 = time.perf_counter()
-        self.endProgress("Bvh file %s loaded in %.3f s" % (filepath, time2-time1))
+        endProgress("Bvh file %s loaded in %.3f s" % (filepath, time2-time1))
         if frameno == 1:
             print("Warning: No frames in range %d -- %d." % (self.startFrame, self.endFrame))
         renameBvhRig(rig, filepath)
@@ -625,7 +625,7 @@ def checkObjectProblems(context):
 #   class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
 #
 
-class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader, Progress):
+class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
     bl_idname = "mcp.load_bvh"
     bl_label = "Load BVH File (.bvh)"
     bl_description = "Load an armature from a bvh file"
@@ -675,7 +675,7 @@ class MCP_OT_RenameBvh(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
 #   class MCP_OT_LoadAndRenameBvh(BvhOperator, ImportHelper, BvhFile):
 #
 
-class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, BvhRenamer, TimeScaler, Progress):
+class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, BvhRenamer, TimeScaler):
     bl_idname = "mcp.load_and_rename_bvh"
     bl_label = "Load And Rename BVH File (.bvh)"
     bl_description = "Load armature from bvh file and rename bones"

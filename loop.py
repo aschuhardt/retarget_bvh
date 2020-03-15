@@ -52,7 +52,7 @@ def fCurveIdentity(fcu):
 #   Loop F-curves
 #
 
-class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter, Progress):
+class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
     bl_idname = "mcp.loop_fcurves"
     bl_label = "Loop F-Curves"
     bl_description = "Make the beginning and end of the selected time range connect smoothly. Use before repeating."
@@ -81,7 +81,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter, Progress):
         self.layout.separator()
 
     def run(self, context):
-        self.startProgress("Loop F-curves")
+        startProgress("Loop F-curves")
         from .action import getObjectAction        
         scn = context.scene
         rig = context.object
@@ -125,11 +125,11 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter, Progress):
                 heads = {}
                 for n,frame in enumerate(frames):
                     scn.frame_set(frame)
-                    self.showProgress(n, frame, nFrames)
+                    showProgress(n, frame, nFrames)
                     heads[frame] = pb.head.copy()
     
                 for n,frame in enumerate(frames):
-                    self.showProgress(n, frame, nFrames)
+                    showProgress(n, frame, nFrames)
                     scn.frame_set(frame)
                     head = heads[frame] - (frame-minTime)*offs
                     diff = head - pb.bone.head_local
@@ -145,7 +145,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter, Progress):
                     if t < minTime or t > maxTime:
                         fcu.keyframe_points.remove(kp)
             
-        self.endProgress("F-curves looped")
+        endProgress("F-curves looped")
         return
         for fcu in fcurves:
             (name, mode) = fCurveIdentity(fcu)
@@ -208,7 +208,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter, Progress):
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
             for (name, pb) in hasQuat.items():
                 pb.rotation_quaternion.normalize()
                 pb.keyframe_insert("rotation_quaternion", group=name)    
@@ -284,7 +284,7 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                 for (t,y) in points:
                     fcu.keyframe_points.insert(t+dt, y+dy, options={'FAST'})
     
-        self.endProgress("F-curves repeated %d times" % self.repeatNumber)
+        endProgress("F-curves repeated %d times" % self.repeatNumber)
 
 
 #
@@ -295,7 +295,7 @@ def getActionItems(self, context):
     return [(act.name, act.name, act.name) for act in bpy.data.actions]
             
 
-class MCP_OT_StitchActions(BvhPropsOperator, IsArmature, Progress):
+class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
     bl_idname = "mcp.stitch_actions"
     bl_label = "Stitch Actions"
     bl_description = "Stitch two action together seamlessly"
@@ -336,7 +336,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature, Progress):
     def run(self, context):
         from .retarget import getLocks, correctMatrixForLocks
     
-        self.startProgress("Stitch actions")
+        startProgress("Stitch actions")
         scn = context.scene
         rig = context.object
         act1 = bpy.data.actions[self.firstAction]
@@ -376,7 +376,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature, Progress):
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
     
             if frame <= frame1-delta:
                 n1 = frame - first1
@@ -414,7 +414,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature, Progress):
         setInterpolation(rig)
         act = rig.animation_data.action
         act.name = self.outputActionName
-        self.endProgress("Actions stitched")
+        endProgress("Actions stitched")
 
     
     def getActionExtent(self, act):
@@ -511,7 +511,7 @@ def printmat(mat):
     print("   (%.4f %.4f %.4f %.4f)" % tuple(mat.to_quaternion()))
 
 
-class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature, Progress):
+class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.shift_animation"
     bl_label = "Shift Animation"
     bl_description = "Shift the animation globally for selected boens"
@@ -521,7 +521,7 @@ class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature, Progress):
         from .action import getObjectAction
         from .retarget import getLocks, correctMatrixForLocks
 
-        self.startProgress("Shift animation")
+        startProgress("Shift animation")
         scn = context.scene
         rig = context.object
         frames = [scn.frame_current] + getActiveFrames(rig)
@@ -542,7 +542,7 @@ class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature, Progress):
 
         for n,frame in enumerate(frames[1:]):
             scn.frame_set(frame)
-            self.showProgress(n, frame, nFrames)
+            showProgress(n, frame, nFrames)
             for bname,bmats in basemats.items():
                 pb = rig.pose.bones[bname]
                 mat = deltaMat[pb.name] @ bmats[n+1]
@@ -551,10 +551,10 @@ class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature, Progress):
                     insertLocation(pb, mat)
                 insertRotation(pb, mat)
         
-        self.endProgress("Animation shifted")
+        endProgress("Animation shifted")
 
 
-class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature, Progress):
+class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature):
     bl_idname = "mcp.fixate_bone"
     bl_label = "Fixate Bone Location"
     bl_description = "Keep bone location fixed (local coordinates)"
@@ -590,7 +590,7 @@ class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature, Progress):
 
     def run(self, context):
         from .action import getObjectAction
-        self.startProgress("Fixate bone locations")
+        startProgress("Fixate bone locations")
         rig = context.object
         scn = context.scene   
         act = getObjectAction(rig)
@@ -618,7 +618,7 @@ class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature, Progress):
                 for kp in fcu.keyframe_points:
                     if kp.co[0] >= minTime and kp.co[0] <= maxTime:
                         kp.co[1] = value
-        self.endProgress("Bone locations fixed")
+        endProgress("Bone locations fixed")
 
 #----------------------------------------------------------
 #   Get active frames

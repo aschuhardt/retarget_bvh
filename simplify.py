@@ -37,32 +37,26 @@ from .utils import *
 #
 
 class FCurvesGetter:
-    useSimplify : BoolProperty(
-        name="Simplify F-Curves",
-        description="Simplify F-curves",
-        default=False)
 
     useVisible : BoolProperty(
         name="Only Visible F-Curves",
-        description="Simplify only visible F-curves",
+        description="Only visible F-curves",
         default=False)
 
     useSelected : BoolProperty(
         name="Only Selected Bones",
-        description="Simplify only F-curves for selected bones",
+        description="Only F-curves for selected bones",
         default=False)
 
     useMarkers : BoolProperty(
         name="Only Between Markers",
-        description="Simplify only between markers",
+        description="Only between markers",
         default=False)
 
     def draw(self, context):
-        self.layout.prop(self, "useSimplify")
-        if self.useSimplify:
-            self.layout.prop(self, "useVisible")
-            self.layout.prop(self, "useSelected")
-            self.layout.prop(self, "useMarkers")
+        self.layout.prop(self, "useVisible")
+        self.layout.prop(self, "useSelected")
+        self.layout.prop(self, "useMarkers")
 
 
     def getActionFCurves(self, act, rig, scn):
@@ -100,6 +94,12 @@ class FCurvesGetter:
     
 
 class Simplifier(FCurvesGetter):
+
+    useSimplify : BoolProperty(
+        name="Simplify F-Curves",
+        description="Simplify F-curves",
+        default=False)
+
     maxErrLoc : FloatProperty(
         name="Max Loc Error",
         description="Max error for location FCurves when doing simplification",
@@ -113,8 +113,9 @@ class Simplifier(FCurvesGetter):
         default=0.1)
 
     def draw(self, context):
-        FCurvesGetter.draw(self, context)
+        self.layout.prop(self, "useSimplify")
         if self.useSimplify:
+            FCurvesGetter.draw(self, context)
             self.layout.prop(self, "maxErrLoc")
             self.layout.prop(self, "maxErrRot")
         self.layout.separator()
@@ -133,7 +134,7 @@ class Simplifier(FCurvesGetter):
         for fcu in fcurves:
             self.simplifyFCurve(fcu, rig.animation_data.action, minTime, maxTime)
         setInterpolation(rig)
-        print("Curves simplified")
+        print("F-curves simplified")
     
         
     def splitFCurvePoints(self, fcu, minTime, maxTime):
@@ -336,6 +337,11 @@ class MCP_OT_SimplifyFCurves(BvhPropsOperator, IsArmature, Simplifier):
     bl_description = "Simplify F-curves"
     bl_options = {'UNDO'}
 
+    def draw(self, context):
+        FCurvesGetter.draw(self, context)
+        self.layout.prop(self, "maxErrLoc")
+        self.layout.prop(self, "maxErrRot")
+    
     def run(self, context):
         self.useSimplify = True
         self.simplifyFCurves(context, context.object)
@@ -347,6 +353,9 @@ class MCP_OT_TimescaleFCurves(BvhPropsOperator, IsArmature, TimeScaler):
     bl_description = "Scale F-curves in time"
     bl_options = {'UNDO'}
     
+    def draw(self, context):
+        self.layout.prop(self, "factor")
+
     def run(self, context):
         self.useTimeScale = True
         self.timescaleFCurves(context.object)

@@ -111,13 +111,13 @@ class CAnimation:
             banim.getTPoseMatrix()
 
 
-    def retarget(self, frames, context, caller, offset, nFrames):
+    def retarget(self, frames, context, offset, nFrames):
         objects = hideObjects(context, self.srcRig)
         scn = context.scene
         try:
             for n,frame in enumerate(frames):
                 scn.frame_set(frame)             
-                caller.showProgress(n+offset, frames[n], nFrames)                   
+                showProgress(n+offset, frames[n], nFrames)                   
                 for banim in self.boneAnims.values():
                     banim.retarget(frame)
         finally:
@@ -294,19 +294,6 @@ def unhideObjects(objects):
         ob.layers = layers
 
 
-def clearMcpProps(rig):
-    keys = list(rig.keys())
-    for key in keys:
-        if key[0:3] == "Mcp":
-            del rig[key]
-
-    for pb in rig.pose.bones:
-        keys = list(pb.keys())
-        for key in keys:
-            if key[0:3] == "Mcp":
-                del pb[key]
-
-
 class Retargeter:
     def retargetAnimation(self, context, srcRig, trgRig):
         from .t_pose import ensureTPoseInited
@@ -315,7 +302,7 @@ class Retargeter:
         from .fkik import setRigToFK
         from .loop import getActiveFrames
 
-        self.startProgress("Retargeting %s => %s" % (srcRig.name, trgRig.name))
+        startProgress("Retargeting %s => %s" % (srcRig.name, trgRig.name))
         if srcRig.type != 'ARMATURE':
             return None,0
         scn = context.scene
@@ -347,7 +334,7 @@ class Retargeter:
         index = 0
         try:
             while frameBlock:
-                anim.retarget(frameBlock, context, self, index, nFrames)
+                anim.retarget(frameBlock, context, index, nFrames)
                 index += 100
                 frameBlock = frames[index:index+100]
 
@@ -362,7 +349,7 @@ class Retargeter:
         act.name = trgRig.name[:4] + srcRig.name[2:]
         act.use_fake_user = True
         clearCategory()
-        self.endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
+        endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
         return act,nFrames
 
 #
@@ -450,7 +437,7 @@ def restoreTargetData(data):
 #   Buttons
 #
 
-class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target, Retargeter, Progress):
+class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target, Retargeter):
     bl_idname = "mcp.retarget_mhx"
     bl_label = "Retarget Selected To Active"
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armature"
@@ -474,22 +461,16 @@ class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target, Retargeter, Progr
         restoreTargetData(data)
 
 
-class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender, Progress):
+class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"
     bl_options = {'UNDO'}
 
     useNLA : BoolProperty(
-        name = "Create NLA Strip",
-        description = "Combined loaded actions into an NLA strip",
+        name = "Create NLA Strips",
+        description = "Create a NLA strip for each loaded action",
         default = False)
-
-    spacing : IntProperty(
-        name = "NLA Spacing",
-        description = "Number of empty keyframes between NLA actions",
-        default = 1)
-
 
     def draw(self, context):
         BvhLoader.draw(self, context)
@@ -499,8 +480,6 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         TimeScaler.draw(self, context)
         Simplifier.draw(self, context)
         self.layout.prop(self, "useNLA")
-        if self.useNLA:
-            self.layout.prop(self, "spacing")
         
                          
     def prequel(self, context):
@@ -519,13 +498,11 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
             info = self.retarget(context, filepath)
             infos.append(info)
         if self.useNLA:
-            track = rig.animation_data.nla_tracks.new()
-            track.is_solo = True
-            start = 1
-            for info in infos:
-                act, size = info
-                track.strips.new(act.name, start, act)
-                start += size + self.spacing
+            for act,size in infos:
+                track = rig.animation_data.nla_tracks.new()
+                track.name = act.name
+                track.is_solo = True
+                track.strips.new(act.name, 1, act)
             rig.animation_data.action = None                
         print("---------------")
         
@@ -569,11 +546,18 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
 class MCP_OT_ClearTempProps(BvhOperator):
     bl_idname = "mcp.clear_temp_props"
     bl_label = "Clear Temporary Properties"
-    bl_description = "Clear properties used by MakeWalk. Animation editing may fail after this."
+    bl_description = "Clear properties used by BVH Retargeter. Animation editing may fail after this."
     bl_options = {'UNDO'}
 
     def run(self, context):
-        clearMcpProps(context.object)
+        rig = context.object
+        for key in list(rig.keys()):
+            if key[0:3] == "Mcp":
+                del rig[key]
+        for pb in rig.pose.bones:
+            for key in list(pb.keys()):
+                if key[0:3] == "Mcp":
+                    del pb[key]
 
 #----------------------------------------------------------
 #   Initialize
