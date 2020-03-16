@@ -158,7 +158,7 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             layout.prop(scn, "McpShowGlobal", icon="DOWNARROW_HLT", emboss=False)
             layout.operator("mcp.shift_animation")
             layout.operator("mcp.floor_foot")
-            layout.operator("mcp.limbs_bend_positive")
+            #layout.operator("mcp.limbs_bend_positive")
             layout.operator("mcp.fixate_bone")
             layout.operator("mcp.simplify_fcurves")
             layout.operator("mcp.timescale_fcurves")
@@ -239,8 +239,9 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
             return
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
         layout.prop(scn, "McpSourceRig")
-        layout.prop(scn, "McpSourceTPose")
+        #layout.prop(scn, "McpSourceTPose")
         layout.operator("mcp.list_source_rig")
+        layout.operator("mcp.put_in_t_pose")
         
 ########################################################################
 #
@@ -265,20 +266,20 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
         layout.separator()
         layout.prop(scn, "McpTargetRig")
-        layout.prop(scn, "McpTargetTPose")
-
-        layout.separator()
+        #layout.prop(scn, "McpTargetTPose")
         layout.prop(scn, "McpIgnoreHiddenLayers")
         layout.prop(rig, "McpReverseHip")
+        layout.separator()
         layout.operator("mcp.get_target_rig")
         layout.operator("mcp.verify_target_rig")
         layout.operator("mcp.list_target_rig")
+        layout.operator("mcp.put_in_t_pose")
 
 ########################################################################
 #
 #   class MCP_PT_Poses(bpy.types.Panel):
 #
-
+'''
 class MCP_PT_Poses(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Poses"
@@ -291,9 +292,8 @@ class MCP_PT_Poses(bpy.types.Panel, utils.IsArmature):
         scn = context.scene
         rig = context.object
 
-        layout.prop(scn, "McpSourceTPose")
+        #layout.prop(scn, "McpSourceTPose")
         layout.prop(scn, "McpTargetTPose")
-        layout.separator()
         layout.operator("mcp.put_in_t_pose")
         layout.separator()
         layout.operator("mcp.define_t_pose")
@@ -303,7 +303,7 @@ class MCP_PT_Poses(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.save_pose")
         layout.separator()
         layout.operator("mcp.rest_current_pose")
-
+'''
 ########################################################################
 #
 #   class MCP_PT_Actions(bpy.types.Panel):
@@ -338,7 +338,7 @@ classes = [
     MCP_PT_Edit,
     MCP_PT_MhxSourceBones,
     MCP_PT_MhxTargetBones,
-    MCP_PT_Poses,
+    #MCP_PT_Poses,
     MCP_PT_Actions,
 
     utils.ErrorOperator

@@ -63,20 +63,15 @@ class JsonFile:
 
 
 class Rigger:
+    includeFingers = False
+    
     autoRig : BoolProperty(
         name = "Auto Rig",
         description = "Find rig automatically",
         default = True)
 
-    includeFingers : BoolProperty(
-        name = "Include Fingers",
-        description = "Include finger bones",
-        default = False)
-
     def draw(self, context):
         self.layout.prop(self, "autoRig")
-        self.layout.prop(self, "includeFingers")
-        
             
     def initRig(self, context):
         from .target import findTargetArmature
@@ -114,7 +109,7 @@ def applyRestPose(context, value):
 
         setActiveObject(context, ob)
         if ob != context.object:
-            raise StandardError("Context switch did not take:\nob = %s\nc.ob = %s\nc.aob = %s" %
+            raise MocapError("Context switch did not take:\nob = %s\nc.ob = %s\nc.aob = %s" %
                 (ob, context.object, context.active_object))
 
         if (ob.McpArmatureName == rig.name and
@@ -136,7 +131,10 @@ def applyRestPose(context, value):
 
     setActiveObject(context, rig)
     bpy.ops.object.mode_set(mode='POSE')
-    bpy.ops.pose.armature_apply()
+    try:
+        bpy.ops.pose.armature_apply()
+    except RuntimeError as err:
+        raise MocapError("Error when applying armature:   \n%s" % err)
     for ob in children:
         name = ob.McpArmatureModifier
         setActiveObject(context, ob)

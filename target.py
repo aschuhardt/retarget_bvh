@@ -35,6 +35,9 @@ import os
 from .utils import *
 from .armature import CArmature
 
+#----------------------------------------------------------
+#   Target classes
+#----------------------------------------------------------
 
 class CTargetInfo:
     def __init__(self, name):
@@ -122,6 +125,33 @@ class CTargetInfo:
                     print("  %s : %s" % pair)
                 raise MocapError("Target armature %s does not\nmatch armature %s." % (rig.name, name))
 
+
+class Target:
+    includeFingers = False
+    
+    useAutoTarget : BoolProperty(
+        name = "Auto Target",
+        description = "Find target rig automatically",
+        default = True)
+
+    def draw(self, context):
+        self.layout.prop(self, "useAutoTarget")
+        if not self.useAutoTarget:
+            self.layout.prop(context.scene, "McpTargetRig")
+
+    def findTarget(self, context, rig):
+        return findTargetArmature(context, rig, self.useAutoTarget, self.includeFingers)
+
+
+class IncludeFingers:
+    includeFingers : BoolProperty(
+        name = "Include Fingers",
+        description = "Include finger bones",
+        default = False)
+
+    def draw(self, context):
+        self.layout.prop(self, "includeFingers")
+                
 #
 #   Global variables
 #
@@ -253,16 +283,6 @@ class MCP_OT_InitTargets(BvhOperator):
         initTargets(context.scene)
 
 
-class IncludeFingers:
-    includeFingers : BoolProperty(
-        name = "Include Fingers",
-        description = "Include finger bones",
-        default = False)    
-
-    def draw(self, context):
-        self.layout.prop(self, "includeFingers")
-
-
 class MCP_OT_GetTargetRig(BvhOperator, IsArmature, IncludeFingers):
     bl_idname = "mcp.get_target_rig"
     bl_label = "Identify Target Rig"
@@ -330,32 +350,6 @@ class MCP_OT_VerifyTargetRig(BvhPropsOperator, IncludeFingers):
         info.testRig(rigtype, rig, self.includeFingers)
         print("Target armature %s verified" % rigtype)
         
-#----------------------------------------------------------
-#   Target armature
-#----------------------------------------------------------
-
-class Target:
-    useAutoTarget : BoolProperty(
-        name = "Auto Target",
-        description = "Find target rig automatically",
-        default = True)
-
-    includeFingers : BoolProperty(
-        name = "Include Fingers",
-        description = "Include finger bones",
-        default = False)
-
-    def draw(self, context):
-        self.layout.prop(self, "useAutoTarget")
-        if not self.useAutoTarget:
-            self.layout.prop(context.scene, "McpTargetRig")
-        self.layout.separator()
-        self.layout.prop(self, "includeFingers")
-        self.layout.separator()        
-
-    def findTarget(self, context, rig):
-        return findTargetArmature(context, rig, self.useAutoTarget, self.includeFingers)
-
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
