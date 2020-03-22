@@ -96,8 +96,9 @@ class CTargetInfo:
                         break
                     par = par.parent
         for bname,pname in self.parents.items():
-            pb = rig.pose.bones[bname]
-            pb.McpParent = pname
+            if bname in rig.pose.bones.keys():
+                pb = rig.pose.bones[bname]
+                pb.McpParent = pname
     
         if theVerbose:
             print("Parents")
@@ -295,8 +296,10 @@ class MCP_OT_GetTargetRig(BvhOperator, IsArmature, IncludeFingers):
     
     def run(self, context):
         setVerbose(True)
-        context.scene.McpTargetRig = "Automatic"        
+        scn = context.scene
+        scn.McpTargetRig = "Automatic"        
         findTargetArmature(context, context.object, True, self.includeFingers)
+        raise MocapMessage("Identified rig %s" % scn.McpTargetRig)
         
     def sequel(self, context, data):
         from .retarget import restoreTargetData
@@ -348,7 +351,7 @@ class MCP_OT_VerifyTargetRig(BvhPropsOperator, IncludeFingers):
         info = _targetInfo[rigtype]
         rig = context.object
         info.testRig(rigtype, rig, self.includeFingers)
-        print("Target armature %s verified" % rigtype)
+        raise MocapMessage("Target armature %s verified" % rigtype)
         
 #----------------------------------------------------------
 #   Initialize

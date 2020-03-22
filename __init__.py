@@ -105,6 +105,8 @@ class MCP_PT_Main(bpy.types.Panel):
         layout.operator("mcp.rename_bvh")
         layout.operator("mcp.load_and_rename_bvh")
         layout.operator("mcp.retarget_mhx")
+        layout.separator()
+        layout.operator("mcp.test")        
 
 ########################################################################
 #
@@ -141,8 +143,11 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         scn = context.scene
         rig = context.object
 
-        if not scn.McpShowIK:
+        if not utils.isMhxRig(rig):
+            pass
+        elif not scn.McpShowIK:
             layout.prop(scn, "McpShowIK", icon="RIGHTARROW", emboss=False)
+            layout.separator()
         else:
             layout.prop(scn, "McpShowIK", icon="DOWNARROW_HLT", emboss=False)
             layout.operator("mcp.offset_toes")
@@ -150,8 +155,8 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             layout.operator("mcp.transfer_to_fk")
             layout.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
             layout.operator("mcp.clear_animation", text="Clear FK Animation").type = "FK"
+            layout.separator()
 
-        layout.separator()
         if not scn.McpShowGlobal:
             layout.prop(scn, "McpShowGlobal", icon="RIGHTARROW", emboss=False)
         else:
@@ -341,7 +346,8 @@ classes = [
     #MCP_PT_Poses,
     MCP_PT_Actions,
 
-    utils.ErrorOperator
+    utils.ErrorOperator,
+    utils.MessageOperator
 ]
 
 def register():

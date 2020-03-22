@@ -318,7 +318,7 @@ def getSnapBones(rig, key, suffix):
     except KeyError:
         names = None
     if not names:
-        raise McpError("Not an mhx armature")
+        raise MocapError("Not an mhx armature")
 
     pbones = []
     constraints = []
@@ -473,120 +473,7 @@ class Transferer(Bender, Target):
         setInterpolation(rig)
         #muteAllConstraints(rig, False)
 
-    
-    def transferRigifyToFk(self, rig, context, delim):
-        from rig_ui import fk2ik_arm, fk2ik_leg
-        from .loop import getActiveFramesBetweenMarkers
-    
-        scn = context.scene
-        frames = getActiveFramesBetweenMarkers(rig, scn)
-        nFrames = len(frames)
-        for n,frame in enumerate(frames):
-            showProgress(n, frame, nFrames)
-            scn.frame_set(frame)
-            updateScene()
-    
-            if self.useArms:
-                for suffix in [".L", ".R"]:
-                    uarm  = "upper_arm"+delim+"fk"+suffix
-                    farm  = "forearm"+delim+"fk"+suffix
-                    hand  = "hand"+delim+"fk"+suffix
-                    uarmi = "MCH-upper_arm"+delim+"ik"+suffix
-                    farmi = "MCH-forearm"+delim+"ik"+suffix
-                    handi = "hand"+delim+"ik"+suffix
-    
-                    fk = [uarm,farm,hand]
-                    ik = [uarmi,farmi,handi]
-                    fk2ik_arm(rig, fk, ik)
-    
-                    setRotation(uarm, rig)
-                    setRotation(farm, rig)
-                    setRotation(hand, rig)
-    
-            if self.useLegs:
-                for suffix in [".L", ".R"]:
-                    thigh  = "thigh"+delim+"fk"+suffix
-                    shin   = "shin"+delim+"fk"+suffix
-                    foot   = "foot"+delim+"fk"+suffix
-                    mfoot  = "MCH-foot"+suffix
-                    thighi = "MCH-thigh"+delim+"ik"+suffix
-                    shini  = "MCH-shin"+delim+"ik"+suffix
-                    footi  = "foot"+delim+"ik"+suffix
-                    mfooti = "MCH-foot"+suffix+".001"
-    
-                    fk = [thigh,shin,foot,mfoot]
-                    ik = [thighi,shini,footi,mfooti]
-                    fk2ik_leg(rig, fk, ik)
-    
-                    setRotation(thigh, rig)
-                    setRotation(shin, rig)
-                    setRotation(foot, rig)
-    
-        setInterpolation(rig)
-        for suffix in [".L", ".R"]:
-            if self.useArms:
-                rig.pose.bones["hand.ik"+suffix]["ikfk_switch"] = 0.0
-            if self.useLegs:
-                rig.pose.bones["foot.ik"+suffix]["ikfk_switch"] = 0.0
-    
-    
-    def transferRigifyToIk(self, rig, context, delim):
-        from rig_ui import ik2fk_arm, ik2fk_leg
-        from .loop import getActiveFramesBetweenMarkers
-    
-        scn = context.scene
-        frames = getActiveFramesBetweenMarkers(rig, scn)
-        nFrames = len(frames)
-        for n,frame in enumerate(frames):
-            showProgress(n, frame, nFrames)
-            scn.frame_set(frame)
-            updateScene()
-    
-            if self.useArms:
-                for suffix in [".L", ".R"]:
-                    uarm  = "upper_arm"+delim+"fk"+suffix
-                    farm  = "forearm"+delim+"fk"+suffix
-                    hand  = "hand"+delim+"fk"+suffix
-                    uarmi = "MCH-upper_arm"+delim+"ik"+suffix
-                    farmi = "MCH-forearm"+delim+"ik"+suffix
-                    handi = "hand"+delim+"ik"+suffix
-                    pole  = "elbow_target"+delim+"ik"+suffix
-    
-                    fk = [uarm,farm,hand]
-                    ik = [uarmi,farmi,handi,pole]
-                    ik2fk_arm(rig, fk, ik)
-    
-                    setLocation(pole, rig)
-                    setLocRot(handi, rig)
-    
-            if self.useLegs:
-                for suffix in [".L", ".R"]:
-                    thigh  = "thigh"+delim+"fk"+suffix
-                    shin   = "shin"+delim+"fk"+suffix
-                    foot   = "foot"+delim+"fk"+suffix
-                    mfoot  = "MCH-foot"+suffix
-                    thighi = "MCH-thigh"+delim+"ik"+suffix
-                    shini  = "MCH-shin"+delim+"ik"+suffix
-                    footi  = "foot"+delim+"ik"+suffix
-                    footroll = "foot_roll"+delim+"ik"+suffix
-                    pole   = "knee_target"+delim+"ik"+suffix
-                    mfooti = "MCH-foot"+suffix+".001"
-    
-                    fk = [thigh,shin,foot,mfoot]
-                    ik = [thighi,shini,footi,footroll,pole,mfooti]
-                    ik2fk_leg(rig, fk, ik)
-    
-                    setLocation(pole, rig)
-                    setLocRot(footi, rig)
-                    setRotation(footroll, rig)
-    
-        setInterpolation(rig)
-        for suffix in [".L", ".R"]:
-            if self.useArms:
-                rig.pose.bones["hand.ik"+suffix]["ikfk_switch"] = 1.0
-            if self.useLegs:
-                rig.pose.bones["foot.ik"+suffix]["ikfk_switch"] = 1.0
-        
+
     
 def muteAllConstraints(rig, value):
     lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
@@ -608,17 +495,8 @@ def muteAllConstraints(rig, value):
     muteConstraints(rLegCnsFk, value)
 
 #------------------------------------------------------------------------
-#   Rigify
+#   
 #------------------------------------------------------------------------
-
-SnapBonesRigify = {
-    "Arm"   : ["upper_arm", "forearm", "hand"],
-    "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
-    "ArmIK" : ["hand_ik", "elbow_target.ik"],
-    "Leg"   : ["thigh", "shin", "foot"],
-    "LegFK" : ["thigh.fk", "shin.fk", "foot.fk"],
-    "LegIK" : ["foot.ik", "foot_roll.ik", "knee_target.ik"],
-}
 
 def setLocation(bname, rig):
     pb = rig.pose.bones[bname]
@@ -720,7 +598,7 @@ def restoreGlobalUndo(context, undo):
     context.user_preferences.edit.use_global_undo = undo
 
 
-class MCP_OT_TransferToFk(BvhPropsOperator, IsArmature, Transferer):
+class MCP_OT_TransferToFk(BvhPropsOperator, IsMhx, Transferer):
     bl_idname = "mcp.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
@@ -735,20 +613,16 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsArmature, Transferer):
         scn = context.scene
         if isMhxRig(rig):
             self.transferMhxToFk(rig, context)
-        elif isRigify(rig):
-            self.transferRigifyToFk(rig, context, ".")
-        elif isRigify2(rig):
-            self.transferRigifyToFk(rig, context, "_")
         else:
             raise MocapError("Can not transfer to FK with this rig")
-        endProgress("Transfer to FK completed")
+        raise MocapMessage("Transfer to FK completed")
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)
         
 
 
-class MCP_OT_TransferToIk(BvhPropsOperator, IsArmature, Transferer):
+class MCP_OT_TransferToIk(BvhPropsOperator, IsMhx, Transferer):
     bl_idname = "mcp.transfer_to_ik"
     bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
@@ -769,13 +643,13 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsArmature, Transferer):
             self.transferRigifyToIk(rig, context, "_")
         else:
             raise MocapError("Can not transfer to IK with this rig")
-        endProgress("Transfer to IK completed")
+        raise MocapMessage("Transfer to IK completed")
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)
         
 
-class MCP_OT_ClearAnimation(BvhOperator, IsArmature, Transferer):
+class MCP_OT_ClearAnimation(BvhOperator, IsMhx, Transferer):
     bl_idname = "mcp.clear_animation"
     bl_label = "Clear Animation"
     bl_description = "Clear Animation For FK or IK Bones"
@@ -807,7 +681,7 @@ class MCP_OT_ClearAnimation(BvhOperator, IsArmature, Transferer):
             self.clearAnimation(rig, context, act, self.type, SnapBonesRigify)
         else:
             raise MocapError("Can not clear %s animation with this rig" % self.type)
-        endProgress("Animation cleared")
+        raise MocapMessage("Animation cleared")
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)
@@ -839,6 +713,17 @@ class MCP_OT_PrintHands(BvhOperator, IsArmature):
     def run(self, context):
         printHand(context)
 
+
+class MCP_OT_Test(BvhOperator, IsArmature):
+    bl_idname = "mcp.test"
+    bl_label = "Test"
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        rig = context.object
+        print("TRIK", rig)
+        print(rig.data.rigify_rig_ui)
+
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
@@ -849,6 +734,7 @@ classes = [
     MCP_OT_TransferToIk,
     MCP_OT_ClearAnimation,
     MCP_OT_PrintHands,
+    MCP_OT_Test,
 ]
 
 def initialize():

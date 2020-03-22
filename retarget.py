@@ -456,10 +456,9 @@ class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target, Retargeter):
             if srcRig != trgRig:
                 self.retargetAnimation(context, srcRig, trgRig)
                 
-                
     def sequel(self, context, data):
         restoreTargetData(data)
-
+        
 
 class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender):
     bl_idname = "mcp.load_and_retarget"
@@ -505,6 +504,7 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
                 track.strips.new(act.name, 1, act)
             rig.animation_data.action = None                
         print("---------------")
+        raise MocapMessage("BVH file(s) retargeted")                
         
             
     def retarget(self, context, filepath):

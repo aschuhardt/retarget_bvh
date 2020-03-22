@@ -636,6 +636,7 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
             filepath = os.path.join(self.directory, file_elem.name)
             self.readBvhFile(context, filepath, context.scene, False)
             bpy.ops.object.mode_set(mode='OBJECT')
+        raise MocapMessage("BVH file(s) loaded")
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -669,7 +670,7 @@ class MCP_OT_RenameBvh(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
         if self.useTimeScale:
             self.timescaleFCurves(srcRig)
         bpy.ops.object.mode_set(mode='OBJECT')
-        print("%s renamed" % srcRig.name)
+        raise MocapMessage("%s renamed" % srcRig.name)
 
 #
 #   class MCP_OT_LoadAndRenameBvh(BvhOperator, ImportHelper, BvhFile):

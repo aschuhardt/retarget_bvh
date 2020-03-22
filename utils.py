@@ -252,10 +252,14 @@ class MocapError(Exception):
         return repr(self.value)
 
 
-class ErrorOperator(bpy.types.Operator):
-    bl_idname = "mcp.error"
-    bl_label = "BVH Retargeter Error"
+class MocapMessage(Exception):
+    def __init__(self, value):
+        global _errorLines
+        _errorLines = value.split("\n")
+        print(value)
 
+
+class MocapPopup(bpy.types.Operator):
     def execute(self, context):
         clearCategory()
         return {'RUNNING_MODAL'}
@@ -269,6 +273,16 @@ class ErrorOperator(bpy.types.Operator):
         global _errorLines
         for line in _errorLines:
             self.layout.label(text=line)
+
+
+class ErrorOperator(MocapPopup):
+    bl_idname = "mcp.error"
+    bl_label = "BVH Retargeter Error"
+
+
+class MessageOperator(MocapPopup):
+    bl_idname = "mcp.message"
+    bl_label = "BVH Retargeter"
 
 #-------------------------------------------------------------
 #   Poll
@@ -287,6 +301,13 @@ class IsArmature:
         ob = context.object
         return (ob and ob.type == 'ARMATURE')
 
+
+class IsMhx:
+    @classmethod
+    def poll(self, context):
+        ob = context.object
+        return (ob and ob.type == 'ARMATURE' and isMhxRig(ob))
+
 #-------------------------------------------------------------
 #   Execute
 #-------------------------------------------------------------
@@ -298,6 +319,8 @@ class BvhOperator(bpy.types.Operator):
             self.run(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
+        except MocapMessage:
+            bpy.ops.mcp.message('INVOKE_DEFAULT')
         except KeyboardInterrupt:
             global _errorLines
             _errorLines = ["Keyboard interrupt"]

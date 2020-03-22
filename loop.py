@@ -145,12 +145,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                     if t < minTime or t > maxTime:
                         fcu.keyframe_points.remove(kp)
             
-        endProgress("F-curves looped")
-        return
-        for fcu in fcurves:
-            (name, mode) = fCurveIdentity(fcu)
-            if isLocation(mode):
-                self.loopFCurve(fcu, minTime, maxTime, scn)
+        raise MocapMessage("F-curves looped")
 
 
     def loopFCurve(self, fcu, t0, tn, scn):
@@ -284,7 +279,7 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                 for (t,y) in points:
                     fcu.keyframe_points.insert(t+dt, y+dy, options={'FAST'})
     
-        endProgress("F-curves repeated %d times" % self.repeatNumber)
+        raise MocapMessage("F-curves repeated %d times" % self.repeatNumber)
 
 
 #
@@ -414,7 +409,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
         setInterpolation(rig)
         act = rig.animation_data.action
         act.name = self.outputActionName
-        endProgress("Actions stitched")
+        raise MocapMessage("Actions stitched")
 
     
     def getActionExtent(self, act):
@@ -551,7 +546,7 @@ class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature):
                     insertLocation(pb, mat)
                 insertRotation(pb, mat)
         
-        endProgress("Animation shifted")
+        raise MocapMessage("Animation shifted")
 
 
 class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature):
@@ -618,7 +613,7 @@ class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature):
                 for kp in fcu.keyframe_points:
                     if kp.co[0] >= minTime and kp.co[0] <= maxTime:
                         kp.co[1] = value
-        endProgress("Bone locations fixed")
+        raise MocapMessage("Bone locations fixated")
 
 #----------------------------------------------------------
 #   Get active frames

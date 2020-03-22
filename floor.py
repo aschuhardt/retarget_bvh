@@ -106,7 +106,7 @@ def addOffset(pb, offset, ez):
 #   Toe below ball
 #-------------------------------------------------------------
 
-class MCP_OT_OffsetToes(BvhOperator, IsArmature, Target):
+class MCP_OT_OffsetToes(BvhOperator, IsMhx, Target):
     bl_idname = "mcp.offset_toes"
     bl_label = "Offset Toes"
     bl_description = "Keep toes below the ball of the feet"
@@ -134,8 +134,8 @@ class MCP_OT_OffsetToes(BvhOperator, IsArmature, Target):
         self.toeBelowBall(context, frames, rig, plane, ".L")
         print("Right toe")
         self.toeBelowBall(context, frames, rig, plane, ".R")
-        endProgress("Toes kept down")
         rig.data.layers = layers
+        raise MocapMessage("Toes kept down")
 
 
     def toeBelowBall(self, context, frames, rig, plane, suffix):
@@ -256,7 +256,7 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
             self.floorIkFoot(rig, plane, scn, frames)
         else:
             self.floorFkFoot(rig, plane, scn, frames)
-        endProgress("Feet kept above floor")
+        raise MocapMessage("Feet kept above floor")
     
     
     def floorFkFoot(self, rig, plane, scn, frames):
