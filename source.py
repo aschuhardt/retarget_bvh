@@ -224,7 +224,7 @@ def readSrcArmature(filepath, name):
     armature = CArmature()
     armature.name = struct["name"]
     bones = armature.boneNames
-    for key,value in struct["armature"].items():
+    for key,value in struct["bones"].items():
         bones[canonicalName(key)] = nameOrNone(value)
     return armature
 

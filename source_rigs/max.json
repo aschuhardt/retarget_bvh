@@ -32,7 +32,7 @@
 		"rightshoulder" : "upper_arm.R",
 		"rightelbow" : "forearm.R",
 		"rightwrist" : "hand.R"
-	},
+	}
 
 }
 

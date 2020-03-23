@@ -29,7 +29,7 @@
     	"rightkneejoint" : "shin.R",
 	    "rightanklejoint" : "foot.R", 
 	    "righttoesjoint" : "toe.R"
-    },
+    }
 
 }
 
