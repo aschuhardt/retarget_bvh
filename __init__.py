@@ -245,6 +245,7 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
         layout.prop(scn, "McpSourceRig")
         #layout.prop(scn, "McpSourceTPose")
+        layout.operator("mcp.verify_source_rig")
         layout.operator("mcp.list_source_rig")
         layout.operator("mcp.put_in_t_pose")
         

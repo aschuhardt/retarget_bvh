@@ -38,33 +38,93 @@ from bpy.props import *
 from .armature import CArmature
 from .utils import *
 
-#
-#   Global variables
-#
+#----------------------------------------------------------
+#   Source classes
+#----------------------------------------------------------
+          
+class CRigInfo:
+    def __init__(self, name="Automatic"):
+        self.name = name
+        self.filepath = "None"
+        self.bones = []
+        self.parents = {}
+        self.optional = []
+        self.fingerprint = []
 
-#_sourceArmatures = { "Automatic" : None }
-_sourceArmatures = {}
-_srcArmature = None
+    def testRig(self, name, rig, includeFingers):
+        from .armature import validBone
+        print("Testing %s" % name)
+        #pbones = dict([(pb.name.lower(),pb) for pb in rig.pose.bones])
+        pbones = rig.pose.bones
+        for (bname, mhxname) in self.bones:
+            print("BB", bname, mhxname)
+            if bname in self.optional:
+                continue
+            if bname[0:2] == "f_" and not includeFingers:
+                continue
+            if bname in pbones.keys():
+                pb = pbones[bname]
+            else:
+                pb = None
+            if pb is None or not validBone(pb):
+                print("  Did not find bone %s (%s)" % (bname, mhxname))
+                print("Bones:")
+                for pair in self.bones:
+                    print("  %s : %s" % pair)
+                raise MocapError(
+                    "Armature %s does not\n" % rig.name +
+                    "match armature %s.\n" % name +
+                    "Did not find bone %s     " % bname)
+
+
+class CSourceInfo(CArmature, CRigInfo):
+    def __init__(self, struct=None):
+        CArmature.__init__(self)
+        CRigInfo.__init__(self)
+        if struct:
+            self.name = struct["name"]
+            for key,value in struct["bones"].items():
+                bname = canonicalName(key)
+                mhxname = nameOrNone(value)
+                self.boneNames[bname] = mhxname
+                self.bones.append((bname,mhxname))
+ 
+
+class IncludeFingers:
+    includeFingers : BoolProperty(
+        name = "Include Fingers",
+        description = "Include finger bones",
+        default = False)
+
+    def draw(self, context):
+        self.layout.prop(self, "includeFingers")
+                    
+#----------------------------------------------------------
+#   Global variables
+#----------------------------------------------------------
+
+_sourceInfo = {}
+_activeSrcInfo = None
 
 def getSourceArmature(name):
-    global _sourceArmatures
-    return _sourceArmatures[name]
+    global _sourceInfo
+    return _sourceInfo[name]
 
 def getSourceBoneName(bname):
-    global _srcArmature
+    global _activeSrcInfo
     lname = canonicalName(bname)
     try:
-        return _srcArmature.boneNames[lname]
+        return _activeSrcInfo.boneNames[lname]
     except KeyError:
         return None
 
 def getSourceTPoseFile():
-    global _srcArmature
-    return _srcArmature.tposeFile
+    global _activeSrcInfo
+    return _activeSrcInfo.tposeFile
 
 def isSourceInited(scn):
-    global _sourceArmatures
-    return (_sourceArmatures != {})
+    global _sourceInfo
+    return (_sourceInfo != {})
 
 def ensureSourceInited(scn):
     if not isSourceInited(scn):
@@ -79,10 +139,10 @@ def guessSrcArmatureFromList(rig, scn):
     bestMisses = 1000
 
     misses = {}
-    for name in _sourceArmatures.keys():
+    for name in _sourceInfo.keys():
         if name == "Automatic":
             continue
-        amt = _sourceArmatures[name]
+        amt = _sourceInfo[name]
         nMisses = 0
         for bone in rig.data.bones:
             try:
@@ -102,7 +162,7 @@ def guessSrcArmatureFromList(rig, scn):
         for (name, n) in misses.items():
             print("  %14s: %2d" % (name, n))
         print("Best bone map for armature %s:" % best.name)
-        amt = _sourceArmatures[best.name]
+        amt = _sourceInfo[best.name]
         for bone in rig.data.bones:
             try:
                 bname = amt.boneNames[canonicalName(bone.name)]
@@ -118,24 +178,24 @@ def guessSrcArmatureFromList(rig, scn):
 #
 
 def findSourceArmature(context, rig, auto, includeFingers):
-    global _srcArmature, _sourceArmatures
+    global _activeSrcInfo, _sourceInfo
     from .t_pose import autoTPose, defineTPose, putInRestPose
     scn = context.scene
 
     setCategory("Identify Source Rig")
     ensureSourceInited(scn)
     if auto or scn.McpSourceRig == "Automatic":
-        amt = _srcArmature = CArmature()
+        amt = _activeSrcInfo = CSourceInfo()
         putInRestPose(rig, True)
         amt.findArmature(rig)
         autoTPose(rig, context, includeFingers)
         #defineTPose(rig)
-        _sourceArmatures["Automatic"] = amt
+        _sourceInfo["Automatic"] = amt
         amt.display("Source")
     else:
-        _srcArmature = _sourceArmatures[scn.McpSourceRig]
+        _activeSrcInfo = _sourceInfo[scn.McpSourceRig]
 
-    rig.McpArmature = _srcArmature.name
+    rig.McpArmature = _activeSrcInfo.name
     print("Using matching armature %s." % rig.McpArmature)
     clearCategory()
 
@@ -144,13 +204,13 @@ def findSourceArmature(context, rig, auto, includeFingers):
 #
 
 def setSourceArmature(rig, scn):
-    global _srcArmature, _sourceArmatures
+    global _activeSrcInfo, _sourceInfo
     name = rig.McpArmature
     if name:
         scn.McpSourceRig = name
     else:
         raise MocapError("No source armature set")
-    _srcArmature = _sourceArmatures[name]
+    _activeSrcInfo = _sourceInfo[name]
     print("Set source armature to %s" % name)
 
 #----------------------------------------------------------
@@ -191,18 +251,18 @@ class MCP_OT_InitSources(bpy.types.Operator):
 
 
 def initSources(scn):
-    global _sourceArmatures, _srcArmatureEnums
+    global _sourceInfo, _srcArmatureEnums
 
-    _sourceArmatures = { "Automatic" : CArmature() }
+    _sourceInfo = { "Automatic" : CSourceInfo() }
     path = os.path.join(os.path.dirname(__file__), "source_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".json" and os.path.isfile(file):    
             armature = readSrcArmature(file, name)
-            _sourceArmatures[armature.name] = armature
+            _sourceInfo[armature.name] = armature
     _srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
-    keys = list(_sourceArmatures.keys())
+    keys = list(_sourceInfo.keys())
     keys.sort()
     for key in keys:
         _srcArmatureEnums.append((key,key,key))
@@ -221,12 +281,7 @@ def readSrcArmature(filepath, name):
         print("Read source file", filepath)
     with open(filepath, "r") as fp:
         struct = json.load(fp)
-    armature = CArmature()
-    armature.name = struct["name"]
-    bones = armature.boneNames
-    for key,value in struct["bones"].items():
-        bones[canonicalName(key)] = nameOrNone(value)
-    return armature
+    return CSourceInfo(struct)
 
 #----------------------------------------------------------
 #   List Rig
@@ -341,7 +396,24 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
             return amt.boneNames
         else:
             return []
+
+
+class MCP_OT_VerifySourceRig(BvhPropsOperator, IncludeFingers):
+    bl_idname = "mcp.verify_source_rig"
+    bl_label = "Verify Source Rig"
+    bl_options = {'UNDO'}
         
+    @classmethod
+    def poll(self, context):
+        ob = context.object
+        return (context.scene.McpSourceRig and ob and ob.type == 'ARMATURE')
+                
+    def run(self, context):   
+        rigtype = context.scene.McpSourceRig     
+        info = _sourceInfo[rigtype]
+        info.testRig(rigtype, context.object, self.includeFingers)
+        raise MocapMessage("Source armature %s verified" % rigtype)
+                
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
@@ -349,6 +421,7 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
 classes = [
     MCP_OT_InitSources,
     MCP_OT_ListSourceRig,
+    MCP_OT_VerifySourceRig,
 ]
 
 def initialize():

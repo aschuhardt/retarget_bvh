@@ -34,20 +34,13 @@ import os
 
 from .utils import *
 from .armature import CArmature
+from .source import CRigInfo, IncludeFingers
 
 #----------------------------------------------------------
 #   Target classes
 #----------------------------------------------------------
 
-class CTargetInfo:
-    def __init__(self, name):
-        self.name = name
-        self.filepath = "None"
-        self.bones = []
-        self.parents = {}
-        self.optional = []
-        self.fingerprint = []
-        
+class CTargetInfo(CRigInfo):        
 
     def readFile(self, filepath):
         import json
@@ -105,26 +98,6 @@ class CTargetInfo:
             for pb in rig.pose.bones:
                 if pb.McpBone:
                     print("  ", pb.name, pb.McpParent)
-          
-
-    def testRig(self, name, rig, includeFingers):
-        from .armature import validBone
-        print("Testing %s" % name)
-        for (bname, mhxname) in self.bones:
-            if bname in self.optional:
-                continue
-            if bname[0:2] == "f_" and not includeFingers:
-                continue
-            try:
-                pb = rig.pose.bones[bname]
-            except KeyError:
-                pb = None
-            if pb is None or not validBone(pb):
-                print("  Did not find bone %s (%s)" % (bname, mhxname))
-                print("Bones:")
-                for pair in self.bones:
-                    print("  %s : %s" % pair)
-                raise MocapError("Target armature %s does not\nmatch armature %s." % (rig.name, name))
 
 
 class Target:
@@ -143,16 +116,6 @@ class Target:
     def findTarget(self, context, rig):
         return findTargetArmature(context, rig, self.useAutoTarget, self.includeFingers)
 
-
-class IncludeFingers:
-    includeFingers : BoolProperty(
-        name = "Include Fingers",
-        description = "Include finger bones",
-        default = False)
-
-    def draw(self, context):
-        self.layout.prop(self, "includeFingers")
-                
 #
 #   Global variables
 #
