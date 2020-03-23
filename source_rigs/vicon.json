@@ -2,7 +2,7 @@
     "name"  : "Vicon Blade",
     "url"   : "",
     
-    "armature" : {
+    "bones" : {
         "root" : "hips",
 		"lowerback" : "spine",
 		"thorax" : "chest",
@@ -13,15 +13,15 @@
 		"l_humerus" : "upper_arm.L",
 		"l_elbow" : "forearm.L",
 		"l_wrist" : "hand.L",
-		"l_thumb" : "thumb.02.L",
-		"l_wrist_end" : "thumb.03.L",
+		"l_thumb" : "f_thumb.02.L",
+		"l_wrist_end" : "f_thumb.03.L",
 
 		"r_collar" : "shoulder.R",
 		"r_humerus" : "upper_arm.R",
 		"r_elbow" : "forearm.R",
 		"r_wrist" : "hand.R",
-		"r_thumb" : "thumb.02.R",
-		"r_wrist_end" : "thumb.03.R",
+		"r_thumb" : "f_thumb.02.R",
+		"r_wrist_end" : "f_thumb.03.R",
 
 		"l_femur" : "thigh.L",
 		"l_tibia" : "shin.L",
@@ -33,8 +33,7 @@
 		"r_foot" : "foot.R",
 		"r_toe" : "toe.R"
 	},
-    
-    "t-pose" : []
+
 }
 
 

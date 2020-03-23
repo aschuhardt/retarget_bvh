@@ -1,0 +1,37 @@
+{
+    "name"  : "Endorphin",
+    "url"   : "",
+    
+    "bones" : {
+        "root" : "hips",
+	    "lowerspinejoint" : "spine",
+	    "middlespinejoint" : "spine-1",
+	    "upperspinejoint" : "chest",
+	    "lowerneckjoint" : "neck",
+	    "upperneckjoint" : "head", 
+
+	    "leftclaviclejoint" : "shoulder.L",
+	    "leftshoulderjoint" : "upper_arm.L", 
+	    "leftelbowjoint" : "forearm.L",
+	    "lefttwistjoint" : "hand.L",
+
+	    "rightclaviclejoint" : "shoulder.R",
+	    "rightshoulderjoint" : "upper_arm.R", 
+	    "rightelbowjoint" : "forearm.R",
+	    "righttwistjoint" : "hand.R",
+
+	    "lefthipjoint" : "thigh.L",
+    	"leftkneejoint" : "shin.L",
+	    "leftanklejoint" : "foot.L", 
+	    "lefttoesjoint" : "toe.L",
+
+	    "righthipjoint" : "thigh.R",
+    	"rightkneejoint" : "shin.R",
+	    "rightanklejoint" : "foot.R", 
+	    "righttoesjoint" : "toe.R"
+    },
+
+}
+
+
+

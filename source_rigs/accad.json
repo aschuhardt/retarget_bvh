@@ -2,7 +2,7 @@
     "name"  : "ACCAD",
     "url"   : "www.accad.Accad.edu/research/mocap/mocap_data.htm",
     
-    "armature" : {
+    "bones" : {
         "hips" : "hips",
 	    "tospine" : "spine",
 	    "spine" : "spine-1",
@@ -30,8 +30,7 @@
 	    "rightfoot" : "foot.R", 
 	    "righttoebase" : "toe.R"
     },
-    
-    "t-pose" : []
+
 }
 
 

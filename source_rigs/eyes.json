@@ -2,7 +2,7 @@
     "name"  : "Eyes Japan",
     "url"   : "",
     
-    "armature" : {
+    "bones" : {
 	    "hips" : "hips",
 	    "lefthip" : "thigh.L",
 	    "leftknee" : "shin.L",

@@ -2,7 +2,7 @@
     "name"  : "Mega",
     "url"   : "",
     
-    "armature" : {
+    "bones" : {
         "hips" : "hips",
         "upperback" : "spine",
 		"chest" : "chest",
@@ -29,8 +29,7 @@
 		"rightfoot" : "foot.R",
 		"righttoes" : "toe.R"
 	},
-    
-    "t-pose" : []
+
 }
 
 

@@ -2,7 +2,7 @@
     "name"  : "3DS Max",
     "url"   : "",
     
-    "armature" : {
+    "bones" : {
         "hips" : "hips",
         "lowerback" : "spine",
 		"spine" : "spine-1",
@@ -30,8 +30,7 @@
 		"rightfoot" : "foot.R",
 		"righttoebase" : "toe.R"
 		},
-    
-    "t-pose" : "cmu.json"
+
 }
 
 
