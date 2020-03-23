@@ -3,32 +3,32 @@
     "url"   : "",
     
     "bones" : {
-        "root" : "hips",
-	    "lowerspinejoint" : "spine",
-	    "middlespinejoint" : "spine-1",
-	    "upperspinejoint" : "chest",
-	    "lowerneckjoint" : "neck",
-	    "upperneckjoint" : "head", 
+        "Root" : "hips",
+	    "LowerSpineJoint" : "spine",
+	    "MiddleSpineJoint" : "spine-1",
+	    "UpperSpineJoint" : "chest",
+	    "LowerNeckJoint" : "neck",
+	    "UpperNeckJoint" : "head", 
 
-	    "leftclaviclejoint" : "shoulder.L",
-	    "leftshoulderjoint" : "upper_arm.L", 
-	    "leftelbowjoint" : "forearm.L",
-	    "lefttwistjoint" : "hand.L",
+	    "LeftClavicleJoint" : "shoulder.L",
+	    "LeftShoulderJoint" : "upper_arm.L", 
+	    "LeftElbowJoint" : "forearm.L",
+	    "LeftTwistJoint" : "hand.L",
 
-	    "rightclaviclejoint" : "shoulder.R",
-	    "rightshoulderjoint" : "upper_arm.R", 
-	    "rightelbowjoint" : "forearm.R",
-	    "righttwistjoint" : "hand.R",
+	    "RightClavicleJoint" : "shoulder.R",
+	    "RightShoulderJoint" : "upper_arm.R", 
+	    "RightElbowJoint" : "forearm.R",
+	    "RightTwistJoint" : "hand.R",
 
-	    "lefthipjoint" : "thigh.L",
-    	"leftkneejoint" : "shin.L",
-	    "leftanklejoint" : "foot.L", 
-	    "lefttoesjoint" : "toe.L",
+	    "LeftHipJoint" : "thigh.L",
+    	"LeftKneeJoint" : "shin.L",
+	    "LeftAnkleJoint" : "foot.L", 
+	    "LeftToesJoint" : "toe.L",
 
-	    "righthipjoint" : "thigh.R",
-    	"rightkneejoint" : "shin.R",
-	    "rightanklejoint" : "foot.R", 
-	    "righttoesjoint" : "toe.R"
+	    "RightHipJoint" : "thigh.R",
+    	"RightKneeJoint" : "shin.R",
+	    "RightAnkleJoint" : "foot.R", 
+	    "RightToesJoint" : "toe.R"
     }
 
 }

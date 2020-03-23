@@ -54,8 +54,9 @@ class CRigInfo:
     def testRig(self, name, rig, includeFingers):
         from .armature import validBone
         print("Testing %s" % name)
-        #pbones = dict([(pb.name.lower(),pb) for pb in rig.pose.bones])
-        pbones = rig.pose.bones
+        pbones = dict([(pb.name.lower(),pb) for pb in rig.pose.bones])
+        for pb in rig.pose.bones:
+            pbones[pb.name] = pb
         for (bname, mhxname) in self.bones:
             print("BB", bname, mhxname)
             if bname in self.optional:
@@ -88,6 +89,10 @@ class CSourceInfo(CArmature, CRigInfo):
                 mhxname = nameOrNone(value)
                 self.boneNames[bname] = mhxname
                 self.bones.append((bname,mhxname))
+            if "optional" in struct.keys():
+                for bname in struct["optional"]:
+                    self.optional.extend([bname, bname.lower()])
+                    
  
 
 class IncludeFingers:

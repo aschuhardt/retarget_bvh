@@ -3,27 +3,29 @@
     "url"   : "",
     
     "bones" : {
-	    "hips" : "hips",
-	    "lefthip" : "thigh.L",
-	    "leftknee" : "shin.L",
-	    "leftankle" : "foot.L",
-	    "righthip" : "thigh.R",
-	    "rightknee" : "shin.R",
-	    "rightankle" : "foot.R",
-	    "spine-1" : "spine",
-	    "chest" : "spine-1",
-	    "chest2" : "spine-1",
-	    "cs_bvh" : "chest",
-	    "leftcollar" : "shoulder.L",
-	    "leftshoulder" : "upper_arm.L",
-	    "leftelbow" : "forearm.L",
-	    "leftwrist" : "hand.L",
-	    "rightcollar" : "shoulder.R",
-	    "rightshoulder" : "upper_arm.R",
-	    "rightelbow" : "forearm.R",
-	    "rightwrist" : "hand.R",
-	    "neck" : "neck",
-	    "head" : "head"
+	    "Hips" : "hips",
+	    "Chest" : "spine-1",
+	    "CS_BVH" : "chest",
+	    "Neck" : "neck",
+	    "Head" : "head",
+	    
+	    "LeftHip" : "thigh.L",
+	    "LeftKnee" : "shin.L",
+	    "LeftAnkle" : "foot.L",
+
+	    "RightHip" : "thigh.R",
+	    "RightKnee" : "shin.R",
+	    "RightAnkle" : "foot.R",
+
+	    "LeftCollar" : "shoulder.L",
+	    "LeftShoulder" : "upper_arm.L",
+	    "LeftElbow" : "forearm.L",
+	    "LeftWrist" : "hand.L",
+
+	    "RightCollar" : "shoulder.R",
+	    "RightShoulder" : "upper_arm.R",
+	    "RightElbow" : "forearm.R",
+	    "RightWrist" : "hand.R"
     },
     
     "t-pose" : [

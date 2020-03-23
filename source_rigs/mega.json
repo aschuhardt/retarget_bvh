@@ -3,31 +3,31 @@
     "url"   : "",
     
     "bones" : {
-        "hips" : "hips",
-        "upperback" : "spine",
-		"chest" : "chest",
-		"neck" : "neck",
-		"neck1" : "head",
+        "Hips" : "hips",
+        "UpperBack" : "spine",
+		"Chest" : "chest",
+		"Neck" : "neck",
+		"Neck1" : "head",
 
-		"lcollar" : "shoulder.L",
-		"leftuparm" : "upper_arm.L",
-		"leftlowarm" : "forearm.L",
-		"lefthand" : "hand.L",
+		"LCollar" : "shoulder.L",
+		"LeftUpArm" : "upper_arm.L",
+		"LeftLowArm" : "forearm.L",
+		"LeftHand" : "hand.L",
 
-		"rcollar" : "shoulder.R",
-		"rightuparm" : "upper_arm.R",
-		"rightlowarm" : "forearm.R",
-		"righthand" : "hand.R",
+		"RCollar" : "shoulder.R",
+		"RightUpArm" : "upper_arm.R",
+		"RightLowArm" : "forearm.R",
+		"RightHand" : "hand.R",
 
-		"leftupleg" : "thigh.L",
-		"leftlowleg" : "shin.L",
-		"leftfoot" : "foot.L",
-		"lefttoes" : "toe.L",
+		"LeftUpLeg" : "thigh.L",
+		"LeftLowLeg" : "shin.L",
+		"LeftFoot" : "foot.L",
+		"LeftToes" : "toe.L",
 
-		"rightupleg" : "thigh.R",
-		"rightlowleg" : "shin.R",
-		"rightfoot" : "foot.R",
-		"righttoes" : "toe.R"
+		"RightUpLeg" : "thigh.R",
+		"RightLowLeg" : "shin.R",
+		"RightFoot" : "foot.R",
+		"RightToes" : "toe.R"
 	}
 
 }

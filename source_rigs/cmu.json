@@ -1,24 +1,28 @@
 {
-    "name"  : "ACCAD",
-    "url"   : "www.accad.Accad.edu/research/mocap/mocap_data.htm",
+    "name"  : "CMU",
+    "url"   : "",
     
     "bones" : {
         "Hips" : "hips",
-	    "ToSpine" : "spine",
+	    "LowerBack" : "spine",
 	    "Spine" : "spine-1",
-	    "Spine1" : "chest",
-	    "Neck" : "neck",
+	    "Neck" : "chest",
+	    "Neck1" : "neck",
 	    "Head" : "head", 
 
 	    "LeftShoulder" : "shoulder.L",
 	    "LeftArm" : "upper_arm.L", 
 	    "LeftForeArm" : "forearm.L",
 	    "LeftHand" : "hand.L",
+	    "LThumb" : "f_thumb.01.L",
+	    "LeftHandIndex1" : "f_index.01.L",
 
 	    "RightShoulder" : "shoulder.R",
 	    "RightArm" : "upper_arm.R",
 	    "RightForeArm" : "forearm.R",
     	"RightHand" : "hand.R",
+	    "RThumb" : "f_thumb.01.R",
+	    "RightHandIndex1" : "f_index.01.R",
 
 	    "LeftUpLeg" : "thigh.L",
     	"LeftLeg" : "shin.L",
