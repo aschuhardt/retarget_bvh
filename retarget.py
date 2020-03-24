@@ -98,14 +98,14 @@ class CAnimation:
             banim.printResult(frame)
 
 
-    def putInTPoses(self, context, includeFingers):
+    def putInTPoses(self, context):
         from .t_pose import putInTPose, putInRestPose
         scn = context.scene
         scn.frame_set(0)
         putInRestPose(self.srcRig, True)
-        putInTPose(self.srcRig, scn.McpSourceTPose, context, includeFingers)
+        putInTPose(self.srcRig, scn.McpSourceTPose, context)
         putInRestPose(self.trgRig, True)
-        putInTPose(self.trgRig, scn.McpTargetTPose, context, includeFingers)
+        putInTPose(self.trgRig, scn.McpTargetTPose, context)
         updateScene()
         for banim in self.boneAnims.values():
             banim.getTPoseMatrix()
@@ -325,9 +325,9 @@ class Retargeter:
         print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
         ensureTargetInited(scn)
-        info = findTargetArmature(context, trgRig, self.useAutoTarget, self.includeFingers)
+        info = findTargetArmature(context, trgRig, self.useAutoTarget)
         anim = CAnimation(srcRig, trgRig, info, context)
-        anim.putInTPoses(context, self.includeFingers)
+        anim.putInTPoses(context)
 
         setCategory("Retarget")
         frameBlock = frames[0:100]
@@ -579,6 +579,11 @@ def initialize():
         name="Unlock Rotation",
         description="Clear X and Z rotation locks",
         default=False)
+
+    bpy.types.Scene.McpIncludeFingers = BoolProperty(
+        name = "Include Fingers",
+        description = "Include finger bones",
+        default = False)
 
     bpy.types.Object.MhAlpha8 = BoolProperty(default=False)
 

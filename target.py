@@ -34,7 +34,7 @@ import os
 
 from .utils import *
 from .armature import CArmature
-from .source import CRigInfo, IncludeFingers
+from .source import CRigInfo
 
 #----------------------------------------------------------
 #   Target classes
@@ -101,8 +101,6 @@ class CTargetInfo(CRigInfo):
 
 
 class Target:
-    includeFingers = False
-    
     useAutoTarget : BoolProperty(
         name = "Auto Target",
         description = "Find target rig automatically",
@@ -112,9 +110,10 @@ class Target:
         self.layout.prop(self, "useAutoTarget")
         if not self.useAutoTarget:
             self.layout.prop(context.scene, "McpTargetRig")
+        self.layout.separator()
 
     def findTarget(self, context, rig):
-        return findTargetArmature(context, rig, self.useAutoTarget, self.includeFingers)
+        return findTargetArmature(context, rig, self.useAutoTarget)
 
 #
 #   Global variables
@@ -138,10 +137,10 @@ def ensureTargetInited(scn):
         initTargets(scn)
 
 #
-#   findTargetArmature(context, rig, auto, includeFingers):
+#   findTargetArmature(context, rig, auto):
 #
 
-def findTargetArmature(context, rig, auto, includeFingers):
+def findTargetArmature(context, rig, auto):
     from .t_pose import putInRestPose
     global _targetInfo
 
@@ -150,7 +149,7 @@ def findTargetArmature(context, rig, auto, includeFingers):
     ensureTargetInited(scn)
 
     if auto or scn.McpTargetRig == "Automatic":
-        name = guessTargetArmatureFromList(rig, scn)
+        name = guessArmatureFromList(rig, scn, _targetInfo)
     else:
         name = scn.McpTargetRig
 
@@ -171,7 +170,7 @@ def findTargetArmature(context, rig, auto, includeFingers):
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
         info = _targetInfo[name]
-        if not info.testRig(name, rig, includeFingers):
+        if not info.testRig(name, rig, scn):
             pass
         print("Target armature %s" % name)
         info.addManualBones(rig)
@@ -179,23 +178,24 @@ def findTargetArmature(context, rig, auto, includeFingers):
         return info
 
 
-def guessTargetArmatureFromList(rig, scn):
-    ensureTargetInited(scn)
-    print("Guessing target")
-    for name,info in _targetInfo.items():
+def guessArmatureFromList(rig, scn, infos):
+    print("Identifying rig")
+    for name,info in infos.items():
         if name == "Automatic":
             continue
-        elif matchAllBones(rig, info):
+        elif matchAllBones(rig, info, scn):
             return name
     else:
         return "Automatic"
 
 
-def matchAllBones(rig, info):
+def matchAllBones(rig, info, scn):
     if not hasAllBones(info.fingerprint, rig):
         return False
     for bname,mhx in info.bones:
-        if bname in info.optional or mhx[0:2] == "f_":
+        if bname in info.optional:
+            continue
+        if (mhx[0:2] == "f_" and not scn.McpIncludeFingers):
             continue
         elif bname not in rig.data.bones.keys():
             if theVerbose:
@@ -247,8 +247,8 @@ class MCP_OT_InitTargets(BvhOperator):
         initTargets(context.scene)
 
 
-class MCP_OT_GetTargetRig(BvhOperator, IsArmature, IncludeFingers):
-    bl_idname = "mcp.get_target_rig"
+class MCP_OT_IdentifyTargetRig(BvhOperator, IsArmature):
+    bl_idname = "mcp.identify_target_rig"
     bl_label = "Identify Target Rig"
     bl_description = "Identify the target rig type of the active armature."
     bl_options = {'UNDO'}
@@ -261,7 +261,7 @@ class MCP_OT_GetTargetRig(BvhOperator, IsArmature, IncludeFingers):
         setVerbose(True)
         scn = context.scene
         scn.McpTargetRig = "Automatic"        
-        findTargetArmature(context, context.object, True, self.includeFingers)
+        findTargetArmature(context, context.object, True)
         raise MocapMessage("Identified rig %s" % scn.McpTargetRig)
         
     def sequel(self, context, data):
@@ -299,7 +299,7 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
             return []
 
 
-class MCP_OT_VerifyTargetRig(BvhPropsOperator, IncludeFingers):
+class MCP_OT_VerifyTargetRig(BvhOperator):
     bl_idname = "mcp.verify_target_rig"
     bl_label = "Verify Target Rig"
     bl_options = {'UNDO'}
@@ -312,8 +312,7 @@ class MCP_OT_VerifyTargetRig(BvhPropsOperator, IncludeFingers):
     def run(self, context):   
         rigtype = context.scene.McpTargetRig     
         info = _targetInfo[rigtype]
-        rig = context.object
-        info.testRig(rigtype, rig, self.includeFingers)
+        info.testRig(rigtype, context.object, context.scene)
         raise MocapMessage("Target armature %s verified" % rigtype)
         
 #----------------------------------------------------------
@@ -322,7 +321,7 @@ class MCP_OT_VerifyTargetRig(BvhPropsOperator, IncludeFingers):
 
 classes = [
     MCP_OT_InitTargets,
-    MCP_OT_GetTargetRig,
+    MCP_OT_IdentifyTargetRig,
     MCP_OT_ListTargetRig,
     MCP_OT_VerifyTargetRig,
 ]

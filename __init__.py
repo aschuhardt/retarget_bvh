@@ -122,6 +122,7 @@ class MCP_PT_Options(bpy.types.Panel):
 
     def draw(self, context):
         scn = context.scene
+        self.layout.prop(scn, "McpIncludeFingers")
         self.layout.prop(scn, "McpUseLimits")
         self.layout.prop(scn, "McpClearLocks")
         self.layout.prop(scn, "McpIgnoreHiddenLayers")
@@ -244,7 +245,9 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
             return
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
         layout.prop(scn, "McpSourceRig")
-        #layout.prop(scn, "McpSourceTPose")
+        layout.prop(scn, "McpIncludeFingers")
+        layout.separator()
+        layout.operator("mcp.identify_source_rig")
         layout.operator("mcp.verify_source_rig")
         layout.operator("mcp.list_source_rig")
         layout.operator("mcp.put_in_t_pose")
@@ -272,11 +275,11 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
         layout.separator()
         layout.prop(scn, "McpTargetRig")
-        #layout.prop(scn, "McpTargetTPose")
+        layout.prop(scn, "McpIncludeFingers")
         layout.prop(scn, "McpIgnoreHiddenLayers")
         layout.prop(rig, "McpReverseHip")
         layout.separator()
-        layout.operator("mcp.get_target_rig")
+        layout.operator("mcp.identify_target_rig")
         layout.operator("mcp.verify_target_rig")
         layout.operator("mcp.list_target_rig")
         layout.operator("mcp.put_in_t_pose")

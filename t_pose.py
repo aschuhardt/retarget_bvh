@@ -63,8 +63,6 @@ class JsonFile:
 
 
 class Rigger:
-    includeFingers = False
-    
     autoRig : BoolProperty(
         name = "Auto Rig",
         description = "Find rig automatically",
@@ -72,6 +70,13 @@ class Rigger:
 
     def draw(self, context):
         self.layout.prop(self, "autoRig")
+        if not self.autoRig:
+            scn = context.scene
+            rig = context.object
+            if rig.McpIsSourceRig:
+                self.layout.prop(scn, "McpSourceRig")
+            else:
+                self.layout.prop(scn, "McpTargetRig")
             
     def initRig(self, context):
         from .target import findTargetArmature
@@ -82,9 +87,9 @@ class Rigger:
         pose = [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
     
         if rig.McpIsSourceRig:
-            findSourceArmature(context, rig, self.autoRig, self.includeFingers)
+            findSourceArmature(context, rig, self.autoRig)
         else:
-            findTargetArmature(context, rig, self.autoRig, self.includeFingers)
+            findTargetArmature(context, rig, self.autoRig)
 
         for pb,mat in pose:
             pb.matrix_basis = mat
@@ -225,11 +230,12 @@ TPose = {
     
 }
 
-def autoTPose(rig, context, includeFingers):
+def autoTPose(rig, context):
     print("Auto T-pose", rig.name)
+    scn = context.scene
     putInRestPose(rig, True)
     for pb in rig.pose.bones:
-        if pb.McpBone[0:2] == "f_" and not includeFingers:
+        if pb.McpBone[0:2] == "f_" and not scn.McpIncludeFingers:
             continue
         if pb.McpBone in TPose.keys():
             ex,ey,ez,order = TPose[pb.McpBone]
@@ -281,12 +287,12 @@ def setKeys(pb):
     #pb.keyframe_insert('location', group=pb.name)
         
 
-def putInTPose(rig, tpname, context, includeFingers):
+def putInTPose(rig, tpname, context):
     global _t_poses
     if rig.McpTPoseDefined:
         getStoredTPose(rig)
     elif tpname == "Default":
-        autoTPose(rig, context, includeFingers)
+        autoTPose(rig, context)
     else:
         if tpname in _t_poses.keys():
             struct = _t_poses[tpname]
@@ -306,7 +312,7 @@ class MCP_OT_PutInTPose(BvhPropsOperator, IsArmature, Rigger):
 
     def run(self, context):
         rig = self.initRig(context)
-        putInTPose(rig, context.scene.McpTargetTPose, context, self.includeFingers)
+        putInTPose(rig, "Default", context)
         print("Pose set to T-pose")
 
 #------------------------------------------------------------------

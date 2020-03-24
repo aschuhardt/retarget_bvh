@@ -51,17 +51,17 @@ class CRigInfo:
         self.optional = []
         self.fingerprint = []
 
-    def testRig(self, name, rig, includeFingers):
+    def testRig(self, name, rig, scn):
         from .armature import validBone
         print("Testing %s" % name)
-        pbones = dict([(pb.name.lower(),pb) for pb in rig.pose.bones])
+        pbones = dict([(pb.name,pb) for pb in rig.pose.bones])
         for pb in rig.pose.bones:
-            pbones[pb.name] = pb
+            pbones[pb.name.lower()] = pb
         for (bname, mhxname) in self.bones:
             print("BB", bname, mhxname)
             if bname in self.optional:
                 continue
-            if bname[0:2] == "f_" and not includeFingers:
+            if bname[0:2] == "f_" and not scn.McpIncludeFingers:
                 continue
             if bname in pbones.keys():
                 pb = pbones[bname]
@@ -88,21 +88,10 @@ class CSourceInfo(CArmature, CRigInfo):
                 bname = canonicalName(key)
                 mhxname = nameOrNone(value)
                 self.boneNames[bname] = mhxname
-                self.bones.append((bname,mhxname))
+                self.bones.append((key,mhxname))
             if "optional" in struct.keys():
                 for bname in struct["optional"]:
                     self.optional.extend([bname, bname.lower()])
-                    
- 
-
-class IncludeFingers:
-    includeFingers : BoolProperty(
-        name = "Include Fingers",
-        description = "Include finger bones",
-        default = False)
-
-    def draw(self, context):
-        self.layout.prop(self, "includeFingers")
                     
 #----------------------------------------------------------
 #   Global variables
@@ -179,10 +168,10 @@ def guessSrcArmatureFromList(rig, scn):
         raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
 
 #
-#   findSourceArmature(context, rig, auto, includeFingers):
+#   findSourceArmature(context, rig, auto):
 #
 
-def findSourceArmature(context, rig, auto, includeFingers):
+def findSourceArmature(context, rig, auto):
     global _activeSrcInfo, _sourceInfo
     from .t_pose import autoTPose, defineTPose, putInRestPose
     scn = context.scene
@@ -190,13 +179,13 @@ def findSourceArmature(context, rig, auto, includeFingers):
     setCategory("Identify Source Rig")
     ensureSourceInited(scn)
     if auto or scn.McpSourceRig == "Automatic":
-        amt = _activeSrcInfo = CSourceInfo()
+        info = _activeSrcInfo = CSourceInfo()
         putInRestPose(rig, True)
-        amt.findArmature(rig)
-        autoTPose(rig, context, includeFingers)
+        info.findArmature(rig)
+        autoTPose(rig, context)
         #defineTPose(rig)
-        _sourceInfo["Automatic"] = amt
-        amt.display("Source")
+        _sourceInfo["Automatic"] = info
+        info.display("Source")
     else:
         _activeSrcInfo = _sourceInfo[scn.McpSourceRig]
 
@@ -235,7 +224,7 @@ class Source:
         self.layout.separator()
 
     def findSource(self, context, rig):
-        return findSourceArmature(context, rig, self.useAutoSource, self.includeFingers)
+        return findSourceArmature(context, rig, self.useAutoSource)
 
 #----------------------------------------------------------
 #   Source initialization
@@ -403,7 +392,7 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
             return []
 
 
-class MCP_OT_VerifySourceRig(BvhPropsOperator, IncludeFingers):
+class MCP_OT_VerifySourceRig(BvhOperator):
     bl_idname = "mcp.verify_source_rig"
     bl_label = "Verify Source Rig"
     bl_options = {'UNDO'}
@@ -416,9 +405,26 @@ class MCP_OT_VerifySourceRig(BvhPropsOperator, IncludeFingers):
     def run(self, context):   
         rigtype = context.scene.McpSourceRig     
         info = _sourceInfo[rigtype]
-        info.testRig(rigtype, context.object, self.includeFingers)
+        info.testRig(rigtype, context.object, context.scene)
         raise MocapMessage("Source armature %s verified" % rigtype)
-                
+
+
+class MCP_OT_IdentifySourceRig(BvhOperator):
+    bl_idname = "mcp.identify_source_rig"
+    bl_label = "Identify Source Rig"
+    bl_options = {'UNDO'}
+        
+    @classmethod
+    def poll(self, context):
+        ob = context.object
+        return (ob and ob.type == 'ARMATURE')
+
+    def run(self, context):   
+        from .target import guessArmatureFromList
+        scn = context.scene
+        scn.McpSourceRig = guessArmatureFromList(context.object, scn, _sourceInfo)          
+        raise MocapMessage("Identified rig %s" % scn.McpSourceRig)
+                      
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
@@ -427,6 +433,7 @@ classes = [
     MCP_OT_InitSources,
     MCP_OT_ListSourceRig,
     MCP_OT_VerifySourceRig,
+    MCP_OT_IdentifySourceRig,
 ]
 
 def initialize():
