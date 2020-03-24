@@ -3,7 +3,7 @@
     "url"   : "",
     
     "bones" : {
-        "Root" : "hips",
+        "root" : "hips",
 	    "LowerSpineJoint" : "spine",
 	    "MiddleSpineJoint" : "spine-1",
 	    "UpperSpineJoint" : "chest",
@@ -13,12 +13,14 @@
 	    "LeftClavicleJoint" : "shoulder.L",
 	    "LeftShoulderJoint" : "upper_arm.L", 
 	    "LeftElbowJoint" : "forearm.L",
-	    "LeftTwistJoint" : "hand.L",
+	    "LeftWristJoint" : "hand.L",
+	    "LeftFingersJoint" : "f_index.01.L",
 
 	    "RightClavicleJoint" : "shoulder.R",
 	    "RightShoulderJoint" : "upper_arm.R", 
 	    "RightElbowJoint" : "forearm.R",
-	    "RightTwistJoint" : "hand.R",
+	    "RightWristJoint" : "hand.R",
+	    "RightFingersJoint" : "f_index.01.R",
 
 	    "LeftHipJoint" : "thigh.L",
     	"LeftKneeJoint" : "shin.L",
