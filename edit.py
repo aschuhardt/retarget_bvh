@@ -121,6 +121,7 @@ def startEdit(context):
 class MCP_OT_StartEdit(BvhOperator, IsArmature):
     bl_idname = "mcp.start_edit"
     bl_label = "Start Edit"
+    bl_description = "Start local F-curve editing"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -172,6 +173,7 @@ def undoEdit(context):
 class MCP_OT_UndoEdit(BvhOperator):
     bl_idname = "mcp.undo_edit"
     bl_label = "Undo Edit"
+    bl_description = "Quit local editing and discard changes"
     bl_options = {'UNDO'}
 
     answer : StringProperty()
@@ -270,6 +272,7 @@ def confirmEdit(context):
 class MCP_OT_ConfirmEdit(BvhOperator):
     bl_idname = "mcp.confirm_edit"
     bl_label = "Confirm Edit"
+    bl_description = "Quit local editing and keep changes"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -354,6 +357,7 @@ def insertKey(context, useLoc, useRot, delete):
 class MCP_OT_InsertKey(BvhOperator):
     bl_idname = "mcp.insert_key"
     bl_label = "Key"
+    bl_description = "Insert or delete a key"
     bl_options = {'UNDO'}
 
     loc : BoolProperty("Loc", default=False)

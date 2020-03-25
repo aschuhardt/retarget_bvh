@@ -237,7 +237,7 @@ def initTargets(scn):
 class MCP_OT_InitTargets(BvhOperator):
     bl_idname = "mcp.init_targets"
     bl_label = "Init Target Panel"
-    bl_description = "(Re)load all .trg files in the target_rigs directory."
+    bl_description = "(Re)load all json files in the target_rigs directory."
     bl_options = {'UNDO'}
 
     def run(self, context):
@@ -278,6 +278,7 @@ from .source import ListRig
 class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
     bl_idname = "mcp.list_target_rig"
     bl_label = "List Target Rig"
+    bl_description = "List the bone associations of the active target rig"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -302,6 +303,7 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
 class MCP_OT_VerifyTargetRig(BvhOperator):
     bl_idname = "mcp.verify_target_rig"
     bl_label = "Verify Target Rig"
+    bl_description = "Verify the target rig type of the active armature"
     bl_options = {'UNDO'}
         
     @classmethod

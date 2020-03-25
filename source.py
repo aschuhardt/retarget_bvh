@@ -233,6 +233,7 @@ class Source:
 class MCP_OT_InitSources(bpy.types.Operator):
     bl_idname = "mcp.init_sources"
     bl_label = "Init Source Panel"
+    bl_description = "(Re)load all json files in the source_rigs directory."
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -372,6 +373,7 @@ class ListRig:
 class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
     bl_idname = "mcp.list_source_rig"
     bl_label = "List Source Rig"
+    bl_description = "List the bone associations of the active source rig"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -395,6 +397,7 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
 class MCP_OT_VerifySourceRig(BvhOperator):
     bl_idname = "mcp.verify_source_rig"
     bl_label = "Verify Source Rig"
+    bl_description = "Verify the source rig type of the active armature"
     bl_options = {'UNDO'}
         
     @classmethod
@@ -412,6 +415,7 @@ class MCP_OT_VerifySourceRig(BvhOperator):
 class MCP_OT_IdentifySourceRig(BvhOperator):
     bl_idname = "mcp.identify_source_rig"
     bl_label = "Identify Source Rig"
+    bl_description = "Identify the source rig type of the active armature"
     bl_options = {'UNDO'}
         
     @classmethod
