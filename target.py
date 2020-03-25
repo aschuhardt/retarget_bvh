@@ -258,7 +258,6 @@ class MCP_OT_IdentifyTargetRig(BvhOperator, IsArmature):
         return changeTargetData(context.object, context.scene)
     
     def run(self, context):
-        setVerbose(True)
         scn = context.scene
         scn.McpTargetRig = "Automatic"        
         findTargetArmature(context, context.object, True)

@@ -488,7 +488,6 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
 
     def run(self, context):
         from .load import checkObjectProblems        
-        setVerbose(False)
         checkObjectProblems(context)
         rig = context.object
         infos = []

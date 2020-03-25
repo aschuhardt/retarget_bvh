@@ -236,7 +236,6 @@ class MCP_OT_InitSources(bpy.types.Operator):
 
     def execute(self, context):
         from .t_pose import initTPoses, initSourceTPose
-        setVerbose(True)
         initSources(context.scene)
         initTPoses()
         initSourceTPose(context.scene)
