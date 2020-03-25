@@ -432,37 +432,47 @@ class MCP_OT_LoadPose(BvhPropsOperator, IsArmature, ExportHelper, JsonFile, Rigg
 #   Save current pose to file
 #------------------------------------------------------------------
 
-def savePose(context, filepath):
-    rig = context.object
-    struct = []
-    for pb in rig.pose.bones:
-        bmat = pb.matrix
-        rmat = pb.bone.matrix_local
-        if pb.parent:
-            bmat = pb.parent.matrix.inverted() @ bmat
-            rmat = pb.parent.bone.matrix_local.inverted() @ rmat
-        mat = rmat.inverted() @ bmat
-        q = mat.to_quaternion()
-        magn = math.sqrt( (q.w-1)*(q.w-1) + q.x*q.x + q.y*q.y + q.z*q.z )
-        if magn > 1e-4:
-            if pb.McpBone:
-                struct.append((pb.McpBone, tuple(q)))
-
-    if os.path.splitext(filepath)[1] != ".json":
-        filepath = filepath + ".json"
-    filepath = os.path.join(os.path.dirname(__file__), filepath)
-    print("Saving %s" % filepath)
-    saveJson(struct, filepath)
-
-
 class MCP_OT_SavePose(BvhOperator, IsArmature, ExportHelper, JsonFile):
     bl_idname = "mcp.save_pose"
     bl_label = "Save Pose"
     bl_description = "Save current pose as .json file"
     bl_options = {'UNDO'}
 
+    onlyMcpBones : BoolProperty(
+        name = "Only Mcp Bones",
+        default = False,
+    )
+    
+    def draw(self, context):
+        self.layout.prop(self, "onlyMcpBones")
+         
     def run(self, context):
-        savePose(context, self.filepath)
+        from collections import OrderedDict
+        rig = context.object
+        struct = OrderedDict()
+        for pb in rig.pose.bones:
+            bmat = pb.matrix
+            rmat = pb.bone.matrix_local
+            if pb.parent:
+                bmat = pb.parent.matrix.inverted() @ bmat
+                rmat = pb.parent.bone.matrix_local.inverted() @ rmat
+            mat = rmat.inverted() @ bmat
+            q = mat.to_quaternion()
+            magn = math.sqrt( (q.w-1)*(q.w-1) + q.x*q.x + q.y*q.y + q.z*q.z )
+            if magn > 1e-4:
+                if pb.McpBone: 
+                    struct[pb.McpBone] = tuple(q)
+                elif not self.onlyMcpBones:
+                    euler = Vector(mat.to_euler())/D
+                    struct[pb.name] = tuple(euler)
+
+        if os.path.splitext(self.filepath)[-1] != ".json":
+            filepath = self.filepath + ".json"
+        else:
+            filepath = self.filepath            
+        filepath = os.path.join(os.path.dirname(__file__), filepath)
+        print("Saving %s" % filepath)
+        saveJson(struct, filepath)
         print("Saved current pose")
 
     def invoke(self, context, event):

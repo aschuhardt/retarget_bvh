@@ -156,7 +156,7 @@ def findTargetArmature(context, rig, auto):
     if name == "Automatic":
         setCategory("Automatic Target Rig")
         amt = CArmature(scn)
-        amt.findArmature(rig, ignoreHiddenLayers=scn.McpIgnoreHiddenLayers)
+        amt.findArmature(rig)
         scn.McpTargetRig = "Automatic"
         amt.display("Target")
 

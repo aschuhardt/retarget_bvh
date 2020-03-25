@@ -31,8 +31,38 @@
     	"RightKneeJoint" : "shin.R",
 	    "RightAnkleJoint" : "foot.R", 
 	    "RightToesJoint" : "toe.R"
-    }
+    },
 
+    "t-pose" : {
+        "root" : [0,0,0],
+        "LowerSpineJoint" : [90,0,-90],
+        "MiddleSpineJoint" : [0,0,0],
+        "UpperSpineJoint" : [0,0,0],
+        "LowerNeckJoint" : [0,0,0],
+        "UpperNeckJoint" : [0,0,0],
+        "RightClavicleJoint" : [90,-90,0],
+        "RightShoulderJoint" : [0,0,0],
+        "RightElbowJoint" : [0,0,0],
+        "RightForearmTwistJoint" : [0,0,0],
+        "RightWristJoint" : [0,0,0],
+        "RightFingersJoint" : [0,90,90],
+        "LeftClavicleJoint" : [0,90,-90],
+        "LeftShoulderJoint" : [0,0,0],
+        "LeftElbowJoint" : [0,0,0],
+        "LeftForearmTwistJoint" : [0,0,0],
+        "LeftWristJoint" : [0,0,0],
+        "LeftFingersJoint" : [-90,90,0],
+        "RightHipJoint" : [-90,0,90],
+        "RightKneeJoint" : [0,90,-90],
+        "RightAnkleJoint" : [0,0,0],
+        "RightMidFootJoint" : [0,180,-90],
+        "RightToesJoint" : [0,0,0],
+        "LeftHipJoint" : [-90,0,90],
+        "LeftKneeJoint" : [0,-90,-90],
+        "LeftAnkleJoint" : [0,0,0],
+        "LeftMidFootJoint" : [180,0,-90],
+        "LeftToesJoint" : [0,0,0]
+    }
 }
 
 

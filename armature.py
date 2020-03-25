@@ -42,9 +42,9 @@ class CArmature:
     def __init__(self, scn):
         self.name = "Automatic"
         self.boneNames = OrderedDict()
-        self.tposeFile = None
         self.rig = None
         self.verbose = scn.McpVerbose
+        self.ignoreHiddenLayers = scn.McpIgnoreHiddenLayers
 
 
     def display(self, type):
@@ -55,8 +55,8 @@ class CArmature:
             print("  %14s %14s" % (bname, mhx))
 
 
-    def findArmature(self, rig, ignoreHiddenLayers=True):
-        if ignoreHiddenLayers:
+    def findArmature(self, rig):
+        if self.ignoreHiddenLayers:
             self.rig = rig
         else:
             self.rig = None
@@ -278,13 +278,21 @@ class CArmature:
             for pb in spine2Children:
                 _,tail,_ = getHeadTailDir(pb)
                 limbs.append((tail[0],pb))
-            limbs.sort()
-            self.findArm(limbs[0][1], ".R")
-            self.findHead(limbs[1][1])
-            self.findArm(limbs[2][1], ".L")
+            try:
+                limbs.sort()
+                fail = False
+            except TypeError:
+                fail = True                
+                reason = "Some of the bones have the same X coordinate\n"
+            if not fail:
+                self.findArm(limbs[0][1], ".R")
+                self.findHead(limbs[1][1])
+                self.findArm(limbs[2][1], ".L")
         else:
-            string = ("Could not auto-detect armature because:\n" +
-                      "Top of spine %s has %d children\n" % (spine2.name, len(spine2Children)))
+            fail = True
+            reason = "Top of spine %s has %d children\n" % (spine2.name, len(spine2Children))
+        if fail:
+            string = "Could not auto-detect armature because:\n" + reason
             for child in spine2Children:
                 string += "  %s\n" % child.name
             string += ("Is the source rig oriented correctly?\n" + 

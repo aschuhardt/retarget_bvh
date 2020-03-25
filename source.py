@@ -50,6 +50,7 @@ class CRigInfo:
         self.parents = {}
         self.optional = []
         self.fingerprint = []
+        self.tpose = {}
         self.verbose = scn.McpVerbose
         
 
@@ -112,10 +113,6 @@ def getSourceBoneName(bname):
         return _activeSrcInfo.boneNames[lname]
     except KeyError:
         return None
-
-def getSourceTPoseFile():
-    global _activeSrcInfo
-    return _activeSrcInfo.tposeFile
 
 def isSourceInited(scn):
     global _sourceInfo
@@ -250,13 +247,19 @@ def initSources(scn):
     global _sourceInfo, _srcArmatureEnums
 
     _sourceInfo = { "Automatic" : CSourceInfo(scn) }
-    path = os.path.join(os.path.dirname(__file__), "source_rigs")
-    for fname in os.listdir(path):
-        file = os.path.join(path, fname)
+    folder = os.path.join(os.path.dirname(__file__), "source_rigs")
+    for fname in os.listdir(folder):
+        filepath = os.path.join(folder, fname)
         (name, ext) = os.path.splitext(fname)
-        if ext == ".json" and os.path.isfile(file):    
-            armature = readSrcArmature(file, name, scn)
-            _sourceInfo[armature.name] = armature
+        if ext == ".json" and os.path.isfile(filepath):    
+            import json
+            if scn.McpVerbose:
+                print("Read source file", filepath)
+            with open(filepath, "r") as fp:
+                struct = json.load(fp)
+            if "name" in struct.keys():
+                name = struct["name"]
+            _sourceInfo[name] = CSourceInfo(scn, struct)
     _srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
     keys = list(_sourceInfo.keys())
     keys.sort()
@@ -270,14 +273,6 @@ def initSources(scn):
     scn.McpSourceRig = 'Automatic'
     print("Defined McpSourceRig")
 
-
-def readSrcArmature(filepath, name, scn):
-    import json
-    if scn.McpVerbose:
-        print("Read source file", filepath)
-    with open(filepath, "r") as fp:
-        struct = json.load(fp)
-    return CSourceInfo(scn, struct)
 
 #----------------------------------------------------------
 #   List Rig

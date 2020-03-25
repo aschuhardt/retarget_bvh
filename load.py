@@ -206,7 +206,7 @@ class BvhLoader:
         setCategory("Load Bvh File")
         frameno = 1
         euler = Euler((int(self.x)*D, int(self.y)*D, int(self.z)*D))
-        flipMatrix = euler.to_matrix()        
+        flipMatrix = euler.to_matrix()
         ssFactor = self.ssFactor
     
         fileName = os.path.realpath(os.path.expanduser(filepath))

@@ -289,7 +289,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
 #
 #   class MCP_PT_Poses(bpy.types.Panel):
 #
-'''
+
 class MCP_PT_Poses(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Poses"
@@ -313,7 +313,7 @@ class MCP_PT_Poses(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.save_pose")
         layout.separator()
         layout.operator("mcp.rest_current_pose")
-'''
+
 ########################################################################
 #
 #   class MCP_PT_Actions(bpy.types.Panel):
@@ -348,7 +348,7 @@ classes = [
     MCP_PT_Edit,
     MCP_PT_MhxSourceBones,
     MCP_PT_MhxTargetBones,
-    #MCP_PT_Poses,
+    MCP_PT_Poses,
     MCP_PT_Actions,
 
     utils.ErrorOperator,
