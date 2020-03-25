@@ -39,15 +39,16 @@ from .utils import *
 
 class CArmature:
 
-    def __init__(self):
+    def __init__(self, scn):
         self.name = "Automatic"
         self.boneNames = OrderedDict()
         self.tposeFile = None
         self.rig = None
+        self.verbose = scn.McpVerbose
 
 
     def display(self, type):
-        if not theVerbose:
+        if not self.verbose:
             return
         print("%s Armature: %s" % (type, self.name))
         for bname,mhx in self.boneNames.items():
@@ -89,14 +90,14 @@ class CArmature:
                 counts = self.getChildCount(hipsChildren)
                 hipsChildren = [counts[-3][2], counts[-2][2], counts[-1][2]]
                 nChildren = 3
-            if theVerbose and (hips is not None):
+            if self.verbose and (hips is not None):
                 print("  Try hips: %s, children: %d" % (hips.name, nChildren))
             first = False
 
         if hips is None:
             raise MocapError("Found no candidate hip bone")
 
-        if theVerbose:
+        if self.verbose:
             print("Mapping bones automatically:")
             print("  hips:", hips.name)
         self.setBone("hips", hips)
@@ -135,7 +136,7 @@ class CArmature:
         _,spine = limbs[1]
         _,leftLeg = limbs[2]
 
-        if theVerbose:
+        if self.verbose:
             print("  spine:", spine.name)
             print("  right leg:", rightLeg.name)
             print("  left leg:", leftLeg.name)
@@ -183,7 +184,7 @@ class CArmature:
     def findLeg(self, hip, suffix):
         bnames = ["hip"+suffix, "thigh"+suffix, "shin"+suffix, "foot"+suffix, "toe"+suffix]
         prefnames = ["X", "X", "X", "foot", "toe"]
-        if theVerbose:
+        if self.verbose:
             print("  hip%s:" % suffix, hip.name)
         try:
             thigh = self.validChildren(hip)[0]
@@ -195,7 +196,7 @@ class CArmature:
         elif len(shins) > 1:
             shin = thigh
             thigh = hip
-            if theVerbose:
+            if self.verbose:
                 print("  thigh%s:" % suffix, thigh.name)
                 print("  shin%s:" % suffix, shin.name)
             bnames = bnames[1:]
@@ -213,7 +214,7 @@ class CArmature:
                 feet = self.validChildren(shin)
                 if feet:
                     foot = feet[0]
-            if theVerbose:
+            if self.verbose:
                 print("  thigh%s:" % suffix, thigh.name)
                 print("  shin%s:" % suffix, shin.name)
                 if foot:
@@ -224,24 +225,24 @@ class CArmature:
 
     def findArm(self, shoulder, suffix):
         bnames = ["shoulder"+suffix, "upper_arm"+suffix, "forearm"+suffix, "hand"+suffix]
-        if theVerbose:
+        if self.verbose:
             print("  shoulder%s:" % suffix, shoulder.name)
         try:
             upperarm = self.validChildren(shoulder)[0]
         except IndexError:
             raise MocapError("Shoulder %s has no children" % shoulder.name)
-        if theVerbose:
+        if self.verbose:
             print("  upper_arm%s:" % suffix, upperarm.name)
         try:
             forearm = self.validChildren(upperarm, True)[0]
         except IndexError:
             raise MocapError("Upper arm %s has no children" % upperarm.name)
-        if theVerbose:
+        if self.verbose:
             print("  forearm%s:" % suffix, forearm.name)
         hands = self.validChildren(forearm)
         if hands:
             hand = hands[0]
-            if theVerbose:
+            if self.verbose:
                 print("  hand%s:" % suffix, hand.name)
             if upperarm.bone.length < hand.bone.length:
                 bnames = ["shoulder"+suffix, ""] + bnames[1:]
@@ -250,14 +251,14 @@ class CArmature:
 
     def findHead(self, neck):
         bnames = ["neck", "head"]
-        if theVerbose:
+        if self.verbose:
             print("  neck:", neck.name)
         self.findTerminal(neck, bnames)
 
 
     def findSpine(self, spine1):
         n,spine2 = self.spineEnd(spine1)
-        if theVerbose:
+        if self.verbose:
             print("  spine:", spine1.name)
             print("  chest:", spine2.name)
         if n == 1:

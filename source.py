@@ -43,13 +43,15 @@ from .utils import *
 #----------------------------------------------------------
           
 class CRigInfo:
-    def __init__(self, name="Automatic"):
+    def __init__(self, scn, name="Automatic"):
         self.name = name
         self.filepath = "None"
         self.bones = []
         self.parents = {}
         self.optional = []
         self.fingerprint = []
+        self.verbose = scn.McpVerbose
+        
 
     def testRig(self, name, rig, scn):
         from .armature import validBone
@@ -58,7 +60,6 @@ class CRigInfo:
         for pb in rig.pose.bones:
             pbones[pb.name.lower()] = pb
         for (bname, mhxname) in self.bones:
-            print("BB", bname, mhxname)
             if bname in self.optional:
                 continue
             if bname[0:2] == "f_" and not scn.McpIncludeFingers:
@@ -79,9 +80,9 @@ class CRigInfo:
 
 
 class CSourceInfo(CArmature, CRigInfo):
-    def __init__(self, struct=None):
-        CArmature.__init__(self)
-        CRigInfo.__init__(self)
+    def __init__(self, scn, struct=None):
+        CArmature.__init__(self, scn)
+        CRigInfo.__init__(self, scn)
         if struct:
             self.name = struct["name"]
             for key,value in struct["bones"].items():
@@ -179,7 +180,7 @@ def findSourceArmature(context, rig, auto):
     setCategory("Identify Source Rig")
     ensureSourceInited(scn)
     if auto or scn.McpSourceRig == "Automatic":
-        info = _activeSrcInfo = CSourceInfo()
+        info = _activeSrcInfo = CSourceInfo(scn)
         putInRestPose(rig, True)
         info.findArmature(rig)
         autoTPose(rig, context)
@@ -248,13 +249,13 @@ class MCP_OT_InitSources(bpy.types.Operator):
 def initSources(scn):
     global _sourceInfo, _srcArmatureEnums
 
-    _sourceInfo = { "Automatic" : CSourceInfo() }
+    _sourceInfo = { "Automatic" : CSourceInfo(scn) }
     path = os.path.join(os.path.dirname(__file__), "source_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".json" and os.path.isfile(file):    
-            armature = readSrcArmature(file, name)
+            armature = readSrcArmature(file, name, scn)
             _sourceInfo[armature.name] = armature
     _srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
     keys = list(_sourceInfo.keys())
@@ -270,13 +271,13 @@ def initSources(scn):
     print("Defined McpSourceRig")
 
 
-def readSrcArmature(filepath, name):
+def readSrcArmature(filepath, name, scn):
     import json
-    if theVerbose:
+    if scn.McpVerbose:
         print("Read source file", filepath)
     with open(filepath, "r") as fp:
         struct = json.load(fp)
-    return CSourceInfo(struct)
+    return CSourceInfo(scn, struct)
 
 #----------------------------------------------------------
 #   List Rig

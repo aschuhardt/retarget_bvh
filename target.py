@@ -40,11 +40,11 @@ from .source import CRigInfo
 #   Target classes
 #----------------------------------------------------------
 
-class CTargetInfo(CRigInfo):        
+class CTargetInfo(CRigInfo):  
 
     def readFile(self, filepath):
         import json
-        if theVerbose:
+        if self.verbose:
             print("Read target file", filepath)
         self.filepath = filepath
         with open(filepath, "r") as fp:
@@ -93,7 +93,7 @@ class CTargetInfo(CRigInfo):
                 pb = rig.pose.bones[bname]
                 pb.McpParent = pname
     
-        if theVerbose:
+        if self.verbose:
             print("Parents")
             for pb in rig.pose.bones:
                 if pb.McpBone:
@@ -155,12 +155,12 @@ def findTargetArmature(context, rig, auto):
 
     if name == "Automatic":
         setCategory("Automatic Target Rig")
-        amt = CArmature()
+        amt = CArmature(scn)
         amt.findArmature(rig, ignoreHiddenLayers=scn.McpIgnoreHiddenLayers)
         scn.McpTargetRig = "Automatic"
         amt.display("Target")
 
-        info = _targetInfo[name] = CTargetInfo(name)
+        info = _targetInfo[name] = CTargetInfo(scn, name)
         info.addAutoBones(rig)
         rig.McpTPoseFile = ""
         clearCategory()
@@ -198,7 +198,7 @@ def matchAllBones(rig, info, scn):
         if (mhx[0:2] == "f_" and not scn.McpIncludeFingers):
             continue
         elif bname not in rig.data.bones.keys():
-            if theVerbose:
+            if scn.McpVerbose:
                 print("Missing bone:", bname)
             return False
     return True
@@ -211,13 +211,13 @@ def matchAllBones(rig, info, scn):
 
 def initTargets(scn):
     global _targetInfo
-    _targetInfo = { "Automatic" : CTargetInfo("Automatic") }
+    _targetInfo = { "Automatic" : CTargetInfo(scn, "Automatic") }
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
         filepath = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".json" and os.path.isfile(filepath):
-            info = CTargetInfo("Manual")
+            info = CTargetInfo(scn, "Manual")
             info.readFile(filepath)
             _targetInfo[info.name] = info
 

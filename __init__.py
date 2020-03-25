@@ -122,6 +122,7 @@ class MCP_PT_Options(bpy.types.Panel):
 
     def draw(self, context):
         scn = context.scene
+        self.layout.prop(scn, "McpVerbose")
         self.layout.prop(scn, "McpIncludeFingers")
         self.layout.prop(scn, "McpUseLimits")
         self.layout.prop(scn, "McpClearLocks")
@@ -355,6 +356,11 @@ classes = [
 ]
 
 def register():
+    bpy.types.Scene.McpVerbose = BoolProperty(
+        name="Verbose",
+        description="Verbose mode for debugging",
+        default=False)
+
     bpy.types.Scene.McpShowIK = BoolProperty(
         name="Inverse Kinematics",
         description="Show inverse kinematics",
