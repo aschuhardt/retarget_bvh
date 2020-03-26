@@ -303,15 +303,13 @@ class MCP_PT_TPose(bpy.types.Panel, utils.IsArmature):
         rig = context.object
 
         #layout.prop(scn, "McpSourceTPose")
-        layout.prop(scn, "McpTargetTPose")
+        #layout.prop(scn, "McpTargetTPose")
         layout.operator("mcp.put_in_t_pose")
-        layout.separator()
-        layout.operator("mcp.define_t_pose")
-        layout.operator("mcp.undefine_t_pose")
-        layout.separator()
+        #layout.separator()
+        #layout.operator("mcp.define_t_pose")
+        #layout.operator("mcp.undefine_t_pose")
         layout.operator("mcp.load_t_pose")
         layout.operator("mcp.save_t_pose")
-        layout.separator()
         layout.operator("mcp.rest_current_pose")
 
 ########################################################################

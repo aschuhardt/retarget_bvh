@@ -88,11 +88,11 @@ class CRigInfo:
             pb.McpBone = ""
         for bname,mhx in self.bones:
             if bname in rig.pose.bones.keys():
-                bone = rig.pose.bones[bname]
-                bone.McpBone = mhx
+                pb = rig.pose.bones[bname]
+                pb.McpBone = mhx
                 if bname in self.t_pose.keys():
                     euler = Euler(Vector(self.t_pose[bname])*D)
-                    bone.McpQuat = euler.to_quaternion()
+                    pb.McpQuat = euler.to_quaternion()
             else:
                 print("  ", bname)
         rig.McpTPoseDefined = (self.t_pose != {})

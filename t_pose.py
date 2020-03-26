@@ -34,7 +34,6 @@ import os
 from math import sqrt, pi
 from mathutils import Quaternion, Matrix
 from .utils import *
-from .io_json import *
 
 #------------------------------------------------------------------
 #   Classes
@@ -124,6 +123,10 @@ def applyRestPose(context, value):
         bpy.ops.pose.armature_apply()
     except RuntimeError as err:
         raise MocapError("Error when applying armature:   \n%s" % err)
+        
+    for pb in rig.pose.bones:
+        pb.McpQuat = (1,0,0,0)
+                
     for ob in children:
         name = ob.McpArmatureModifier
         setActiveObject(context, ob)
@@ -351,30 +354,6 @@ class MCP_OT_UndefineTPose(BvhPropsOperator, IsArmature, Rigger):
 #   Load T-pose from file
 #------------------------------------------------------------------
 
-def loadPose(rig, filename):
-    if filename:
-        filepath = os.path.join(os.path.dirname(__file__), filename)
-        filepath = os.path.normpath(filepath)
-        print("Loading %s" % filepath)
-        struct = loadJson(filepath)
-        rig.McpTPoseFile = filename
-        setTPose(rig, struct)
-        return struct
-    else:
-        return None
-    
-
-def setTPose(rig, struct):
-    setRestPose(rig)
-    for name,value in struct:
-        bname = getBoneName(rig, name)
-        if bname in rig.pose.bones.keys():
-            pb = rig.pose.bones[bname]
-            quat = Quaternion(value)
-            pb.matrix_basis = quat.to_matrix().to_4x4()
-            setKeys(pb)
-
-
 def getBoneName(rig, name):
     if rig.McpIsSourceRig:
         return name
@@ -386,16 +365,32 @@ def getBoneName(rig, name):
             return ""
 
 
-class MCP_OT_LoadTPose(BvhPropsOperator, IsArmature, ExportHelper, JsonFile, Rigger):
+class MCP_OT_LoadTPose(BvhOperator, IsArmature, ExportHelper, JsonFile, Rigger):
     bl_idname = "mcp.load_t_pose"
     bl_label = "Load T-Pose"
     bl_description = "Load T-pose from file"
     bl_options = {'UNDO'}
 
     def run(self, context):
+        from .io_json import loadJson
         rig = self.initRig(context)
-        filename = os.path.relpath(self.filepath, os.path.dirname(__file__))
-        loadPose(rig, filename)
+        print("Loading %s" % self.filepath)
+        struct = loadJson(self.filepath)
+        rig.McpTPoseFile = self.filepath
+        if "t-pose" in struct.keys():
+            self.setTPose(rig, struct["t-pose"])
+        else:
+            raise MocapError("File does not define a T-pose:\n%s" % self.filepath)
+
+    def setTPose(self, rig, struct):
+        setRestPose(rig)
+        for bname,value in struct.items():
+            if bname in rig.pose.bones.keys():
+                pb = rig.pose.bones[bname]
+                euler = Euler(Vector(value)*D)
+                quat = pb.McpQuat = euler.to_quaternion()
+                pb.matrix_basis = quat.to_matrix().to_4x4()
+                setKeys(pb)
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
@@ -421,6 +416,7 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
          
     def run(self, context):
         from collections import OrderedDict
+        from .io_json import saveJson
         rig = context.object
         tstruct = OrderedDict()
         struct = {"t-pose" : tstruct}
@@ -458,8 +454,8 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
 classes = [
     MCP_OT_RestCurrentPose,
     MCP_OT_PutInTPose,
-    MCP_OT_DefineTPose,
-    MCP_OT_UndefineTPose,
+    #MCP_OT_DefineTPose,
+    #MCP_OT_UndefineTPose,
     MCP_OT_LoadTPose,
     MCP_OT_SaveTPose,
 ]
