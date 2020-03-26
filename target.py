@@ -185,9 +185,6 @@ class MCP_OT_InitTargets(BvhOperator):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        from .t_pose import initTPoses, initTargetTPose
-        initTPoses()
-        initTargetTPose(context.scene)
         initTargets(context.scene)
 
 

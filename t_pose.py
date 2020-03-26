@@ -37,22 +37,6 @@ from .utils import *
 from .io_json import *
 
 #------------------------------------------------------------------
-#   
-#------------------------------------------------------------------
-
-_t_poses = {}
-
-def isTPoseInited():
-    global _t_poses
-    return (_t_poses != {})
-
-def ensureTPoseInited(scn):
-    if not isTPoseInited():
-        initTPoses()
-        initSourceTPose(scn)
-        initTargetTPose(scn)
-
-#------------------------------------------------------------------
 #   Classes
 #------------------------------------------------------------------
 
@@ -468,52 +452,6 @@ class MCP_OT_SavePose(BvhOperator, IsArmature, ExportHelper, JsonFile):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
-#----------------------------------------------------------
-#   T-pose initialization
-#----------------------------------------------------------
-
-def initTPoses():
-    global _tposeEnums
-
-    keys = []
-    path = os.path.join(os.path.dirname(__file__), "t_poses")
-    for fname in os.listdir(path):
-        file = os.path.join(path, fname)
-        (name, ext) = os.path.splitext(fname)
-        if ext == ".json" and os.path.isfile(file):
-            key = name.capitalize()
-            keys.append((key,key,key))
-    keys.sort()
-    _tposeEnums = [("Default", "Default", "Default")] + keys
-
-
-def initSourceTPose(scn):
-    bpy.types.Scene.McpSourceTPose = EnumProperty(
-        items = _tposeEnums,
-        name = "Source T-Pose",
-        default = 'Default')
-    scn.McpSourceTPose = 'Default'
-
-
-def initTargetTPose(scn):
-    bpy.types.Scene.McpTargetTPose = EnumProperty(
-        items = _tposeEnums,
-        name = "Target T-Pose",
-        default = 'Default')
-    scn.McpTargetTPose = 'Default'
-
-
-class MCP_OT_InitTPoses(BvhOperator):
-    bl_idname = "mcp.init_t_poses"
-    bl_label = "Init T-poses"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        initTPoses()
-        initSourceTPose(context.scene)
-        initTargetTPose(context.scene)
-        print("T-poses initialized")
 
 #----------------------------------------------------------
 #   Initialize

@@ -256,10 +256,7 @@ class MCP_OT_InitSources(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        from .t_pose import initTPoses, initSourceTPose
         initSources(context.scene)
-        initTPoses()
-        initSourceTPose(context.scene)
         return{'FINISHED'}
 
 

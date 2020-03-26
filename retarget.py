@@ -296,7 +296,6 @@ def unhideObjects(objects):
 
 class Retargeter:
     def retargetAnimation(self, context, srcRig, trgRig):
-        from .t_pose import ensureTPoseInited
         from .source import ensureSourceInited, setSourceArmature 
         from .target import ensureTargetInited, findTargetArmature
         from .fkik import setRigToFK
@@ -319,7 +318,6 @@ class Retargeter:
             raise MocapError("No frames found.")
         oldData = changeTargetData(trgRig, scn)
 
-        ensureTPoseInited(scn)
         ensureSourceInited(scn)
         setSourceArmature(srcRig, scn)
         print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
