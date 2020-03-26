@@ -47,12 +47,31 @@ class CRigInfo:
         self.name = name
         self.filepath = "None"
         self.bones = []
+        self.boneNames = {}
         self.parents = {}
         self.optional = []
         self.fingerprint = []
         self.tpose = {}
         self.verbose = scn.McpVerbose
-        
+
+
+    def readFile(self, filepath):
+        import json
+        if self.verbose:
+            print(self.verboseString, filepath)
+        self.filepath = filepath
+        with open(filepath, "r") as fp:
+            struct = json.load(fp)
+        self.name = struct["name"]
+        self.bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
+        self.boneNames = dict([(canonicalName(key), value) for key,value in self.bones])
+        if "parents" in struct.keys():
+            self.parents = struct["parents"]
+        if "optional" in struct.keys():
+            self.optional = struct["optional"]
+        if "fingerprint" in struct.keys():
+            self.fingerprint = struct["fingerprint"]
+                        
 
     def testRig(self, name, rig, scn):
         from .armature import validBone
@@ -81,19 +100,11 @@ class CRigInfo:
 
 
 class CSourceInfo(CArmature, CRigInfo):
+    verboseString = "Read source file"
+    
     def __init__(self, scn, struct=None):
         CArmature.__init__(self, scn)
         CRigInfo.__init__(self, scn)
-        if struct:
-            self.name = struct["name"]
-            for key,value in struct["bones"].items():
-                bname = canonicalName(key)
-                mhxname = nameOrNone(value)
-                self.boneNames[bname] = mhxname
-                self.bones.append((key,mhxname))
-            if "optional" in struct.keys():
-                for bname in struct["optional"]:
-                    self.optional.extend([bname, bname.lower()])
                     
 #----------------------------------------------------------
 #   Global variables
@@ -121,49 +132,6 @@ def isSourceInited(scn):
 def ensureSourceInited(scn):
     if not isSourceInited(scn):
         initSources(scn)
-
-#
-#    guessSrcArmatureFromList(rig, scn):
-#
-
-def guessSrcArmatureFromList(rig, scn):
-    ensureSourceInited(scn)
-    bestMisses = 1000
-
-    misses = {}
-    for name in _sourceInfo.keys():
-        if name == "Automatic":
-            continue
-        amt = _sourceInfo[name]
-        nMisses = 0
-        for bone in rig.data.bones:
-            try:
-                amt.boneNames[canonicalName(bone.name)]
-            except KeyError:
-                nMisses += 1
-        misses[name] = nMisses
-        if nMisses < bestMisses:
-            best = amt
-            bestMisses = nMisses
-
-    if bestMisses == 0:
-        scn.McpSourceRig = best.name
-        return best
-    else:
-        print("Number of misses:")
-        for (name, n) in misses.items():
-            print("  %14s: %2d" % (name, n))
-        print("Best bone map for armature %s:" % best.name)
-        amt = _sourceInfo[best.name]
-        for bone in rig.data.bones:
-            try:
-                bname = amt.boneNames[canonicalName(bone.name)]
-                string = "     "
-            except KeyError:
-                string = " *** "
-                bname = "?"
-            print("%s %14s => %s" % (string, bone.name, bname))
-        raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
 
 #
 #   findSourceArmature(context, rig, auto):
@@ -249,16 +217,10 @@ def initSources(scn):
     folder = os.path.join(os.path.dirname(__file__), "source_rigs")
     for fname in os.listdir(folder):
         filepath = os.path.join(folder, fname)
-        (name, ext) = os.path.splitext(fname)
-        if ext == ".json" and os.path.isfile(filepath):    
-            import json
-            if scn.McpVerbose:
-                print("Read source file", filepath)
-            with open(filepath, "r") as fp:
-                struct = json.load(fp)
-            if "name" in struct.keys():
-                name = struct["name"]
-            _sourceInfo[name] = CSourceInfo(scn, struct)
+        if os.path.splitext(fname)[-1] == ".json":
+            info = CSourceInfo(scn)
+            info.readFile(filepath)            
+            _sourceInfo[info.name] = info
     _srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
     keys = list(_sourceInfo.keys())
     keys.sort()

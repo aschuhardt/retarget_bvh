@@ -41,23 +41,7 @@ from .source import CRigInfo
 #----------------------------------------------------------
 
 class CTargetInfo(CRigInfo):  
-
-    def readFile(self, filepath):
-        import json
-        if self.verbose:
-            print("Read target file", filepath)
-        self.filepath = filepath
-        with open(filepath, "r") as fp:
-            struct = json.load(fp)
-        self.name = struct["name"]
-        self.bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
-        if "parents" in struct.keys():
-            self.parents = struct["parents"]
-        if "optional" in struct.keys():
-            self.optional = struct["optional"]
-        if "fingerprint" in struct.keys():
-            self.fingerprint = struct["fingerprint"]
-        
+    verboseString = "Read target file"
 
     def addAutoBones(self, rig):
         self.bones = []
