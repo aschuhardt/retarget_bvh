@@ -51,7 +51,7 @@ class CRigInfo:
         self.parents = {}
         self.optional = []
         self.fingerprint = []
-        self.tpose = {}
+        self.t_pose = {}
         self.verbose = scn.McpVerbose
 
 
@@ -71,7 +71,55 @@ class CRigInfo:
             self.optional = struct["optional"]
         if "fingerprint" in struct.keys():
             self.fingerprint = struct["fingerprint"]
-                        
+        if "t-pose" in struct.keys():
+            self.t_pose = struct["t-pose"]
+ 
+ 
+    def addAutoBones(self, rig):
+        self.bones = []
+        for pb in rig.pose.bones:
+            if pb.McpBone:
+                self.bones.append( (pb.name, pb.McpBone) )
+        self.addParents(rig)
+        
+
+    def addManualBones(self, rig):
+        for pb in rig.pose.bones:
+            pb.McpBone = ""
+        for bname,mhx in self.bones:
+            if bname in rig.pose.bones.keys():
+                bone = rig.pose.bones[bname]
+                bone.McpBone = mhx
+                if bname in self.t_pose.keys():
+                    euler = Euler(Vector(self.t_pose[bname])*D)
+                    bone.McpQuat = euler.to_quaternion()
+            else:
+                print("  ", bname)
+        rig.McpTPoseDefined = (self.t_pose != {})
+        self.addParents(rig)
+        
+        
+    def addParents(self, rig):        
+        for pb in rig.pose.bones:
+            if pb.McpBone:
+                pb.McpParent = ""
+                par = pb.parent
+                while par:
+                    if par.McpBone:
+                        pb.McpParent = par.name
+                        break
+                    par = par.parent
+        for bname,pname in self.parents.items():
+            if bname in rig.pose.bones.keys():
+                pb = rig.pose.bones[bname]
+                pb.McpParent = pname
+    
+        if self.verbose:
+            print("Parents")
+            for pb in rig.pose.bones:
+                if pb.McpBone:
+                    print("  ", pb.name, pb.McpParent)
+                       
 
     def testRig(self, name, rig, scn):
         from .armature import validBone
@@ -144,16 +192,21 @@ def findSourceArmature(context, rig, auto):
 
     setCategory("Identify Source Rig")
     ensureSourceInited(scn)
-    if auto or scn.McpSourceRig == "Automatic":
-        info = _activeSrcInfo = CSourceInfo(scn)
+    if auto:
+        from .target import guessArmatureFromList
+        scn.McpSourceRig = guessArmatureFromList(rig, scn, _sourceInfo)              
+    if scn.McpSourceRig == "Automatic":
+        info = CSourceInfo(scn)
         putInRestPose(rig, True)
         info.findArmature(rig)
+        info.addAutoBones(rig)
         autoTPose(rig, context)
         #defineTPose(rig)
-        _sourceInfo["Automatic"] = info
+        _activeSrcInfo = _sourceInfo["Automatic"] = info
         info.display("Source")
     else:
-        _activeSrcInfo = _sourceInfo[scn.McpSourceRig]
+        info = _activeSrcInfo = _sourceInfo[scn.McpSourceRig]
+        info.addManualBones(rig)
 
     rig.McpArmature = _activeSrcInfo.name
     print("Using matching armature %s." % rig.McpArmature)
@@ -383,7 +436,13 @@ class MCP_OT_IdentifySourceRig(BvhOperator):
     def run(self, context):   
         from .target import guessArmatureFromList
         scn = context.scene
-        scn.McpSourceRig = guessArmatureFromList(context.object, scn, _sourceInfo)          
+        rig = context.object
+        scn.McpSourceRig = guessArmatureFromList(rig, scn, _sourceInfo)  
+        info = _sourceInfo[scn.McpSourceRig]
+        if scn.McpSourceRig == "Automatic":
+            info.addAutoBones(rig)
+        else:
+            info.addManualBones(rig)
         raise MocapMessage("Identified rig %s" % scn.McpSourceRig)
                       
 #----------------------------------------------------------

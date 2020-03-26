@@ -274,7 +274,16 @@ def putInRestPose(rig, useSetKeys):
         if useSetKeys:
             setKeys(pb)
     updateScene()            
+
                 
+def getStoredTPose(rig, useSetKeys):
+    for pb in rig.pose.bones:
+        quat = Quaternion(pb.McpQuat)
+        pb.matrix_basis = quat.to_matrix().to_4x4()
+        #print(" PB", pb.name, Vector(pb.matrix_basis.to_euler())/D)
+        if useSetKeys:
+            setKeys(pb)
+    updateScene()            
 
 
 def setKeys(pb):        
@@ -288,19 +297,10 @@ def setKeys(pb):
         
 
 def putInTPose(rig, tpname, context):
-    global _t_poses
     if rig.McpTPoseDefined:
-        getStoredTPose(rig)
+        getStoredTPose(rig, True)
     elif tpname == "Default":
         autoTPose(rig, context)
-    else:
-        if tpname in _t_poses.keys():
-            struct = _t_poses[tpname]
-        else:
-            filepath = ("t_poses/%s.json" % tpname.lower())
-            struct = loadPose(rig, filepath)
-            _t_poses[tpname] = struct
-        setTPose(rig, struct)
     updateScene()
     
 
@@ -318,16 +318,6 @@ class MCP_OT_PutInTPose(BvhPropsOperator, IsArmature, Rigger):
 #------------------------------------------------------------------
 #   Set T-Pose
 #------------------------------------------------------------------
-
-def getStoredTPose(rig):
-    for pb in rig.pose.bones:
-        pb.matrix_basis = getStoredBonePose(pb)
-
-
-def getStoredBonePose(pb):
-    quat = Quaternion(pb.McpQuat)
-    return quat.to_matrix().to_4x4()
-
 
 def defineTPose(rig):
     for pb in rig.pose.bones:
