@@ -322,42 +322,42 @@ ListedBones = [
     ('foot.R',       'R foot'),
     ('toe.R',        'R toes'),
     None,
-	("f_thumb.01.L",   "L thumb 1"),
-	("f_thumb.02.L",   "L thumb 2"),
-	("f_thumb.03.L",   "L thumb 3"),
-	("f_index.01.L",   "L index 1"),
-	("f_index.02.L",   "L index 2"),
-	("f_index.03.L",   "L index 3"),
-	("f_middle.01.L",   "L middle 1"),
-	("f_middle.02.L",   "L middle 2"),
-	("f_middle.03.L",   "L middle 3"),
-	("f_ring.01.L",   "L ring 1"),
-	("f_ring.02.L",   "L ring 2"),
-	("f_ring.03.L",   "L ring 3"),
-	("f_pinky.01.L",   "L pinky 1"),
-	("f_pinky.02.L",   "L pinky 2"),
-	("f_pinky.03.L",   "L pinky 3"),
+    ("f_thumb.01.L",   "L thumb 1"),
+    ("f_thumb.02.L",   "L thumb 2"),
+    ("f_thumb.03.L",   "L thumb 3"),
+    ("f_index.01.L",   "L index 1"),
+    ("f_index.02.L",   "L index 2"),
+    ("f_index.03.L",   "L index 3"),
+    ("f_middle.01.L",   "L middle 1"),
+    ("f_middle.02.L",   "L middle 2"),
+    ("f_middle.03.L",   "L middle 3"),
+    ("f_ring.01.L",   "L ring 1"),
+    ("f_ring.02.L",   "L ring 2"),
+    ("f_ring.03.L",   "L ring 3"),
+    ("f_pinky.01.L",   "L pinky 1"),
+    ("f_pinky.02.L",   "L pinky 2"),
+    ("f_pinky.03.L",   "L pinky 3"),
     None,
-	("f_thumb.01.R",   "R thumb 1"),
-	("f_thumb.02.R",   "R thumb 2"),
-	("f_thumb.03.R",   "R thumb 3"),
-	("f_index.01.R",   "R index 1"),
-	("f_index.02.R",   "R index 2"),
-	("f_index.03.R",   "R index 3"),
-	("f_middle.01.R",   "R middle 1"),
-	("f_middle.02.R",   "R middle 2"),
-	("f_middle.03.R",   "R middle 3"),
-	("f_ring.01.R",   "R ring 1"),
-	("f_ring.02.R",   "R ring 2"),
-	("f_ring.03.R",   "R ring 3"),
-	("f_pinky.01.R",   "R pinky 1"),
-	("f_pinky.02.R",   "R pinky 2"),
-	("f_pinky.03.R",   "R pinky 3"),
+    ("f_thumb.01.R",   "R thumb 1"),
+    ("f_thumb.02.R",   "R thumb 2"),
+    ("f_thumb.03.R",   "R thumb 3"),
+    ("f_index.01.R",   "R index 1"),
+    ("f_index.02.R",   "R index 2"),
+    ("f_index.03.R",   "R index 3"),
+    ("f_middle.01.R",   "R middle 1"),
+    ("f_middle.02.R",   "R middle 2"),
+    ("f_middle.03.R",   "R middle 3"),
+    ("f_ring.01.R",   "R ring 1"),
+    ("f_ring.02.R",   "R ring 2"),
+    ("f_ring.03.R",   "R ring 3"),
+    ("f_pinky.01.R",   "R pinky 1"),
+    ("f_pinky.02.R",   "R pinky 2"),
+    ("f_pinky.03.R",   "R pinky 3"),
 ]
 
 class ListRig:
     def draw(self, context):
-        bones = self.getBones(context)
+        bones, tpose = self.getBones(context)
         if bones:
             box = self.layout.box()
             for boneText in ListedBones:
@@ -371,10 +371,15 @@ class ListRig:
                         row = box.row()
                         row.label(text=text)
                         row.label(text=bname)
+                        if bname in tpose.keys():
+                            row.label(text=str(tpose[bname]))
+                        else:
+                            row.label(text="")
                 else:
                     row = box.row()
                     row.label(text=text)
                     row.label(text="-")
+                    row.label(text="")
 
 
 class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
@@ -394,11 +399,12 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
         return []
 
     def getBones(self, context):  
-        amt = getSourceArmature(context.scene.McpSourceRig)
-        if amt:
-            return amt.boneNames
+        info = getSourceArmature(context.scene.McpSourceRig)
+        if info:
+            tpose = dict([(key.lower(),value) for key,value in info.t_pose.items()])
+            return info.boneNames, tpose
         else:
-            return []
+            return [], {}
 
 
 class MCP_OT_VerifySourceRig(BvhOperator):

@@ -264,7 +264,6 @@ def getStoredTPose(rig, useSetKeys):
     for pb in rig.pose.bones:
         quat = Quaternion(pb.McpQuat)
         pb.matrix_basis = quat.to_matrix().to_4x4()
-        #print(" PB", pb.name, Vector(pb.matrix_basis.to_euler())/D)
         if useSetKeys:
             setKeys(pb)
     updateScene()            
@@ -387,10 +386,10 @@ def getBoneName(rig, name):
             return ""
 
 
-class MCP_OT_LoadPose(BvhPropsOperator, IsArmature, ExportHelper, JsonFile, Rigger):
-    bl_idname = "mcp.load_pose"
-    bl_label = "Load Pose"
-    bl_description = "Load pose from file"
+class MCP_OT_LoadTPose(BvhPropsOperator, IsArmature, ExportHelper, JsonFile, Rigger):
+    bl_idname = "mcp.load_t_pose"
+    bl_label = "Load T-Pose"
+    bl_description = "Load T-pose from file"
     bl_options = {'UNDO'}
 
     def run(self, context):
@@ -406,9 +405,9 @@ class MCP_OT_LoadPose(BvhPropsOperator, IsArmature, ExportHelper, JsonFile, Rigg
 #   Save current pose to file
 #------------------------------------------------------------------
 
-class MCP_OT_SavePose(BvhOperator, IsArmature, ExportHelper, JsonFile):
-    bl_idname = "mcp.save_pose"
-    bl_label = "Save Pose"
+class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
+    bl_idname = "mcp.save_t_pose"
+    bl_label = "Save T-Pose"
     bl_description = "Save current pose as .json file"
     bl_options = {'UNDO'}
 
@@ -423,7 +422,8 @@ class MCP_OT_SavePose(BvhOperator, IsArmature, ExportHelper, JsonFile):
     def run(self, context):
         from collections import OrderedDict
         rig = context.object
-        struct = OrderedDict()
+        tstruct = OrderedDict()
+        struct = {"t-pose" : tstruct}
         for pb in rig.pose.bones:
             bmat = pb.matrix
             rmat = pb.bone.matrix_local
@@ -433,12 +433,10 @@ class MCP_OT_SavePose(BvhOperator, IsArmature, ExportHelper, JsonFile):
             mat = rmat.inverted() @ bmat
             q = mat.to_quaternion()
             magn = math.sqrt( (q.w-1)*(q.w-1) + q.x*q.x + q.y*q.y + q.z*q.z )
-            if magn > 1e-4:
-                if pb.McpBone: 
-                    struct[pb.McpBone] = tuple(q)
-                elif not self.onlyMcpBones:
+            if magn > -1e-4:
+                if pb.McpBone or not self.onlyMcpBones:
                     euler = Vector(mat.to_euler())/D
-                    struct[pb.name] = tuple(euler)
+                    tstruct[pb.name] = [int(round(ex)) for ex in euler]
 
         if os.path.splitext(self.filepath)[-1] != ".json":
             filepath = self.filepath + ".json"
@@ -462,8 +460,8 @@ classes = [
     MCP_OT_PutInTPose,
     MCP_OT_DefineTPose,
     MCP_OT_UndefineTPose,
-    MCP_OT_LoadPose,
-    MCP_OT_SavePose,
+    MCP_OT_LoadTPose,
+    MCP_OT_SaveTPose,
 ]
 
 def initialize():

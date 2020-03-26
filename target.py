@@ -235,9 +235,9 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
     def getBones(self, context):
         info = getTargetInfo(context.scene.McpTargetRig)    
         if info:
-            return info.bones
+            return info.bones, {}
         else:
-            return []
+            return [], {}
 
 
 class MCP_OT_VerifyTargetRig(BvhOperator):

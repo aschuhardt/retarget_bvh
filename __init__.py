@@ -290,9 +290,9 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
 #   class MCP_PT_Poses(bpy.types.Panel):
 #
 
-class MCP_PT_Poses(bpy.types.Panel, utils.IsArmature):
+class MCP_PT_TPose(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
-    bl_label = "Poses"
+    bl_label = "T-Pose"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -309,8 +309,8 @@ class MCP_PT_Poses(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.define_t_pose")
         layout.operator("mcp.undefine_t_pose")
         layout.separator()
-        layout.operator("mcp.load_pose")
-        layout.operator("mcp.save_pose")
+        layout.operator("mcp.load_t_pose")
+        layout.operator("mcp.save_t_pose")
         layout.separator()
         layout.operator("mcp.rest_current_pose")
 
@@ -348,7 +348,7 @@ classes = [
     MCP_PT_Edit,
     MCP_PT_MhxSourceBones,
     MCP_PT_MhxTargetBones,
-    MCP_PT_Poses,
+    MCP_PT_TPose,
     MCP_PT_Actions,
 
     utils.ErrorOperator,
