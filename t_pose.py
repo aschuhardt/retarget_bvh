@@ -58,8 +58,10 @@ class Rigger:
             rig = context.object
             if rig.McpIsSourceRig:
                 self.layout.prop(scn, "McpSourceRig")
+                self.layout.prop(scn, "McpSourceTPose")
             else:
                 self.layout.prop(scn, "McpTargetRig")
+                self.layout.prop(scn, "McpTargetTPose")
             
     def initRig(self, context):
         from .target import findTargetArmature
@@ -486,7 +488,6 @@ def initTPoses(scn):
         name = "TPose Source",
         default = 'Default')
     scn.McpSourceTPose = 'Default'
-    print("SS", scn.McpSourceTPose)
 
     bpy.types.Scene.McpTargetTPose = EnumProperty(
         items = enums,

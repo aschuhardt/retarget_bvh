@@ -53,7 +53,9 @@ class Target:
     def draw(self, context):
         self.layout.prop(self, "useAutoTarget")
         if not self.useAutoTarget:
-            self.layout.prop(context.scene, "McpTargetRig")
+            scn = context.scene
+            self.layout.prop(scn, "McpTargetRig")
+            self.layout.prop(scn, "McpTargetTPose")
         self.layout.separator()
 
     def findTarget(self, context, rig):

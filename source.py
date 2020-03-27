@@ -88,6 +88,7 @@ class CRigInfo:
             if pb.McpBone:
                 self.bones.append( (pb.name, pb.McpBone) )
         self.addParents(rig)
+        rig.McpTPoseDefined = False
         
 
     def addManualBones(self, rig):
@@ -99,16 +100,17 @@ class CRigInfo:
                 pb.McpBone = mhx
             else:
                 print("  ", bname)
-        rig.McpTPoseDefined = (self.t_pose != {})
+        rig.McpTPoseDefined = False
         self.addParents(rig)
 
 
-    def addTPose(self, rig):        
+    def addTPose(self, rig):   
         for bname in self.t_pose.keys():
             if bname in rig.pose.bones.keys():
                 pb = rig.pose.bones[bname]
                 euler = Euler(Vector(self.t_pose[bname])*D)
                 pb.McpQuat = euler.to_quaternion()
+        rig.McpTPoseDefined = True
 
 
     def addParents(self, rig):        
@@ -199,17 +201,18 @@ def ensureSourceInited(scn):
 
 def findSourceArmature(context, rig, auto):
     global _activeSrcInfo, _sourceInfos
-    from .t_pose import autoTPose, defineTPose, putInRestPose
+    from .t_pose import autoTPose, defineTPose, putInRestPose, getTPoseInfo
     scn = context.scene
 
     setCategory("Identify Source Rig")
     ensureSourceInited(scn)
     if auto:
         from .target import guessArmatureFromList
-        scn.McpSourceRig = guessArmatureFromList(rig, scn, _sourceInfos)              
+        scn.McpSourceRig = guessArmatureFromList(rig, scn, _sourceInfos)    
     if scn.McpSourceRig == "Automatic":
         info = CSourceInfo(scn)
         putInRestPose(rig, True)
+        scn.McpSourceTPose = "Default"
         info.findArmature(rig)
         info.addAutoBones(rig)
         autoTPose(rig, context)
@@ -219,6 +222,13 @@ def findSourceArmature(context, rig, auto):
     else:
         info = _activeSrcInfo = _sourceInfos[scn.McpSourceRig]
         info.addManualBones(rig)
+        if info.t_pose_file and auto:
+            scn.McpSourceTPose = info.t_pose_file
+        tinfo = getTPoseInfo(scn.McpSourceTPose)
+        if tinfo:
+            tinfo.addTPose(rig)
+        else:
+            scn.McpSourceTPose = "Default"
 
     rig.McpArmature = _activeSrcInfo.name
     print("Using matching armature %s." % rig.McpArmature)
@@ -237,6 +247,7 @@ def setSourceArmature(rig, scn):
         raise MocapError("No source armature set")
     _activeSrcInfo = _sourceInfos[name]
     print("Set source armature to %s" % name)
+    
 
 #----------------------------------------------------------
 #   Class
@@ -251,7 +262,9 @@ class Source:
     def draw(self, context):
         self.layout.prop(self, "useAutoSource")
         if not self.useAutoSource:
-            self.layout.prop(context.scene, "McpSourceRig")
+            scn = context.scene
+            self.layout.prop(scn, "McpSourceRig")
+            self.layout.prop(scn, "McpSourceTPose")
         self.layout.separator()
 
     def findSource(self, context, rig):
@@ -412,11 +425,16 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
                 return [bone]
         return []
 
-    def getBones(self, context):  
-        info = getSourceArmature(context.scene.McpSourceRig)
-        if info:
-            tpose = dict([(key.lower(),value) for key,value in info.t_pose.items()])
+    def getBones(self, context): 
+        from .t_pose import getTPoseInfo
+        scn = context.scene 
+        info = getSourceArmature(scn.McpSourceRig)
+        tinfo = getTPoseInfo(scn.McpSourceTPose)
+        if info and tinfo:
+            tpose = dict([(key.lower(),value) for key,value in tinfo.t_pose.items()])
             return info.boneNames, tpose
+        elif info:
+            return info.boneNames, {}
         else:
             return [], {}
 
