@@ -382,6 +382,7 @@ def validBone(pb, rig=None, muteIk=False):
 
 def getHeadTailDir(pb):
     mat = pb.bone.matrix_local
+    mat = pb.matrix
     head = Vector(mat.col[3][:3])
     vec = Vector(mat.col[1][:3])
     tail = head + pb.bone.length * vec

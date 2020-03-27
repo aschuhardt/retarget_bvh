@@ -203,7 +203,6 @@ class BvhLoader:
 
 
     def readBvhFile(self, context, filepath, scn, scan):
-        setCategory("Load Bvh File")
         frameno = 1
         euler = Euler((int(self.x)*D, int(self.y)*D, int(self.z)*D))
         flipMatrix = euler.to_matrix()
@@ -324,7 +323,6 @@ class BvhLoader:
             print("Warning: No frames in range %d -- %d." % (self.startFrame, self.endFrame))
         renameBvhRig(rig, filepath)
         rig.McpIsSourceRig = True
-        clearCategory()
         return rig
 
 
@@ -576,7 +574,6 @@ class BvhRenamer(Source, Target):
     
     
     def renameAndRescaleBvh(self, context, srcRig, trgRig):
-        setCategory("Rename And Rescale")
         if srcRig.McpRenamed:
             raise MocapError("%s already renamed and rescaled." % srcRig.name)
     
@@ -593,7 +590,6 @@ class BvhRenamer(Source, Target):
         setInterpolation(srcRig)
         self.rescaleRig(trgRig, srcRig)
         srcRig.McpRenamed = True
-        clearCategory()
     
 #----------------------------------------------------------
 #   Object Problems

@@ -91,7 +91,6 @@ def findTargetArmature(context, rig, auto):
     global _targetInfos
 
     scn = context.scene
-    setCategory("Identify Target Rig")
     ensureTargetInited(scn)
 
     if auto or scn.McpTargetRig == "Automatic":
@@ -100,7 +99,6 @@ def findTargetArmature(context, rig, auto):
         name = scn.McpTargetRig
 
     if name == "Automatic":
-        setCategory("Automatic Target Rig")
         amt = CArmature(scn)
         amt.findArmature(rig)
         scn.McpTargetRig = "Automatic"
@@ -109,18 +107,15 @@ def findTargetArmature(context, rig, auto):
         info = _targetInfos[name] = CTargetInfo(scn, name)
         info.addAutoBones(rig)
         rig.McpTPoseFile = ""
-        clearCategory()
         return info
 
     else:
-        setCategory("Manual Target Rig")
         scn.McpTargetRig = name
         info = _targetInfos[name]
         if not info.testRig(name, rig, scn):
             pass
         print("Target armature %s" % name)
         info.addManualBones(rig)
-        clearCategory()
         return info
 
 

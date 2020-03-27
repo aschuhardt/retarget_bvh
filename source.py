@@ -26,8 +26,6 @@
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
 
-
-
 import bpy
 import os
 from collections import OrderedDict
@@ -201,27 +199,28 @@ def ensureSourceInited(scn):
 
 def findSourceArmature(context, rig, auto):
     global _activeSrcInfo, _sourceInfos
-    from .t_pose import autoTPose, defineTPose, putInRestPose, getTPoseInfo
+    from .t_pose import autoTPose, defineTPose, putInRestPose, getTPoseInfo, putInRightPose
     scn = context.scene
 
-    setCategory("Identify Source Rig")
     ensureSourceInited(scn)
     if auto:
         from .target import guessArmatureFromList
-        scn.McpSourceRig = guessArmatureFromList(rig, scn, _sourceInfos)    
+        scn.McpSourceRig = guessArmatureFromList(rig, scn, _sourceInfos) 
+        print("AU", scn.McpSourceRig)
+    
     if scn.McpSourceRig == "Automatic":
         info = CSourceInfo(scn)
-        putInRestPose(rig, True)
-        scn.McpSourceTPose = "Default"
+        tposed = putInRightPose(rig, scn.McpSourceTPose)
         info.findArmature(rig)
         info.addAutoBones(rig)
-        autoTPose(rig, context)
-        #defineTPose(rig)
+        if not tposed:
+            autoTPose(rig, context)
         _activeSrcInfo = _sourceInfos["Automatic"] = info
         info.display("Source")
     else:
         info = _activeSrcInfo = _sourceInfos[scn.McpSourceRig]
         info.addManualBones(rig)
+        print("II", info.name, info.t_pose_file)
         if info.t_pose_file and auto:
             scn.McpSourceTPose = info.t_pose_file
         tinfo = getTPoseInfo(scn.McpSourceTPose)
@@ -232,7 +231,6 @@ def findSourceArmature(context, rig, auto):
 
     rig.McpArmature = _activeSrcInfo.name
     print("Using matching armature %s." % rig.McpArmature)
-    clearCategory()
 
 #
 #    setSourceArmature(rig, scn)

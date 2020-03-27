@@ -210,19 +210,7 @@ def showProgress(n, frame, nFrames, step=20):
 #   Error handling
 #-------------------------------------------------------------
 
-_category = ""
 _errorLines = ""
-
-def setCategory(string):
-    global _category
-    _category = string
-
-def clearCategory():
-    global _category
-    _category = "General error"
-
-clearCategory()
-
 
 class MocapError(Exception):
     def __init__(self, value):
@@ -251,7 +239,6 @@ class MocapMessage(Exception):
 
 class MocapPopup(bpy.types.Operator):
     def execute(self, context):
-        clearCategory()
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):

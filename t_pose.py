@@ -56,7 +56,7 @@ class Rigger:
         if not self.autoRig:
             scn = context.scene
             rig = context.object
-            if rig.McpIsSourceRig:
+            if self.isSourceRig:
                 self.layout.prop(scn, "McpSourceRig")
                 self.layout.prop(scn, "McpSourceTPose")
             else:
@@ -71,7 +71,7 @@ class Rigger:
         rig = context.object
         pose = [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
     
-        if rig.McpIsSourceRig:
+        if self.isSourceRig:
             findSourceArmature(context, rig, self.autoRig)
         else:
             findTargetArmature(context, rig, self.autoRig)
@@ -263,7 +263,19 @@ def putInRestPose(rig, useSetKeys):
         if useSetKeys:
             setKeys(pb)
     updateScene()            
+        
 
+def putInRightPose(rig, tpose):      
+    if tpose != "Default":
+        tinfo = getTPoseInfo(tpose)
+        if tinfo:
+            tinfo.addTPose(rig)        
+            putInTPose(rig, tpose, context)
+            return True
+    else:
+        putInRestPose(rig, True)
+    return False
+            
                 
 def getStoredTPose(rig, useSetKeys):
     for pb in rig.pose.bones:
@@ -292,16 +304,32 @@ def putInTPose(rig, tpname, context):
     updateScene()
     
 
-class MCP_OT_PutInTPose(BvhPropsOperator, IsArmature, Rigger):
-    bl_idname = "mcp.put_in_t_pose"
-    bl_label = "Put In T-pose"
+class MCP_OT_PutInSrcTPose(BvhPropsOperator, IsArmature, Rigger):
+    bl_idname = "mcp.put_in_src_t_pose"
+    bl_label = "Put In T-pose (Source)"
     bl_description = "Put the character into T-pose"
     bl_options = {'UNDO'}
 
+    isSourceRig = True
+    
     def run(self, context):
         rig = self.initRig(context)
-        putInTPose(rig, "Default", context)
-        print("Pose set to T-pose")
+        putInTPose(rig, context.scene.McpSourceTPose, context)
+        print("Pose set to source T-pose")
+    
+
+class MCP_OT_PutInTrgTPose(BvhPropsOperator, IsArmature, Rigger):
+    bl_idname = "mcp.put_in_trg_t_pose"
+    bl_label = "Put In T-pose (Target)"
+    bl_description = "Put the character into T-pose"
+    bl_options = {'UNDO'}
+
+    isSourceRig = False
+    
+    def run(self, context):
+        rig = self.initRig(context)
+        putInTPose(rig, context.scene.McpTargetTPose, context)
+        print("Pose set to target T-pose")
 
 #------------------------------------------------------------------
 #   Set T-Pose
@@ -455,6 +483,9 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
 
 from .source import CRigInfo
 
+class CTPoseInfo(CRigInfo):  
+    verboseString = "Read T-pose file"
+    
 _tposeInfos = {}
 _activeTPoseInfo = None
 
@@ -469,12 +500,12 @@ def getTPoseInfo(name):
 def initTPoses(scn):
     global _tposeInfos
 
-    _tposeInfos = { "Default" : CRigInfo(scn) }
+    _tposeInfos = { "Default" : CTPoseInfo(scn) }
     folder = os.path.join(os.path.dirname(__file__), "t_poses")
     for fname in os.listdir(folder):
         filepath = os.path.join(folder, fname)
         if os.path.splitext(fname)[-1] == ".json":
-            info = CRigInfo(scn)
+            info = CTPoseInfo(scn)
             info.readFile(filepath)            
             _tposeInfos[info.name] = info
     enums = []
@@ -503,7 +534,8 @@ def initTPoses(scn):
 
 classes = [
     MCP_OT_RestCurrentPose,
-    MCP_OT_PutInTPose,
+    MCP_OT_PutInSrcTPose,
+    MCP_OT_PutInTrgTPose,
     #MCP_OT_DefineTPose,
     #MCP_OT_UndefineTPose,
     MCP_OT_LoadTPose,

@@ -252,7 +252,7 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.identify_source_rig")
         layout.operator("mcp.verify_source_rig")
         layout.operator("mcp.list_source_rig")
-        layout.operator("mcp.put_in_t_pose")
+        layout.operator("mcp.put_in_src_t_pose")
         
 ########################################################################
 #
@@ -285,7 +285,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.identify_target_rig")
         layout.operator("mcp.verify_target_rig")
         layout.operator("mcp.list_target_rig")
-        layout.operator("mcp.put_in_t_pose")
+        layout.operator("mcp.put_in_trg_t_pose")
 
 ########################################################################
 #
@@ -306,8 +306,9 @@ class MCP_PT_TPose(bpy.types.Panel, utils.IsArmature):
 
         layout.prop(scn, "McpSourceTPose", text="Source T-Pose")
         layout.prop(scn, "McpTargetTPose", text="Target T-Pose")
-        layout.operator("mcp.put_in_t_pose")
-        #layout.separator()
+        layout.operator("mcp.put_in_src_t_pose")
+        layout.operator("mcp.put_in_trg_t_pose")
+        layout.separator()
         #layout.operator("mcp.define_t_pose")
         #layout.operator("mcp.undefine_t_pose")
         layout.operator("mcp.load_t_pose")

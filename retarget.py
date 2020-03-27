@@ -327,7 +327,6 @@ class Retargeter:
         anim = CAnimation(srcRig, trgRig, info, context)
         anim.putInTPoses(context)
 
-        setCategory("Retarget")
         frameBlock = frames[0:100]
         index = 0
         try:
@@ -346,7 +345,6 @@ class Retargeter:
         act = trgRig.animation_data.action
         act.name = trgRig.name[:4] + srcRig.name[2:]
         act.use_fake_user = True
-        clearCategory()
         endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
         return act,nFrames
 
