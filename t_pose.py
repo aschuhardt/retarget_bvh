@@ -448,6 +448,55 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
         return {'RUNNING_MODAL'}
 
 #----------------------------------------------------------
+#   Global T-pose
+#----------------------------------------------------------
+
+from .source import CRigInfo
+
+_tposeInfos = {}
+_activeTPoseInfo = None
+
+def getTPoseInfo(name):
+    global _tposeInfos
+    if name in _tposeInfos.keys():
+        return _tposeInfos[name]
+    else:
+        return None
+
+
+def initTPoses(scn):
+    global _tposeInfos
+
+    _tposeInfos = { "Default" : CRigInfo(scn) }
+    folder = os.path.join(os.path.dirname(__file__), "t_poses")
+    for fname in os.listdir(folder):
+        filepath = os.path.join(folder, fname)
+        if os.path.splitext(fname)[-1] == ".json":
+            info = CRigInfo(scn)
+            info.readFile(filepath)            
+            _tposeInfos[info.name] = info
+    enums = []
+    keys = list(_tposeInfos.keys())
+    keys.sort()
+    for key in keys:
+        enums.append((key,key,key))
+
+    bpy.types.Scene.McpSourceTPose = EnumProperty(
+        items = enums,
+        name = "TPose Source",
+        default = 'Default')
+    scn.McpSourceTPose = 'Default'
+    print("SS", scn.McpSourceTPose)
+
+    bpy.types.Scene.McpTargetTPose = EnumProperty(
+        items = enums,
+        name = "TPose Target",
+        default = 'Default')
+    scn.McpTargetTPose = 'Default'
+
+    print("T-poses initialized")
+
+#----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
 

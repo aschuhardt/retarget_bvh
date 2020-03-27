@@ -63,18 +63,18 @@ class Target:
 #   Global variables
 #
 
-_targetInfo = {}
+_targetInfos = {}
 
 def getTargetInfo(rigname):
-    global _targetInfo
-    return _targetInfo[rigname]
+    global _targetInfos
+    return _targetInfos[rigname]
 
 def loadTargets():
-    global _targetInfo
-    _targetInfo = {}
+    global _targetInfos
+    _targetInfos = {}
 
 def isTargetInited(scn):
-    return ( _targetInfo != {} )
+    return ( _targetInfos != {} )
 
 def ensureTargetInited(scn):
     if not isTargetInited(scn):
@@ -86,14 +86,14 @@ def ensureTargetInited(scn):
 
 def findTargetArmature(context, rig, auto):
     from .t_pose import putInRestPose
-    global _targetInfo
+    global _targetInfos
 
     scn = context.scene
     setCategory("Identify Target Rig")
     ensureTargetInited(scn)
 
     if auto or scn.McpTargetRig == "Automatic":
-        name = guessArmatureFromList(rig, scn, _targetInfo)
+        name = guessArmatureFromList(rig, scn, _targetInfos)
     else:
         name = scn.McpTargetRig
 
@@ -104,7 +104,7 @@ def findTargetArmature(context, rig, auto):
         scn.McpTargetRig = "Automatic"
         amt.display("Target")
 
-        info = _targetInfo[name] = CTargetInfo(scn, name)
+        info = _targetInfos[name] = CTargetInfo(scn, name)
         info.addAutoBones(rig)
         rig.McpTPoseFile = ""
         clearCategory()
@@ -113,7 +113,7 @@ def findTargetArmature(context, rig, auto):
     else:
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
-        info = _targetInfo[name]
+        info = _targetInfos[name]
         if not info.testRig(name, rig, scn):
             pass
         print("Target armature %s" % name)
@@ -154,8 +154,11 @@ def matchAllBones(rig, info, scn):
 ###############################################################################
 
 def initTargets(scn):
-    global _targetInfo
-    _targetInfo = { "Automatic" : CTargetInfo(scn, "Automatic") }
+    from .t_pose import initTPoses    
+    initTPoses(scn)
+
+    global _targetInfos
+    _targetInfos = { "Automatic" : CTargetInfo(scn, "Automatic") }
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
         filepath = os.path.join(path, fname)
@@ -163,10 +166,10 @@ def initTargets(scn):
         if ext == ".json" and os.path.isfile(filepath):
             info = CTargetInfo(scn, "Manual")
             info.readFile(filepath)
-            _targetInfo[info.name] = info
+            _targetInfos[info.name] = info
 
     enums =[]
-    keys = list(_targetInfo.keys())
+    keys = list(_targetInfos.keys())
     keys.sort()
     for key in keys:
         enums.append((key,key,key))
@@ -253,7 +256,7 @@ class MCP_OT_VerifyTargetRig(BvhOperator):
                 
     def run(self, context):   
         rigtype = context.scene.McpTargetRig     
-        info = _targetInfo[rigtype]
+        info = _targetInfos[rigtype]
         info.testRig(rigtype, context.object, context.scene)
         raise MocapMessage("Target armature %s verified" % rigtype)
         
@@ -276,7 +279,7 @@ def initialize():
         
     bpy.types.Scene.McpTargetTPose = EnumProperty(
         items = [("Default", "Default", "Default")],
-        name = "Target T-pose",
+        name = "TPose Target",
         default = "Default")              
 
     bpy.types.Object.McpReverseHip = BoolProperty(

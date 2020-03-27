@@ -246,6 +246,7 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
             return
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
         layout.prop(scn, "McpSourceRig")
+        layout.prop(scn, "McpSourceTPose")
         layout.prop(scn, "McpIncludeFingers")
         layout.separator()
         layout.operator("mcp.identify_source_rig")
@@ -276,6 +277,7 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
         layout.separator()
         layout.prop(scn, "McpTargetRig")
+        layout.prop(scn, "McpTargetTPose")
         layout.prop(scn, "McpIncludeFingers")
         layout.prop(scn, "McpIgnoreHiddenLayers")
         layout.prop(rig, "McpReverseHip")
@@ -302,8 +304,8 @@ class MCP_PT_TPose(bpy.types.Panel, utils.IsArmature):
         scn = context.scene
         rig = context.object
 
-        #layout.prop(scn, "McpSourceTPose")
-        #layout.prop(scn, "McpTargetTPose")
+        layout.prop(scn, "McpSourceTPose", text="Source T-Pose")
+        layout.prop(scn, "McpTargetTPose", text="Target T-Pose")
         layout.operator("mcp.put_in_t_pose")
         #layout.separator()
         #layout.operator("mcp.define_t_pose")
