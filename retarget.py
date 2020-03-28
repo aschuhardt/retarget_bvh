@@ -106,10 +106,8 @@ class CAnimation:
         putInTPose(self.srcRig, scn.McpSourceTPose, context)
         putInRestPose(self.trgRig, True)
         putInTPose(self.trgRig, scn.McpTargetTPose, context)
-        updateScene()
         for banim in self.boneAnims.values():
             banim.getTPoseMatrix()
-
 
     def retarget(self, frames, context, offset, nFrames):
         objects = hideObjects(context, self.srcRig)
@@ -295,9 +293,22 @@ def unhideObjects(objects):
 
 
 class Retargeter:
+
+    def prequel(self, context):
+        data = changeTargetData(context.object, context.scene)
+        return (time.perf_counter(), data)
+        
+
+    def sequel(self, context, stuff):
+        time1,data = stuff
+        restoreTargetData(data)
+        time2 = time.perf_counter()
+        print("Retargeting finished in %.3f s" % (time2-time1))
+
+
     def retargetAnimation(self, context, srcRig, trgRig):
-        from .source import ensureSourceInited, setSourceArmature 
-        from .target import ensureTargetInited, findTargetArmature
+        from .source import setSourceArmature 
+        from .target import findTargetArmature
         from .fkik import setRigToFK
         from .loop import getActiveFrames
 
@@ -318,11 +329,9 @@ class Retargeter:
             raise MocapError("No frames found.")
         oldData = changeTargetData(trgRig, scn)
 
-        ensureSourceInited(scn)
         setSourceArmature(srcRig, scn)
         print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
-        ensureTargetInited(scn)
         info = findTargetArmature(context, trgRig, self.useAutoTarget)
         anim = CAnimation(srcRig, trgRig, info, context)
         anim.putInTPoses(context)
@@ -433,27 +442,37 @@ def restoreTargetData(data):
 #   Buttons
 #
 
-class MCP_OT_RetargetMhx(BvhPropsOperator, IsArmature, Target, Retargeter):
-    bl_idname = "mcp.retarget_mhx"
-    bl_label = "Retarget Selected To Active"
-    bl_description = "Retarget animation to the active (target) armature from the other selected (source) armature"
-    bl_options = {'UNDO'}
+def ensureInited(scn):        
+    from .source import ensureSourceInited 
+    from .target import ensureTargetInited
+    ensureSourceInited(scn)
+    ensureTargetInited(scn)
 
-    def prequel(self, context):
-        return changeTargetData(context.object, context.scene)
+
+class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, Target, Retargeter):
+    bl_idname = "mcp.retarget_selected_to_active"
+    bl_label = "Retarget Active From Selected"
+    bl_description = "Retarget animation to the active (target) armature from the other selected (source) armatures"
+    bl_options = {'UNDO'}
 
     def run(self, context):
         from .load import checkObjectProblems
         checkObjectProblems(context)
         trgRig = context.object
-        rigList = list(context.selected_objects)
-        self.findTarget(context, trgRig)
-        for srcRig in rigList:
-            if srcRig != trgRig:
+        done = False
+        for srcRig in context.selected_objects:   
+            if srcRig != trgRig and srcRig.type == 'ARMATURE':
                 self.retargetAnimation(context, srcRig, trgRig)
-                
-    def sequel(self, context, data):
-        restoreTargetData(data)
+                done = True
+                break
+        if not done:
+            raise MocapError("No source armature found")  
+        trgRig.select_set(True)
+        context.view_layer.objects.active = trgRig
+
+    def invoke(self, context, event):
+        ensureInited(context.scene)
+        return BvhPropsOperator.invoke(self, context, event)
         
 
 class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender):
@@ -477,20 +496,17 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         self.layout.prop(self, "useNLA")
         
                          
-    def prequel(self, context):
-        data = changeTargetData(context.object, context.scene)
-        return (time.perf_counter(), data)
-        
-
     def run(self, context):
         from .load import checkObjectProblems        
         checkObjectProblems(context)
         rig = context.object
         infos = []
         for file_elem in self.files:
+            print("---------------")
             filepath = os.path.join(self.directory, file_elem.name)
             info = self.retarget(context, filepath)
             infos.append(info)
+        print("---------------")
         if self.useNLA:
             for act,size in infos:
                 track = rig.animation_data.nla_tracks.new()
@@ -498,7 +514,8 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
                 track.is_solo = True
                 track.strips.new(act.name, 1, act)
             rig.animation_data.action = None                
-        print("---------------")
+        rig.select_set(True)
+        context.view_layer.objects.active = rig
         raise MocapMessage("BVH file(s) retargeted")                
         
             
@@ -526,14 +543,8 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         return info
         
                 
-    def sequel(self, context, stuff):
-        time1,data = stuff
-        restoreTargetData(data)
-        time2 = time.perf_counter()
-        print("Retargeting finished in %.3f s" % (time2-time1))
-
-
     def invoke(self, context, event):
+        ensureInited(context.scene)
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
@@ -559,7 +570,7 @@ class MCP_OT_ClearTempProps(BvhOperator):
 #----------------------------------------------------------
 
 classes = [
-    MCP_OT_RetargetMhx,
+    MCP_OT_RetargetSelectedToActive,
     MCP_OT_LoadAndRetarget,
     MCP_OT_ClearTempProps,
 ]

@@ -199,30 +199,27 @@ def ensureSourceInited(scn):
 
 def findSourceArmature(context, rig, auto):
     global _activeSrcInfo, _sourceInfos
-    from .t_pose import autoTPose, defineTPose, putInRestPose, getTPoseInfo, putInRightPose
+    from .t_pose import autoTPose, putInRestPose, getTPoseInfo, putInRightPose
     scn = context.scene
 
     ensureSourceInited(scn)
     if auto:
         from .target import guessArmatureFromList
-        scn.McpSourceRig = guessArmatureFromList(rig, scn, _sourceInfos) 
-        print("AU", scn.McpSourceRig)
+        scn.McpSourceRig, scn.McpSourceTPose = guessArmatureFromList(rig, scn, _sourceInfos) 
     
     if scn.McpSourceRig == "Automatic":
         info = CSourceInfo(scn)
-        tposed = putInRightPose(rig, scn.McpSourceTPose)
+        tposed = putInRightPose(rig, scn.McpSourceTPose, context)
         info.findArmature(rig)
         info.addAutoBones(rig)
         if not tposed:
             autoTPose(rig, context)
+            scn.McpSourceTPose = "Default"
         _activeSrcInfo = _sourceInfos["Automatic"] = info
         info.display("Source")
     else:
         info = _activeSrcInfo = _sourceInfos[scn.McpSourceRig]
         info.addManualBones(rig)
-        print("II", info.name, info.t_pose_file)
-        if info.t_pose_file and auto:
-            scn.McpSourceTPose = info.t_pose_file
         tinfo = getTPoseInfo(scn.McpSourceTPose)
         if tinfo:
             tinfo.addTPose(rig)
@@ -230,7 +227,7 @@ def findSourceArmature(context, rig, auto):
             scn.McpSourceTPose = "Default"
 
     rig.McpArmature = _activeSrcInfo.name
-    print("Using matching armature %s." % rig.McpArmature)
+    print("Using source armature %s." % rig.McpArmature)
 
 #
 #    setSourceArmature(rig, scn)
@@ -407,6 +404,13 @@ class ListRig:
                     row.label(text="")
 
 
+    def findKeys(self, mhx, bones):
+        for bone in bones.keys():
+            if mhx == bones[bone]:
+                return [bone]
+        return []
+
+
 class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
     bl_idname = "mcp.list_source_rig"
     bl_label = "List Source Rig"
@@ -416,12 +420,6 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
     @classmethod
     def poll(self, context):
         return context.scene.McpSourceRig
-
-    def findKeys(self, mhx, bones):
-        for bone in bones.keys():
-            if mhx == bones[bone]:
-                return [bone]
-        return []
 
     def getBones(self, context): 
         from .t_pose import getTPoseInfo

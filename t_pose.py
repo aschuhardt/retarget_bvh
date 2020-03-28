@@ -265,7 +265,7 @@ def putInRestPose(rig, useSetKeys):
     updateScene()            
         
 
-def putInRightPose(rig, tpose):      
+def putInRightPose(rig, tpose, context):      
     if tpose != "Default":
         tinfo = getTPoseInfo(tpose)
         if tinfo:
@@ -296,11 +296,18 @@ def setKeys(pb):
     #pb.keyframe_insert('location', group=pb.name)
         
 
-def putInTPose(rig, tpname, context):
-    if rig.McpTPoseDefined:
+def putInTPose(rig, name, context):
+    if False and rig.McpTPoseDefined:
         getStoredTPose(rig, True)
-    elif tpname == "Default":
-        autoTPose(rig, context)
+    elif name == "Default":
+        autoTPose(rig, context)    
+    else:
+        info = getTPoseInfo(name)
+        if info is None:
+            raise MocapError("T-pose %s not found" % name)
+        info.addTPose(rig)
+        getStoredTPose(rig, True)
+        print("PTP", name, rig.name)
     updateScene()
     
 

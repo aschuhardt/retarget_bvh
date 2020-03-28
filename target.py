@@ -40,8 +40,12 @@ from .source import CRigInfo
 #   Target classes
 #----------------------------------------------------------
 
-class CTargetInfo(CRigInfo):  
+class CTargetInfo(CArmature, CRigInfo):  
     verboseString = "Read target file"
+
+    def __init__(self, scn, name="Automatic"):
+        CArmature.__init__(self, scn)
+        CRigInfo.__init__(self, scn, name)
 
 
 class Target:
@@ -87,36 +91,36 @@ def ensureTargetInited(scn):
 #
 
 def findTargetArmature(context, rig, auto):
-    from .t_pose import putInRestPose
+    from .t_pose import autoTPose, putInRestPose, getTPoseInfo, putInRightPose
     global _targetInfos
 
     scn = context.scene
     ensureTargetInited(scn)
 
-    if auto or scn.McpTargetRig == "Automatic":
-        name = guessArmatureFromList(rig, scn, _targetInfos)
-    else:
-        name = scn.McpTargetRig
+    if auto:
+        scn.McpTargetRig, scn.McpTargetTPose = guessArmatureFromList(rig, scn, _targetInfos) 
 
-    if name == "Automatic":
-        amt = CArmature(scn)
-        amt.findArmature(rig)
-        scn.McpTargetRig = "Automatic"
-        amt.display("Target")
-
-        info = _targetInfos[name] = CTargetInfo(scn, name)
+    if scn.McpTargetRig == "Automatic":
+        info = CTargetInfo(scn)
+        tposed = putInRightPose(rig, scn.McpTargetTPose, context)
+        info.findArmature(rig)
         info.addAutoBones(rig)
-        rig.McpTPoseFile = ""
-        return info
-
+        if not tposed:
+            autoTPose(rig, context)
+        _targetInfos["Automatic"] = info
+        info.display("Target")
     else:
-        scn.McpTargetRig = name
-        info = _targetInfos[name]
-        if not info.testRig(name, rig, scn):
-            pass
-        print("Target armature %s" % name)
+        info = _targetInfos[scn.McpTargetRig]
         info.addManualBones(rig)
-        return info
+        tinfo = getTPoseInfo(scn.McpTargetTPose)
+        if tinfo:
+            tinfo.addTPose(rig)
+        else:
+            scn.McpTargetTPose = "Default"
+
+    rig.McpArmature = info.name
+    print("Using target armature %s." % rig.McpArmature)
+    return info
 
 
 def guessArmatureFromList(rig, scn, infos):
@@ -125,9 +129,12 @@ def guessArmatureFromList(rig, scn, infos):
         if name == "Automatic":
             continue
         elif matchAllBones(rig, info, scn):
-            return name
+            if info.t_pose_file:
+                return name, info.t_pose_file
+            else:
+                return name, "Default"
     else:
-        return "Automatic"
+        return "Automatic", "Default"
 
 
 def matchAllBones(rig, info, scn):
@@ -225,20 +232,25 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
     def poll(self, context):
         return context.scene.McpTargetRig
 
-    def findKeys(self, mhx, bones):
+    def sfindKeys(self, mhx, bones):
         keys = []
         for (bone, mhx1) in bones:
             if mhx1 == mhx:
                 keys.append(bone)
         return keys
 
-    def getBones(self, context):
-        info = getTargetInfo(context.scene.McpTargetRig)    
-        if info:
-            return info.bones, {}
+    def getBones(self, context): 
+        from .t_pose import getTPoseInfo
+        scn = context.scene 
+        info = getTargetInfo(scn.McpTargetRig)    
+        tinfo = getTPoseInfo(scn.McpTargetTPose)
+        if info and tinfo:
+            tpose = dict([(key.lower(),value) for key,value in tinfo.t_pose.items()])
+            return info.boneNames, tpose
+        elif info:
+            return info.boneNames, {}
         else:
             return [], {}
-
 
 class MCP_OT_VerifyTargetRig(BvhOperator):
     bl_idname = "mcp.verify_target_rig"

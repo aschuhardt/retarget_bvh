@@ -601,12 +601,10 @@ def checkObjectProblems(context):
     rig = context.object
 
     eu = rig.rotation_euler
-    print(eu)
     if abs(eu.x) + abs(eu.y) + abs(eu.z) > epsilon:
         problems += "object rotation\n"
 
     vec = rig.scale - Vector((1,1,1))
-    print(vec, vec.length)
     if vec.length > epsilon:
         problems += "object scaling\n"
 
@@ -630,22 +628,24 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
     def run(self, context):
         for file_elem in self.files:
             filepath = os.path.join(self.directory, file_elem.name)
-            self.readBvhFile(context, filepath, context.scene, False)
+            rig = self.readBvhFile(context, filepath, context.scene, False)
             bpy.ops.object.mode_set(mode='OBJECT')
-        raise MocapMessage("BVH file(s) loaded")
+            rig.select_set(True)
+            context.view_layer.objects.active = rig
+        print("BVH file(s) loaded")
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
 #
-#   class MCP_OT_RenameBvh(BvhOperator):
+#   class MCP_OT_RenameActiveToSelected(BvhOperator):
 #
 
-class MCP_OT_RenameBvh(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
-    bl_idname = "mcp.rename_bvh"
-    bl_label = "Rename And Rescale BVH Rig"
-    bl_description = "Rename bones of active armature and scale it to fit other armature"
+class MCP_OT_RenameActiveToSelected(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
+    bl_idname = "mcp.rename_active_to_selected"
+    bl_label = "Rename Active To Selected"
+    bl_description = "Rename bones of selected (source) armatures and scale it to fit the active (target) armature"
     bl_options = {'UNDO'}
 
     def draw(self, context):
@@ -654,19 +654,21 @@ class MCP_OT_RenameBvh(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
     
     def run(self, context):
         scn = context.scene
-        srcRig = context.object
-        trgRig = None
-        for ob in context.view_layer.objects:
-            if ob.type == 'ARMATURE' and ob.select_get() and ob != srcRig:
-                trgRig = ob
-                break
-        if not trgRig:
-            raise MocapError("No target rig selected")
-        self.renameAndRescaleBvh(context, srcRig, trgRig)
-        if self.useTimeScale:
-            self.timescaleFCurves(srcRig)
-        bpy.ops.object.mode_set(mode='OBJECT')
-        raise MocapMessage("%s renamed" % srcRig.name)
+        trgRig = context.object
+        for srcRig in context.selected_objects:        
+            if srcRig != trgRig and srcRig.type == 'ARMATURE':
+                print("REN", srcRig.name, trgRig.name)
+                self.renameAndRescaleBvh(context, srcRig, trgRig)
+                if self.useTimeScale:
+                    self.timescaleFCurves(srcRig)
+                bpy.ops.object.mode_set(mode='OBJECT')
+                print("%s renamed" % srcRig.name)
+        context.view_layer.objects.active = trgRig
+
+    def invoke(self, context, event):
+        from .retarget import ensureInited
+        ensureInited(context.scene)
+        return BvhPropsOperator.invoke(self, context, event)
 
 #
 #   class MCP_OT_LoadAndRenameBvh(BvhOperator, ImportHelper, BvhFile):
@@ -674,7 +676,7 @@ class MCP_OT_RenameBvh(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
 
 class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, BvhRenamer, TimeScaler):
     bl_idname = "mcp.load_and_rename_bvh"
-    bl_label = "Load And Rename BVH File (.bvh)"
+    bl_label = "Load And Rename BVH File"
     bl_description = "Load armature from bvh file and rename bones"
     bl_options = {'UNDO'}
 
@@ -708,7 +710,7 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Bv
 
 classes = [
     MCP_OT_LoadBvh,
-    MCP_OT_RenameBvh,
+    MCP_OT_RenameActiveToSelected,
     MCP_OT_LoadAndRenameBvh,
 ]
 

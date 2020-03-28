@@ -102,11 +102,9 @@ class MCP_PT_Main(bpy.types.Panel):
         layout.separator()
         layout.operator("mcp.load_bvh")        
         layout.separator()
-        layout.operator("mcp.rename_bvh")
+        layout.operator("mcp.rename_active_to_selected")
         layout.operator("mcp.load_and_rename_bvh")
-        layout.operator("mcp.retarget_mhx")
-        layout.separator()
-        layout.operator("mcp.test")        
+        layout.operator("mcp.retarget_selected_to_active")     
 
 ########################################################################
 #
