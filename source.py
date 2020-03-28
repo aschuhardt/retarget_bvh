@@ -64,7 +64,7 @@ class CRigInfo:
         if "name" in struct.keys():
             self.name = struct["name"]
         else:
-            self.name = os.path.splitext(os.path.basename(self.name))[0]
+            self.name = os.path.splitext(os.path.basename(filepath))[0]
         if "bones" in struct.keys():
             self.bones = [(key, nameOrNone(value)) for key,value in struct["bones"].items()]
             self.boneNames = dict([(canonicalName(key), value) for key,value in self.bones])
@@ -469,9 +469,8 @@ class MCP_OT_IdentifySourceRig(BvhOperator):
         from .t_pose import getTPoseInfo
         scn = context.scene
         rig = context.object
-        scn.McpSourceRig = guessArmatureFromList(rig, scn, _sourceInfos)  
+        scn.McpSourceRig,scn.McpSourceTPose = guessArmatureFromList(rig, scn, _sourceInfos)  
         info = _sourceInfos[scn.McpSourceRig]
-        scn.McpSourceTPose = "Default"
         if scn.McpSourceRig == "Automatic":
             info.addAutoBones(rig)
         else:

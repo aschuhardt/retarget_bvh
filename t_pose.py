@@ -513,7 +513,7 @@ def initTPoses(scn):
         filepath = os.path.join(folder, fname)
         if os.path.splitext(fname)[-1] == ".json":
             info = CTPoseInfo(scn)
-            info.readFile(filepath)            
+            info.readFile(filepath)   
             _tposeInfos[info.name] = info
     enums = []
     keys = list(_tposeInfos.keys())
