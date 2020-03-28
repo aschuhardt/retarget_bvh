@@ -297,17 +297,19 @@ def setKeys(pb):
         
 
 def putInTPose(rig, name, context):
+    scn = context.scene
     if False and rig.McpTPoseDefined:
         getStoredTPose(rig, True)
     elif name == "Default":
         autoTPose(rig, context)    
+        print("Put %s in automatic T-pose" % (rig.name))
     else:
         info = getTPoseInfo(name)
         if info is None:
             raise MocapError("T-pose %s not found" % name)
         info.addTPose(rig)
         getStoredTPose(rig, True)
-        print("PTP", name, rig.name)
+        print("Put %s in T-pose %s" % (rig.name, name))
     updateScene()
     
 

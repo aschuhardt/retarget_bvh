@@ -451,7 +451,7 @@ def ensureInited(scn):
 
 class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, Target, Retargeter):
     bl_idname = "mcp.retarget_selected_to_active"
-    bl_label = "Retarget Active From Selected"
+    bl_label = "Retarget Selected To Active"
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armatures"
     bl_options = {'UNDO'}
 

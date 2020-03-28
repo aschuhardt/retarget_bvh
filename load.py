@@ -644,7 +644,7 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
 
 class MCP_OT_RenameActiveToSelected(BvhPropsOperator, IsArmature, TimeScaler, BvhRenamer):
     bl_idname = "mcp.rename_active_to_selected"
-    bl_label = "Rename Active To Selected"
+    bl_label = "Rename Selected From Active"
     bl_description = "Rename bones of selected (source) armatures and scale it to fit the active (target) armature"
     bl_options = {'UNDO'}
 
