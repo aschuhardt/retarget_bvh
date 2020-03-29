@@ -1,6 +1,6 @@
 {
     "name"  : "ACCAD",
-    "url"   : "www.accad.Accad.edu/research/mocap/mocap_data.htm",
+    "url"   : "https://accad.osu.edu/research/motion-lab/mocap-system-and-data",
     
     "bones" : {
         "Hips" : "hips",

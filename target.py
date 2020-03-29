@@ -247,10 +247,9 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
         info = getTargetInfo(scn.McpTargetRig)    
         tinfo = getTPoseInfo(scn.McpTargetTPose)
         if info and tinfo:
-            tpose = dict([(key.lower(),value) for key,value in tinfo.t_pose.items()])
-            return info.boneNames, tpose
+            return info.bones, tinfo.t_pose
         elif info:
-            return info.boneNames, {}
+            return info.bones, {}
         else:
             return [], {}
 

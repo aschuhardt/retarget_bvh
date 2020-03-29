@@ -407,8 +407,8 @@ class ListRig:
 
 
     def findKeys(self, mhx, bones):
-        for bone in bones.keys():
-            if mhx == bones[bone]:
+        for bone,mhx1 in bones:
+            if mhx == mhx1:
                 return [bone]
         return []
 
@@ -429,10 +429,9 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
         info = getSourceArmature(scn.McpSourceRig)
         tinfo = getTPoseInfo(scn.McpSourceTPose)
         if info and tinfo:
-            tpose = dict([(key.lower(),value) for key,value in tinfo.t_pose.items()])
-            return info.boneNames, tpose
+            return info.bones, tinfo.t_pose
         elif info:
-            return info.boneNames, {}
+            return info.bones, {}
         else:
             return [], {}
 

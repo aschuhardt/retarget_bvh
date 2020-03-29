@@ -442,7 +442,11 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
         from .io_json import saveJson
         rig = context.object
         tstruct = OrderedDict()
-        struct = {"t-pose" : tstruct}
+        struct = OrderedDict()
+        fname = os.path.splitext(os.path.basename(self.filepath))[0]
+        words = [word.capitalize() for word in fname.split("_")]        
+        struct["name"] = " ".join(words)
+        struct["t-pose"] = tstruct
         for pb in rig.pose.bones:
             bmat = pb.matrix
             rmat = pb.bone.matrix_local
