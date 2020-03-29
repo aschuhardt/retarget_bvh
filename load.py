@@ -621,7 +621,7 @@ def checkObjectProblems(context):
 
 class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
     bl_idname = "mcp.load_bvh"
-    bl_label = "Load BVH File (.bvh)"
+    bl_label = "Load BVH File"
     bl_description = "Load an armature from a bvh file"
     bl_options = {'UNDO'}
 
@@ -657,7 +657,6 @@ class MCP_OT_RenameActiveToSelected(BvhPropsOperator, IsArmature, TimeScaler, Bv
         trgRig = context.object
         for srcRig in context.selected_objects:        
             if srcRig != trgRig and srcRig.type == 'ARMATURE':
-                print("REN", srcRig.name, trgRig.name)
                 self.renameAndRescaleBvh(context, srcRig, trgRig)
                 if self.useTimeScale:
                     self.timescaleFCurves(srcRig)
@@ -698,6 +697,9 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Bv
         if self.useTimeScale:
             self.timescaleFCurves(srcRig)
         bpy.ops.object.mode_set(mode='OBJECT')
+        srcRig.select_set(True)
+        trgRig.select_set(True)
+        context.view_layer.objects.active = trgRig
         print("%s loaded and renamed" % srcRig.name)
 
     def sequel(self, context, data):

@@ -163,6 +163,7 @@ def initTargets(scn):
 
     global _targetInfos
     _targetInfos = { "Automatic" : CTargetInfo(scn, "Automatic") }
+    keys = []
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
         filepath = os.path.join(path, fname)
@@ -171,10 +172,11 @@ def initTargets(scn):
             info = CTargetInfo(scn, "Manual")
             info.readFile(filepath)
             _targetInfos[info.name] = info
+            keys.append(info.name)
 
     enums =[]
-    keys = list(_targetInfos.keys())
     keys.sort()
+    keys = ["Automatic"] + keys
     for key in keys:
         enums.append((key,key,key))
 
@@ -209,7 +211,7 @@ class MCP_OT_IdentifyTargetRig(BvhOperator, IsArmature):
         scn = context.scene
         scn.McpTargetRig = "Automatic"        
         findTargetArmature(context, context.object, True)
-        raise MocapMessage("Identified rig %s" % scn.McpTargetRig)
+        print("Identified rig %s" % scn.McpTargetRig)
         
     def sequel(self, context, data):
         from .retarget import restoreTargetData

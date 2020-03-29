@@ -287,15 +287,17 @@ def initSources(scn):
     global _sourceInfos
     _sourceInfos = { "Automatic" : CSourceInfo(scn) }
     folder = os.path.join(os.path.dirname(__file__), "source_rigs")
+    keys = []
     for fname in os.listdir(folder):
         filepath = os.path.join(folder, fname)
         if os.path.splitext(fname)[-1] == ".json":
             info = CSourceInfo(scn)
             info.readFile(filepath)            
             _sourceInfos[info.name] = info
+            keys.append(info.name)
     enums = []
-    keys = list(_sourceInfos.keys())
     keys.sort()
+    keys = ["Automatic"] + keys
     for key in keys:
         enums.append((key,key,key))
 

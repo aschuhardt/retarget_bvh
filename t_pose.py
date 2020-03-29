@@ -90,75 +90,65 @@ class Rigger:
 #   Define current pose as rest pose
 #------------------------------------------------------------------
 
-def applyRestPose(context, value):
-    rig = context.object
-    children = []
-    for ob in context.view_layer.objects:
-        if ob.type != 'MESH':
-            continue
-
-        setActiveObject(context, ob)
-        if ob != context.object:
-            raise MocapError("Context switch did not take:\nob = %s\nc.ob = %s\nc.aob = %s" %
-                (ob, context.object, context.active_object))
-
-        if (ob.McpArmatureName == rig.name and
-            ob.McpArmatureModifier != ""):
-            mod = ob.modifiers[ob.McpArmatureModifier]
-            ob.modifiers.remove(mod)
-            ob.data.shape_keys.key_blocks[ob.McpArmatureModifier].value = value
-            children.append(ob)
-        else:
-            for mod in ob.modifiers:
-                if (mod.type == 'ARMATURE' and
-                    mod.object == rig):
-                    children.append(ob)
-                    bpy.ops.object.modifier_apply(apply_as='SHAPE', modifier=mod.name)
-                    ob.data.shape_keys.key_blocks[mod.name].value = value
-                    ob.McpArmatureName = rig.name
-                    ob.McpArmatureModifier = mod.name
-                    break
-
-    setActiveObject(context, rig)
-    bpy.ops.object.mode_set(mode='POSE')
-    try:
-        bpy.ops.pose.armature_apply()
-    except RuntimeError as err:
-        raise MocapError("Error when applying armature:   \n%s" % err)
-        
-    for pb in rig.pose.bones:
-        pb.McpQuat = (1,0,0,0)
-                
-    for ob in children:
-        name = ob.McpArmatureModifier
-        setActiveObject(context, ob)
-        mod = ob.modifiers.new(name, 'ARMATURE')
-        mod.object = rig
-        mod.use_vertex_groups = True
-        bpy.ops.object.modifier_move_up(modifier=name)
-        #setShapeKey(ob, name, value)
-
-    setActiveObject(context, rig)
-    print("Applied pose as rest pose")
-
-
-def setShapeKey(ob, name, value):
-    if not ob.data.shape_keys:
-        return
-    skey = ob.data.shape_keys.key_blocks[name]
-    skey.value = value
-
-
-class MCP_OT_RestCurrentPose(BvhPropsOperator, IsArmature, Rigger):
+class MCP_OT_RestCurrentPose(BvhOperator, IsArmature):
     bl_idname = "mcp.rest_current_pose"
     bl_label = "Current Pose => Rest Pose"
     bl_description = "Change rest pose to current pose"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        self.initRig(context)
-        applyRestPose(context, 1.0)
-        print("Set current pose to rest pose")
+        rig = context.object
+        children = []
+        for ob in context.view_layer.objects:
+            if ob.type != 'MESH':
+                continue
+
+            setActiveObject(context, ob)
+            if ob != context.object:
+                raise MocapError("Context switch did not take:\nob = %s\nc.ob = %s\nc.aob = %s" %
+                    (ob, context.object, context.active_object))
+
+            if (ob.McpArmatureName == rig.name and
+                ob.McpArmatureModifier != ""):
+                mod = ob.modifiers[ob.McpArmatureModifier]
+                ob.modifiers.remove(mod)
+                ob.data.shape_keys.key_blocks[ob.McpArmatureModifier].value = 1.0
+                children.append(ob)
+            else:
+                for mod in ob.modifiers:
+                    if (mod.type == 'ARMATURE' and
+                        mod.object == rig):
+                        children.append(ob)
+                        bpy.ops.object.modifier_apply(apply_as='SHAPE', modifier=mod.name)
+                        ob.data.shape_keys.key_blocks[mod.name].value = 1.0
+                        ob.McpArmatureName = rig.name
+                        ob.McpArmatureModifier = mod.name
+                        break
+
+        setActiveObject(context, rig)
+        bpy.ops.object.mode_set(mode='POSE')
+        try:
+            bpy.ops.pose.armature_apply()
+        except RuntimeError as err:
+            raise MocapError("Error when applying armature:   \n%s" % err)
+        
+        for pb in rig.pose.bones:
+            pb.McpQuat = (1,0,0,0)
+                
+        bpy.ops.object.mode_set(mode='OBJECT')
+        for ob in children:
+            name = ob.McpArmatureModifier
+            setActiveObject(context, ob)
+            mod = ob.modifiers.new(name, 'ARMATURE')
+            mod.object = rig
+            mod.use_vertex_groups = True
+            bpy.ops.object.modifier_move_up(modifier=name)
+            if False and ob.data.shape_keys:
+                skey = ob.data.shape_keys.key_blocks[name]
+                skey.value = 1.0
+
+        setActiveObject(context, rig)
+        raise MocapMessage("Applied pose as rest pose")
 
 #------------------------------------------------------------------
 #   Automatic T-Pose
@@ -293,7 +283,6 @@ def setKeys(pb):
         pb.keyframe_insert("rotation_axis_angle", group=pb.name)
     else:
         pb.keyframe_insert("rotation_euler", group=pb.name)
-    #pb.keyframe_insert('location', group=pb.name)
         
 
 def putInTPose(rig, name, context):
@@ -325,7 +314,12 @@ class MCP_OT_PutInSrcTPose(BvhPropsOperator, IsArmature, Rigger):
         rig = self.initRig(context)
         putInTPose(rig, context.scene.McpSourceTPose, context)
         print("Pose set to source T-pose")
-    
+
+    def invoke(self, context, event):
+        from .source import ensureSourceInited
+        ensureSourceInited(context.scene)
+        return BvhPropsOperator.invoke(self, context, event)    
+
 
 class MCP_OT_PutInTrgTPose(BvhPropsOperator, IsArmature, Rigger):
     bl_idname = "mcp.put_in_trg_t_pose"
@@ -340,49 +334,37 @@ class MCP_OT_PutInTrgTPose(BvhPropsOperator, IsArmature, Rigger):
         putInTPose(rig, context.scene.McpTargetTPose, context)
         print("Pose set to target T-pose")
 
+    def invoke(self, context, event):
+        from .target import ensureTargetInited
+        ensureTargetInited(context.scene)
+        return BvhPropsOperator.invoke(self, context, event)    
+
 #------------------------------------------------------------------
-#   Set T-Pose
+#   Define and undefine T-Pose
 #------------------------------------------------------------------
 
-def defineTPose(rig):
-    for pb in rig.pose.bones:
-        pb.McpQuat = pb.matrix_basis.to_quaternion()
-    rig.McpTPoseDefined = True
-
-
-class MCP_OT_DefineTPose(BvhOperator, IsArmature, Rigger):
+class MCP_OT_DefineTPose(BvhOperator, IsArmature):
     bl_idname = "mcp.define_t_pose"
     bl_label = "Define T-pose"
     bl_description = "Define T-pose as current pose"
     bl_options = {'UNDO'}
 
-    problems = ""
-
     def run(self, context):
-        from .load import checkObjectProblems
-        checkObjectProblems(context)
-        rig = self.initRig(context)
-        defineTPose(rig)
+        rig = context.object
+        for pb in rig.pose.bones:
+            pb.McpQuat = pb.matrix_basis.to_quaternion()
+        rig.McpTPoseDefined = True
         print("T-pose defined as current pose")
 
-#------------------------------------------------------------------
-#   Undefine stored T-pose
-#------------------------------------------------------------------
 
-def setRestPose(rig):
-    unit = Matrix()
-    for pb in rig.pose.bones:
-        pb.matrix_basis = unit
-
-
-class MCP_OT_UndefineTPose(BvhPropsOperator, IsArmature, Rigger):
+class MCP_OT_UndefineTPose(BvhOperator, IsArmature):
     bl_idname = "mcp.undefine_t_pose"
     bl_label = "Undefine T-pose"
     bl_description = "Remove definition of T-pose"
     bl_options = {'UNDO'}
 
     def run(self, context):
-        rig = self.initRig(context)
+        rig = context.object
         rig.McpTPoseDefined = False
         quat = Quaternion()
         for pb in rig.pose.bones:            
@@ -404,15 +386,17 @@ def getBoneName(rig, name):
             return ""
 
 
-class MCP_OT_LoadTPose(BvhOperator, IsArmature, ExportHelper, JsonFile, Rigger):
+class MCP_OT_LoadTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
     bl_idname = "mcp.load_t_pose"
     bl_label = "Load T-Pose"
     bl_description = "Load T-pose from file"
     bl_options = {'UNDO'}
 
+    isSourceRig = True
+    
     def run(self, context):
         from .io_json import loadJson
-        rig = self.initRig(context)
+        rig = context.object
         print("Loading %s" % self.filepath)
         struct = loadJson(self.filepath)
         rig.McpTPoseFile = self.filepath
@@ -422,7 +406,7 @@ class MCP_OT_LoadTPose(BvhOperator, IsArmature, ExportHelper, JsonFile, Rigger):
             raise MocapError("File does not define a T-pose:\n%s" % self.filepath)
 
     def setTPose(self, rig, struct):
-        setRestPose(rig)
+        putInRestPose(rig, True)
         for bname,value in struct.items():
             if bname in rig.pose.bones.keys():
                 pb = rig.pose.bones[bname]
@@ -510,6 +494,7 @@ def initTPoses(scn):
     global _tposeInfos
 
     _tposeInfos = { "Default" : CTPoseInfo(scn) }
+    keys = []
     folder = os.path.join(os.path.dirname(__file__), "t_poses")
     for fname in os.listdir(folder):
         filepath = os.path.join(folder, fname)
@@ -517,9 +502,10 @@ def initTPoses(scn):
             info = CTPoseInfo(scn)
             info.readFile(filepath)   
             _tposeInfos[info.name] = info
+            keys.append(info.name)
     enums = []
-    keys = list(_tposeInfos.keys())
     keys.sort()
+    keys = ["Default"] + keys
     for key in keys:
         enums.append((key,key,key))
 
