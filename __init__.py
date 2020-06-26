@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,11 +30,12 @@ bl_info = {
     "name": "BVH Retargeter",
     "author": "Thomas Larsson",
     "version": (2,0),
-    "blender": (2,80,0),
+    "blender": (2,83,0),
     "location": "View3D > Tools > Retarget BVH",
     "description": "Mocap retargeting tool",
     "warning": "",
     'wiki_url': "https://diffeomorphic.blogspot.com/p/bvh-retargeter.html",
+    "tracker_url": "https://bitbucket.org/Diffeomorphic/retarget_bvh/issues?status=new&status=open",
     "category": "Animation"}
 
 
@@ -76,7 +77,7 @@ else:
     from . import floor
 
 from bpy.props import BoolProperty
-    
+
 
 def inset(layout):
     split = layout.split(factor=0.05)
@@ -100,11 +101,11 @@ class MCP_PT_Main(bpy.types.Panel):
         scn = context.scene
         layout.operator("mcp.load_and_retarget")
         layout.separator()
-        layout.operator("mcp.load_bvh")        
+        layout.operator("mcp.load_bvh")
         layout.separator()
         layout.operator("mcp.rename_active_to_selected")
         layout.operator("mcp.load_and_rename_bvh")
-        layout.operator("mcp.retarget_selected_to_active")     
+        layout.operator("mcp.retarget_selected_to_active")
 
 ########################################################################
 #
@@ -251,7 +252,7 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.verify_source_rig")
         layout.operator("mcp.list_source_rig")
         layout.operator("mcp.put_in_src_t_pose")
-        
+
 ########################################################################
 #
 #    class MCP_PT_MhxTargetBones(bpy.types.Panel):
@@ -379,7 +380,7 @@ def register():
         name="Loop And Repeat",
         description="Show loop and repeat",
         default=False)
-        
+
     action.initialize()
     edit.initialize()
     fkik.initialize()
