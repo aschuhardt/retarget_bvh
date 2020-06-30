@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -25,8 +25,6 @@
 #   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # ------------------------------------------------------------------------------
-
-
 
 import bpy
 from bpy.props import *
@@ -51,7 +49,7 @@ def updateScene():
     deps.update()
     scn = bpy.context.scene
     scn.frame_current = scn.frame_current
-    
+
 #
 #  quadDict():
 #
@@ -198,7 +196,7 @@ def endProgress(string):
     print(string + " (100%)")
     wm = bpy.context.window_manager
     wm.progress_end()
-        
+
 def showProgress(n, frame, nFrames, step=20):
     pct = (100.0*n)/nFrames
     if n % step == 0:
@@ -210,31 +208,66 @@ def showProgress(n, frame, nFrames, step=20):
 #   Error handling
 #-------------------------------------------------------------
 
-_errorLines = ""
+def clearErrorMessage():
+    global theMessage, theErrorLines
+    theMessage = ""
+    theErrorLines = []
+
+clearErrorMessage()
+
+def getErrorMessage():
+    """getErrorMessage()
+
+    Returns:
+    The error message from previous operator invokation if it raised
+    an error, or the empty string if the operator exited without errors.
+    """
+    global theMessage
+    return theMessage
+
+
+def getSilentMode():
+    global theSilentMode
+    return theSilentMode
+
+def setSilentMode(value):
+    """setSilentMode(value)
+
+    In silent mode, operators fail silently if they encounters an error.
+    This is useful for scripting.
+
+    value: True turns silent mode on, False turns it off.
+    """
+    global theSilentMode
+    theSilentMode = value
+
+setSilentMode(False)
+
 
 class MocapError(Exception):
     def __init__(self, value):
-        global _errorLines
-        self.value = value
-        _errorLines = (
-            value.split("\n") +
+        global theErrorLines, theMessage
+        theMessage = value
+        theErrorLines = (
+            theMessage.split("\n") +
             ["" +
              "For corrective actions see:",
              "http://diffeomorphic.blogspot.com/p/bvh-retargeter.html"]
             )
         print("*** BVH Retargeter Error ***")
-        for line in _errorLines:
+        for line in theErrorLines:
             print(line)
 
     def __str__(self):
-        return repr(self.value)
+        return repr(theMessage)
 
 
 class MocapMessage(Exception):
     def __init__(self, value):
-        global _errorLines
-        _errorLines = value.split("\n")
-        print(value)
+        global theErrorLines, theMessage
+        theMessage = value
+        theErrorLines = theMessage.split("\n")
+        print(theMessage)
 
 
 class MocapPopup(bpy.types.Operator):
@@ -247,8 +280,8 @@ class MocapPopup(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        global _errorLines
-        for line in _errorLines:
+        global theErrorLines
+        for line in theErrorLines:
             self.layout.label(text=line)
 
 
@@ -291,26 +324,34 @@ class IsMhx:
 
 class BvhOperator(bpy.types.Operator):
     def execute(self, context):
+        clearErrorMessage()
         data = self.prequel(context)
+        print("BVHOP", self)
         try:
             self.run(context)
         except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
+            if False and getSilentMode():
+                print(theMessage)
+            else:
+                bpy.ops.mcp.error('INVOKE_DEFAULT')
         except MocapMessage:
-            bpy.ops.mcp.message('INVOKE_DEFAULT')
+            if False and getSilentMode():
+                print(theMessage)
+            else:
+                bpy.ops.mcp.message('INVOKE_DEFAULT')
         except KeyboardInterrupt:
-            global _errorLines
-            _errorLines = ["Keyboard interrupt"]
-            bpy.ops.mcp.error('INVOKE_DEFAULT')        
+            global theErrorLines
+            theErrorLines = ["Keyboard interrupt"]
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
             self.sequel(context, data)
-        return{'FINISHED'}    
-        
+        return{'FINISHED'}
+
     def prequel(self, context):
-        return None    
-    
+        return None
+
     def sequel(self, context, data):
-        pass        
+        pass
 
     def run(self, context):
         pass
@@ -318,5 +359,6 @@ class BvhOperator(bpy.types.Operator):
 
 class BvhPropsOperator(BvhOperator):
     def invoke(self, context, event):
+        clearErrorMessage()
         wm = context.window_manager
         return wm.invoke_props_dialog(self)

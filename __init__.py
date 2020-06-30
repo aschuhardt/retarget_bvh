@@ -60,7 +60,7 @@ if "bpy" in locals():
     imp.reload(panels)
 else:
     print("Loading BVH Retargeter")
-
+    import bpy
     from . import utils
     from . import io_json
     from . import armature
@@ -78,9 +78,11 @@ else:
     from . import panels
 
 #----------------------------------------------------------
-#   Functions
+#   Import documented functions available for external scripting
 #----------------------------------------------------------
 
+from .utils import getErrorMessage, setSilentMode
+from .retarget import ensureInited
 
 #----------------------------------------------------------
 #   Initialize

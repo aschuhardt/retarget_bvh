@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -75,12 +75,12 @@ class CAnimation:
             else:
                 #print("  -", trgName, srcName)
                 continue
-            parent = self.getTargetParent(trgName, trgBone)            
+            parent = self.getTargetParent(trgName, trgBone)
             self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, parent, self, context)
 
 
-    def getTargetParent(self, trgName, trgBone):    
-        parName = trgBone.McpParent    
+    def getTargetParent(self, trgName, trgBone):
+        parName = trgBone.McpParent
         while parName and parName not in self.boneAnims.keys():
             print("Skipping", parName)
             parBone = self.trgRig.pose.bones[parName]
@@ -114,8 +114,8 @@ class CAnimation:
         scn = context.scene
         try:
             for n,frame in enumerate(frames):
-                scn.frame_set(frame)             
-                showProgress(n+offset, frames[n], nFrames)                   
+                scn.frame_set(frame)
+                showProgress(n+offset, frames[n], nFrames)
                 for banim in self.boneAnims.values():
                     banim.retarget(frame)
         finally:
@@ -297,7 +297,7 @@ class Retargeter:
     def prequel(self, context):
         data = changeTargetData(context.object, context.scene)
         return (time.perf_counter(), data)
-        
+
 
     def sequel(self, context, stuff):
         time1,data = stuff
@@ -307,7 +307,7 @@ class Retargeter:
 
 
     def retargetAnimation(self, context, srcRig, trgRig):
-        from .source import setSourceArmature 
+        from .source import setSourceArmature
         from .target import findTargetArmature
         from .fkik import setRigToFK
         from .loop import getActiveFrames
@@ -442,8 +442,8 @@ def restoreTargetData(data):
 #   Buttons
 #
 
-def ensureInited(scn):        
-    from .source import ensureSourceInited 
+def ensureInited(scn):
+    from .source import ensureSourceInited
     from .target import ensureTargetInited
     ensureSourceInited(scn)
     ensureTargetInited(scn)
@@ -460,20 +460,20 @@ class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, Target, Reta
         checkObjectProblems(context)
         trgRig = context.object
         done = False
-        for srcRig in context.selected_objects:   
+        for srcRig in context.selected_objects:
             if srcRig != trgRig and srcRig.type == 'ARMATURE':
                 self.retargetAnimation(context, srcRig, trgRig)
                 done = True
                 break
         if not done:
-            raise MocapError("No source armature found")  
+            raise MocapError("No source armature found")
         trgRig.select_set(True)
         context.view_layer.objects.active = trgRig
 
     def invoke(self, context, event):
         ensureInited(context.scene)
         return BvhPropsOperator.invoke(self, context, event)
-        
+
 
 class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender):
     bl_idname = "mcp.load_and_retarget"
@@ -494,16 +494,17 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         TimeScaler.draw(self, context)
         Simplifier.draw(self, context)
         self.layout.prop(self, "useNLA")
-        
-                         
+
+
     def run(self, context):
-        from .load import checkObjectProblems        
+        from .load import checkObjectProblems
         checkObjectProblems(context)
         rig = context.object
+        print("RUN", rig)
+        print(self.getFilePaths())
         infos = []
-        for file_elem in self.files:
+        for filepath in self.getFilePaths():
             print("---------------")
-            filepath = os.path.join(self.directory, file_elem.name)
             info = self.retarget(context, filepath)
             infos.append(info)
         print("---------------")
@@ -513,12 +514,12 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
                 track.name = act.name
                 track.is_solo = True
                 track.strips.new(act.name, 1, act)
-            rig.animation_data.action = None                
+            rig.animation_data.action = None
         rig.select_set(True)
         context.view_layer.objects.active = rig
-        raise MocapMessage("BVH file(s) retargeted")                
-        
-            
+        raise MocapMessage("BVH file(s) retargeted")
+
+
     def retarget(self, context, filepath):
         from .load import deleteSourceRig
 
@@ -541,8 +542,8 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         finally:
             deleteSourceRig(context, srcRig, 'Y_')
         return info
-        
-                
+
+
     def invoke(self, context, event):
         ensureInited(context.scene)
         context.window_manager.fileselect_add(self)

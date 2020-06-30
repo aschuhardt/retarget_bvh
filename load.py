@@ -1,19 +1,19 @@
     # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -37,7 +37,6 @@ from .source import Source
 from .target import Target
 from .simplify import TimeScaler
 
-
 class BvhFile:
     filename_ext = ".bvh"
     filter_glob : StringProperty(default="*.bvh", options={'HIDDEN'})
@@ -52,7 +51,15 @@ class MultiFile(ImportHelper):
     directory : StringProperty(
         subtype='DIR_PATH')
 
-
+    def getFilePaths(self):
+        if self.files:
+            filepaths = []
+            for file_elem in self.files:
+                filepath = os.path.join(self.directory, file_elem.name)
+                filepaths.append(filepath)
+            return filepaths
+        else:
+            return [self.filepath]
 
 ###################################################################################
 #    BVH importer.
@@ -170,7 +177,7 @@ class BvhLoader:
         name = "Z",
         description = "Z Euler Angle",
         default = "0")
-        
+
     ssFactor : IntProperty(
         name="Subsample Factor",
         description="Sample only every n:th frame",
@@ -207,19 +214,19 @@ class BvhLoader:
         euler = Euler((int(self.x)*D, int(self.y)*D, int(self.z)*D))
         flipMatrix = euler.to_matrix()
         ssFactor = self.ssFactor
-    
+
         fileName = os.path.realpath(os.path.expanduser(filepath))
         (shortName, ext) = os.path.splitext(fileName)
         if ext.lower() != ".bvh":
             raise MocapError("Not a bvh file: " + fileName)
         startProgress( "Loading BVH file "+ fileName )
-    
+
         time1 = time.perf_counter()
         level = 0
         nErrors = 0
         coll = context.scene.collection
         rig = None
-    
+
         fp = open(fileName, "rU")
         print( "Reading skeleton" )
         lineNo = 0
@@ -298,7 +305,7 @@ class BvhLoader:
                     status = Frames
                     frame = 0
                     frameno = 1
-    
+
                     bpy.ops.object.mode_set(mode='POSE')
                     pbones = rig.pose.bones
                     for pb in pbones:
@@ -312,7 +319,7 @@ class BvhLoader:
                     showProgress(frameno, frame, nFrames, step=200)
                     frameno += 1
                 frame += 1
-    
+
         fp.close()
         if not rig:
             raise MocapError("Bvh file \n%s\n is corrupt: No rig defined" % filepath)
@@ -532,7 +539,7 @@ class BvhRenamer(Source, Target):
         name="Auto Scale",
         description="Rescale skeleton to match target",
         default=True)
-        
+
     def draw(self, context):
         Source.draw(self, context)
         Target.draw(self, context)
@@ -541,7 +548,7 @@ class BvhRenamer(Source, Target):
             self.layout.prop(self, "scale")
         self.layout.separator()
 
-    
+
     def rescaleRig(self, trgRig, srcRig):
         if not self.useAutoScale:
             return
@@ -555,7 +562,7 @@ class BvhRenamer(Source, Target):
         scale = trgScale/srcScale
         print("Rescale %s with factor %f" % (srcRig.name, scale))
         self.scale = scale
-    
+
         bpy.ops.object.mode_set(mode='EDIT')
         ebones = srcRig.data.edit_bones
         for eb in ebones:
@@ -571,14 +578,14 @@ class BvhRenamer(Source, Target):
             if words[-1] == 'location':
                 for kp in fcu.keyframe_points:
                     kp.co[1] *= scale
-    
-    
+
+
     def renameAndRescaleBvh(self, context, srcRig, trgRig):
         if srcRig.McpRenamed:
             raise MocapError("%s already renamed and rescaled." % srcRig.name)
-    
+
         from .t_pose import putInTPose
-        
+
         scn = context.scene
         scn.frame_current = 0
         setActiveObject(context, srcRig)
@@ -590,7 +597,7 @@ class BvhRenamer(Source, Target):
         setInterpolation(srcRig)
         self.rescaleRig(trgRig, srcRig)
         srcRig.McpRenamed = True
-    
+
 #----------------------------------------------------------
 #   Object Problems
 #----------------------------------------------------------
@@ -611,7 +618,7 @@ def checkObjectProblems(context):
     if problems:
         msg = ("BVH Retargeter cannot use this rig because it has:\n" +
                problems +
-               "Apply object transformations before using BVH Retargeter")               
+               "Apply object transformations before using BVH Retargeter")
         raise MocapError(msg)
 
 ########################################################################
@@ -626,8 +633,7 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
     bl_options = {'UNDO'}
 
     def run(self, context):
-        for file_elem in self.files:
-            filepath = os.path.join(self.directory, file_elem.name)
+        for filepath in self.getFilePaths():
             rig = self.readBvhFile(context, filepath, context.scene, False)
             bpy.ops.object.mode_set(mode='OBJECT')
             rig.select_set(True)
@@ -651,11 +657,11 @@ class MCP_OT_RenameActiveToSelected(BvhPropsOperator, IsArmature, TimeScaler, Bv
     def draw(self, context):
         BvhRenamer.draw(self, context)
         TimeScaler.draw(self, context)
-    
+
     def run(self, context):
         scn = context.scene
         trgRig = context.object
-        for srcRig in context.selected_objects:        
+        for srcRig in context.selected_objects:
             if srcRig != trgRig and srcRig.type == 'ARMATURE':
                 self.renameAndRescaleBvh(context, srcRig, trgRig)
                 if self.useTimeScale:
@@ -687,7 +693,7 @@ class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, Bv
     def prequel(self, context):
         from .retarget import changeTargetData
         return changeTargetData(context.object, context.scene)
-    
+
     def run(self, context):
         checkObjectProblems(context)
         scn = context.scene

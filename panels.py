@@ -188,11 +188,12 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
+        from .source import isSourceInited
         layout = self.layout
         scn = context.scene
         rig = context.object
 
-        if not source.isSourceInited(scn):
+        if not isSourceInited(scn):
             layout.operator("mcp.init_sources", text="Init Source Panel")
             return
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
@@ -218,11 +219,12 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
+        from .target import isTargetInited
         layout = self.layout
         rig = context.object
         scn = context.scene
 
-        if not target.isTargetInited(scn):
+        if not isTargetInited(scn):
             layout.operator("mcp.init_targets", text="Init Target Panel")
             return
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
