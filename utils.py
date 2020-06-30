@@ -326,16 +326,15 @@ class BvhOperator(bpy.types.Operator):
     def execute(self, context):
         clearErrorMessage()
         data = self.prequel(context)
-        print("BVHOP", self)
         try:
             self.run(context)
         except MocapError:
-            if False and getSilentMode():
+            if getSilentMode():
                 print(theMessage)
             else:
                 bpy.ops.mcp.error('INVOKE_DEFAULT')
         except MocapMessage:
-            if False and getSilentMode():
+            if getSilentMode():
                 print(theMessage)
             else:
                 bpy.ops.mcp.message('INVOKE_DEFAULT')

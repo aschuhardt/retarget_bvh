@@ -500,8 +500,6 @@ class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoa
         from .load import checkObjectProblems
         checkObjectProblems(context)
         rig = context.object
-        print("RUN", rig)
-        print(self.getFilePaths())
         infos = []
         for filepath in self.getFilePaths():
             print("---------------")
