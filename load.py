@@ -104,6 +104,7 @@ class CNode:
             child.display(pad+"  ")
         return
 
+
     def build(self, amt, orig, parent):
         self.head = orig + self.offset
         if not self.children:
@@ -117,10 +118,12 @@ class CNode:
         tails = Vector((0,0,0))
         for child in self.children:
             tails += child.build(amt, self.head, eb)
-        n = len(self.children)
-        eb.tail = tails/n
-        if eb.length == 0:
+        tail = tails/len(self.children)
+        if (tail-self.head).length == 0:
             print("Zero-length bone: %s" % eb.name)
+            vec = self.head - parent.head
+            tail = self.head + vec*0.1
+        eb.tail = tail
         (loc, rot, scale) = eb.matrix.decompose()
         self.matrix = rot.to_matrix()
         self.inverse = self.matrix.copy()
