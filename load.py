@@ -119,7 +119,8 @@ class CNode:
             tails += child.build(amt, self.head, eb)
         n = len(self.children)
         eb.tail = tails/n
-        #self.matrix = eb.matrix.rotation_part()
+        if eb.length == 0:
+            print("Zero-length bone: %s" % eb.name)
         (loc, rot, scale) = eb.matrix.decompose()
         self.matrix = rot.to_matrix()
         self.inverse = self.matrix.copy()
@@ -339,7 +340,10 @@ class BvhLoader:
         flipInv = flipMatrix.inverted()
         for node in nodes:
             bname = node.name
-            if bname in pbones.keys():
+            if bname not in pbones.keys():
+                for (mode, indices) in node.channels:
+                    m += len(indices)
+            else:
                 pb = pbones[bname]
                 for (mode, indices) in node.channels:
                     if mode == Location:
