@@ -449,7 +449,36 @@ def ensureInited(scn):
     ensureTargetInited(scn)
 
 
-class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, Target, Retargeter):
+def getOtherRig(context, rig):
+    for ob in context.selected_objects:
+        if ob != rig and ob.type == 'ARMATURE':
+            return ob
+    return None
+
+
+class MCP_OT_RetargetRenamedToActive(BvhPropsOperator, IsArmature, Target, Retargeter):
+    bl_idname = "mcp.retarget_renamed_to_active"
+    bl_label = "Retarget Renamed To Active"
+    bl_description = "Retarget animation from the renamed source armature (selected) to the target (active) armature."
+    bl_options = {'UNDO'}
+
+    def run(self, context):
+        from .load import checkObjectProblems
+        checkObjectProblems(context)
+        trgRig = context.object
+        srcRig = getOtherRig(context, trgRig)
+        if srcRig is None:
+            raise MocapError("No source armature found")
+        self.retargetAnimation(context, srcRig, trgRig)
+        trgRig.select_set(True)
+        context.view_layer.objects.active = trgRig
+
+    def invoke(self, context, event):
+        ensureInited(context.scene)
+        return BvhPropsOperator.invoke(self, context, event)
+
+
+class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, BvhRenamer, Retargeter):
     bl_idname = "mcp.retarget_selected_to_active"
     bl_label = "Retarget Selected To Active"
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armatures"
@@ -459,14 +488,21 @@ class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, Target, Reta
         from .load import checkObjectProblems
         checkObjectProblems(context)
         trgRig = context.object
-        done = False
-        for srcRig in context.selected_objects:
-            if srcRig != trgRig and srcRig.type == 'ARMATURE':
-                self.retargetAnimation(context, srcRig, trgRig)
-                done = True
-                break
-        if not done:
+        srcRig = getOtherRig(context, trgRig)
+        if srcRig is None:
             raise MocapError("No source armature found")
+        bpy.ops.object.select_all(action='DESELECT')
+        context.view_layer.objects.active = srcRig
+        srcRig.select_set(True)
+        bpy.ops.object.duplicate()
+        tmpRig = context.object
+        context.view_layer.objects.active = trgRig
+        self.renameAndRescaleBvh(context, tmpRig, trgRig)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        self.retargetAnimation(context, tmpRig, trgRig)
+        bpy.ops.object.select_all(action='DESELECT')
+        tmpRig.select_set(True)
+        bpy.ops.object.delete()
         trgRig.select_set(True)
         context.view_layer.objects.active = trgRig
 
@@ -569,6 +605,7 @@ class MCP_OT_ClearTempProps(BvhOperator):
 #----------------------------------------------------------
 
 classes = [
+    MCP_OT_RetargetRenamedToActive,
     MCP_OT_RetargetSelectedToActive,
     MCP_OT_LoadAndRetarget,
     MCP_OT_ClearTempProps,

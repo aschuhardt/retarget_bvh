@@ -54,10 +54,12 @@ class MCP_PT_Main(bpy.types.Panel):
         layout.operator("mcp.load_and_retarget")
         layout.separator()
         layout.operator("mcp.load_bvh")
+        layout.operator("mcp.retarget_selected_to_active")
         layout.separator()
+        layout.label(text="Debugging")
         layout.operator("mcp.rename_active_to_selected")
         layout.operator("mcp.load_and_rename_bvh")
-        layout.operator("mcp.retarget_selected_to_active")
+        layout.operator("mcp.retarget_renamed_to_active")
 
 ########################################################################
 #
