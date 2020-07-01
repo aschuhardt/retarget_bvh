@@ -288,13 +288,9 @@ class MCP_OT_InitSources(bpy.types.Operator):
         return{'FINISHED'}
 
 
-def initSources(scn):
-    from .t_pose import initTPoses
-    initTPoses(scn)
-
+def readSourceFiles(scn, subdir):
     global _sourceInfos
-    _sourceInfos = { "Automatic" : CSourceInfo(scn) }
-    folder = os.path.join(os.path.dirname(__file__), "source_rigs")
+    folder = os.path.join(os.path.dirname(__file__), subdir)
     keys = []
     for fname in os.listdir(folder):
         filepath = os.path.join(folder, fname)
@@ -303,11 +299,19 @@ def initSources(scn):
             info.readFile(filepath)
             _sourceInfos[info.name] = info
             keys.append(info.name)
-    enums = []
     keys.sort()
-    keys = ["Automatic"] + keys
-    for key in keys:
-        enums.append((key,key,key))
+    return keys
+
+
+def initSources(scn):
+    global _sourceInfos
+    from .t_pose import initTPoses
+    initTPoses(scn)
+    _sourceInfos = { "Automatic" : CSourceInfo(scn) }
+    skeys = readSourceFiles(scn, "source_rigs")
+    tkeys = readSourceFiles(scn, "target_rigs")
+    keys = ["Automatic"] + skeys + ["---------"] + tkeys
+    enums = [(key,key,key) for key in keys]
 
     bpy.types.Scene.McpSourceRig = EnumProperty(
         items = enums,

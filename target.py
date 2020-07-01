@@ -155,14 +155,10 @@ def matchAllBones(rig, info, scn):
 #
 ###############################################################################
 
-def initTargets(scn):
-    from .t_pose import initTPoses
-    initTPoses(scn)
-
+def readTargetFiles(scn, subdir):
     global _targetInfos
-    _targetInfos = { "Automatic" : CTargetInfo(scn, "Automatic") }
     keys = []
-    path = os.path.join(os.path.dirname(__file__), "target_rigs")
+    path = os.path.join(os.path.dirname(__file__), subdir)
     for fname in os.listdir(path):
         filepath = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
@@ -171,12 +167,19 @@ def initTargets(scn):
             info.readFile(filepath)
             _targetInfos[info.name] = info
             keys.append(info.name)
-
-    enums =[]
     keys.sort()
-    keys = ["Automatic"] + keys
-    for key in keys:
-        enums.append((key,key,key))
+    return keys
+
+
+def initTargets(scn):
+    global _targetInfos
+    from .t_pose import initTPoses
+    initTPoses(scn)
+    _targetInfos = { "Automatic" : CTargetInfo(scn, "Automatic") }
+    tkeys = readTargetFiles(scn, "target_rigs")
+    skeys = readTargetFiles(scn, "source_rigs")
+    keys = ["Automatic"] + tkeys + ["---------"] + skeys
+    enums = [(key,key,key) for key in keys]
 
     bpy.types.Scene.McpTargetRig = EnumProperty(
         items = enums,
