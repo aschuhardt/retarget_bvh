@@ -162,6 +162,7 @@ class BvhLoader:
         description="Scale the BVH by this value",
         min=0.0001, max=1000000.0,
         soft_min=0.001, soft_max=100.0,
+        precision = 3,
         default=1.0)
 
     x : EnumProperty(
@@ -638,6 +639,10 @@ class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
     bl_label = "Load BVH File"
     bl_description = "Load an armature from a bvh file"
     bl_options = {'UNDO'}
+
+    def draw(self, context):
+        self.layout.prop(self, "scale")
+        BvhLoader.draw(self, context)
 
     def run(self, context):
         for filepath in self.getFilePaths():
