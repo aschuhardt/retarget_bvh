@@ -497,14 +497,17 @@ class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, BvhRenamer, 
         bpy.ops.object.duplicate()
         tmpRig = context.object
         context.view_layer.objects.active = trgRig
-        self.renameAndRescaleBvh(context, tmpRig, trgRig)
-        bpy.ops.object.mode_set(mode='OBJECT')
-        self.retargetAnimation(context, tmpRig, trgRig)
-        bpy.ops.object.select_all(action='DESELECT')
-        tmpRig.select_set(True)
-        bpy.ops.object.delete()
-        trgRig.select_set(True)
-        context.view_layer.objects.active = trgRig
+        try:
+            self.renameAndRescaleBvh(context, tmpRig, trgRig)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            self.retargetAnimation(context, tmpRig, trgRig)
+        finally:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.select_all(action='DESELECT')
+            tmpRig.select_set(True)
+            bpy.ops.object.delete()
+            trgRig.select_set(True)
+            context.view_layer.objects.active = trgRig
 
     def invoke(self, context, event):
         ensureInited(context.scene)

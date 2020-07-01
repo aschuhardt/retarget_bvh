@@ -468,7 +468,7 @@ def renameBones(srcRig, context):
             trgName = trgName[0]
         eb = ebones[srcName]
         if trgName:
-            if action:
+            if action and srcName in action.groups.keys():
                 grp = action.groups[srcName]
                 grp.name = trgName
             eb.name = trgName
