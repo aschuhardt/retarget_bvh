@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -40,7 +40,7 @@ from .source import CRigInfo
 #   Target classes
 #----------------------------------------------------------
 
-class CTargetInfo(CArmature, CRigInfo):  
+class CTargetInfo(CArmature, CRigInfo):
     verboseString = "Read target file"
 
     def __init__(self, scn, name="Automatic"):
@@ -98,13 +98,11 @@ def findTargetArmature(context, rig, auto):
     ensureTargetInited(scn)
 
     if auto:
-        scn.McpTargetRig, scn.McpTargetTPose = guessArmatureFromList(rig, scn, _targetInfos) 
+        scn.McpTargetRig, scn.McpTargetTPose = guessArmatureFromList(rig, scn, _targetInfos)
 
     if scn.McpTargetRig == "Automatic":
         info = CTargetInfo(scn)
-        tposed = putInRightPose(rig, scn.McpTargetTPose, context)
-        info.findArmature(rig)
-        info.addAutoBones(rig)
+        tposed = info.identifyRig(rig, context, scn.McpTargetTPose)
         if not tposed:
             autoTPose(rig, context)
         _targetInfos["Automatic"] = info
@@ -158,7 +156,7 @@ def matchAllBones(rig, info, scn):
 ###############################################################################
 
 def initTargets(scn):
-    from .t_pose import initTPoses    
+    from .t_pose import initTPoses
     initTPoses(scn)
 
     global _targetInfos
@@ -206,13 +204,13 @@ class MCP_OT_IdentifyTargetRig(BvhOperator, IsArmature):
     def prequel(self, context):
         from .retarget import changeTargetData
         return changeTargetData(context.object, context.scene)
-    
+
     def run(self, context):
         scn = context.scene
-        scn.McpTargetRig = "Automatic"        
+        scn.McpTargetRig = "Automatic"
         findTargetArmature(context, context.object, True)
         print("Identified rig %s" % scn.McpTargetRig)
-        
+
     def sequel(self, context, data):
         from .retarget import restoreTargetData
         restoreTargetData(data)
@@ -241,10 +239,10 @@ class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
                 keys.append(bone)
         return keys
 
-    def getBones(self, context): 
+    def getBones(self, context):
         from .t_pose import getTPoseInfo
-        scn = context.scene 
-        info = getTargetInfo(scn.McpTargetRig)    
+        scn = context.scene
+        info = getTargetInfo(scn.McpTargetRig)
         tinfo = getTPoseInfo(scn.McpTargetTPose)
         if info and tinfo:
             return info.bones, tinfo.t_pose
@@ -258,18 +256,18 @@ class MCP_OT_VerifyTargetRig(BvhOperator):
     bl_label = "Verify Target Rig"
     bl_description = "Verify the target rig type of the active armature"
     bl_options = {'UNDO'}
-        
+
     @classmethod
     def poll(self, context):
         ob = context.object
         return (context.scene.McpTargetRig and ob and ob.type == 'ARMATURE')
-                
-    def run(self, context):   
-        rigtype = context.scene.McpTargetRig     
+
+    def run(self, context):
+        rigtype = context.scene.McpTargetRig
         info = _targetInfos[rigtype]
         info.testRig(rigtype, context.object, context.scene)
         raise MocapMessage("Target armature %s verified" % rigtype)
-        
+
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
@@ -285,26 +283,21 @@ def initialize():
     bpy.types.Scene.McpTargetRig = EnumProperty(
         items = [("Automatic", "Automatic", "Automatic")],
         name = "Target Rig",
-        default = "Automatic")    
-        
+        default = "Automatic")
+
     bpy.types.Scene.McpTargetTPose = EnumProperty(
         items = [("Default", "Default", "Default")],
         name = "TPose Target",
-        default = "Default")              
+        default = "Default")
 
     bpy.types.Object.McpReverseHip = BoolProperty(
         name = "Reverse Hip",
         description = "The rig has a reverse hip",
         default = False)
 
-    bpy.types.Scene.McpIgnoreHiddenLayers = BoolProperty(
-        name = "Ignore Hidden Layers",
-        description = "Ignore bones on hidden layers when identifying target rig",
-        default = True)
-
     bpy.types.PoseBone.McpBone = StringProperty(
-        name = "MakeHuman Bone",
-        description = "MakeHuman bone corresponding to this bone",
+        name = "Canonical Bone Name",
+        description = "Canonical bone corresponding to this bone",
         default = "")
 
     bpy.types.PoseBone.McpParent = StringProperty(

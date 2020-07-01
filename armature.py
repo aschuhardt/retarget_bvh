@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -44,7 +44,6 @@ class CArmature:
         self.boneNames = OrderedDict()
         self.rig = None
         self.verbose = scn.McpVerbose
-        self.ignoreHiddenLayers = scn.McpIgnoreHiddenLayers
 
 
     def display(self, type):
@@ -56,11 +55,7 @@ class CArmature:
 
 
     def findArmature(self, rig):
-        if self.ignoreHiddenLayers:
-            self.rig = rig
-        else:
-            self.rig = None
-
+        self.rig = rig
         roots = []
         for pb in rig.pose.bones:
             if pb.parent is None:
@@ -70,10 +65,12 @@ class CArmature:
         nChildren = len(roots)
         first = True
         hips = None
+        self.clearBones()
         while first or nChildren != 3:
             if not first and nChildren == 2 and rig.McpReverseHip:
                 break
             elif nChildren == 0:
+                self.clearBones()
                 raise MocapError("Hip bone must have children: %s" % hips.name)
             elif nChildren == 1:
                 hips = hipsChildren[0]
@@ -95,6 +92,7 @@ class CArmature:
             first = False
 
         if hips is None:
+            self.clearBones()
             raise MocapError("Found no candidate hip bone")
 
         if self.verbose:
@@ -117,6 +115,7 @@ class CArmature:
             string = "Hips %s has %d children:\n" % (hips.name, len(hipsChildren))
             for child in hipsChildren:
                 string += "  %s\n" % child.name
+            self.clearBones()
             raise MocapError(string)
 
         spine = None
@@ -150,6 +149,12 @@ class CArmature:
             return ("  No %s\n" % name)
         else:
             return ("  %s = %s, tail = %s\n" % (name, pb.name, tuple(tail)))
+
+
+    def clearBones(self):
+        for pb in self.rig.pose.bones:
+            pb.McpBone = ""
+        self.boneNames = {}
 
 
     def setBone(self, bname, pb):
@@ -189,9 +194,11 @@ class CArmature:
         try:
             thigh = self.validChildren(hip)[0]
         except IndexError:
+            self.clearBones()
             raise MocapError("Hip %s has no children" % hip.name)
         shins = self.validChildren(thigh, True)
         if len(shins) == 0:
+            self.clearBones()
             raise MocapError("Thigh %s has no children" % thigh.name)
         elif len(shins) > 1:
             shin = thigh
@@ -230,12 +237,14 @@ class CArmature:
         try:
             upperarm = self.validChildren(shoulder)[0]
         except IndexError:
+            self.clearBones()
             raise MocapError("Shoulder %s has no children" % shoulder.name)
         if self.verbose:
             print("  upper_arm%s:" % suffix, upperarm.name)
         try:
             forearm = self.validChildren(upperarm, True)[0]
         except IndexError:
+            self.clearBones()
             raise MocapError("Upper arm %s has no children" % upperarm.name)
         if self.verbose:
             print("  forearm%s:" % suffix, forearm.name)
@@ -282,7 +291,7 @@ class CArmature:
                 limbs.sort()
                 fail = False
             except TypeError:
-                fail = True                
+                fail = True
                 reason = "Some of the bones have the same X coordinate\n"
             if not fail:
                 self.findArm(limbs[0][1], ".R")
@@ -295,8 +304,9 @@ class CArmature:
             string = "Could not auto-detect armature because:\n" + reason
             for child in spine2Children:
                 string += "  %s\n" % child.name
-            string += ("Is the source rig oriented correctly?\n" + 
+            string += ("Is the source rig oriented correctly?\n" +
                        "Try to change vertical or horizonal orientation.")
+            self.clearBones()
             raise MocapError(string)
 
 
@@ -388,4 +398,4 @@ def getHeadTailDir(pb):
     tail = head + pb.bone.length * vec
     return head, tail, vec
 
-    
+

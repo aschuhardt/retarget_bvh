@@ -77,7 +77,6 @@ class MCP_PT_Options(bpy.types.Panel):
         self.layout.prop(scn, "McpIncludeFingers")
         self.layout.prop(scn, "McpUseLimits")
         self.layout.prop(scn, "McpClearLocks")
-        self.layout.prop(scn, "McpIgnoreHiddenLayers")
 
 ########################################################################
 #
@@ -232,7 +231,6 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         layout.prop(scn, "McpTargetRig")
         layout.prop(scn, "McpTargetTPose")
         layout.prop(scn, "McpIncludeFingers")
-        layout.prop(scn, "McpIgnoreHiddenLayers")
         layout.prop(rig, "McpReverseHip")
         layout.separator()
         layout.operator("mcp.identify_target_rig")

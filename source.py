@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -39,7 +39,7 @@ from .utils import *
 #----------------------------------------------------------
 #   Source classes
 #----------------------------------------------------------
-          
+
 class CRigInfo:
     def __init__(self, scn, name="Automatic"):
         self.name = name
@@ -78,8 +78,16 @@ class CRigInfo:
             self.t_pose = struct["t-pose"]
         if "t-pose-file" in struct.keys():
             self.t_pose_file = struct["t-pose-file"]
- 
- 
+
+
+    def identifyRig(self, rig, context, tpose):
+        from .t_pose import putInRightPose
+        tposed = putInRightPose(rig, tpose, context)
+        self.findArmature(rig)
+        self.addAutoBones(rig)
+        return tposed
+
+
     def addAutoBones(self, rig):
         self.bones = []
         for pb in rig.pose.bones:
@@ -87,7 +95,7 @@ class CRigInfo:
                 self.bones.append( (pb.name, pb.McpBone) )
         self.addParents(rig)
         rig.McpTPoseDefined = False
-        
+
 
     def addManualBones(self, rig):
         for pb in rig.pose.bones:
@@ -102,7 +110,7 @@ class CRigInfo:
         self.addParents(rig)
 
 
-    def addTPose(self, rig):   
+    def addTPose(self, rig):
         for bname in self.t_pose.keys():
             if bname in rig.pose.bones.keys():
                 pb = rig.pose.bones[bname]
@@ -111,7 +119,7 @@ class CRigInfo:
         rig.McpTPoseDefined = True
 
 
-    def addParents(self, rig):        
+    def addParents(self, rig):
         for pb in rig.pose.bones:
             if pb.McpBone:
                 pb.McpParent = ""
@@ -125,16 +133,18 @@ class CRigInfo:
             if bname in rig.pose.bones.keys():
                 pb = rig.pose.bones[bname]
                 pb.McpParent = pname
-    
+
         if self.verbose:
             print("Parents")
             for pb in rig.pose.bones:
                 if pb.McpBone:
                     print("  ", pb.name, pb.McpParent)
-                       
+
 
     def testRig(self, name, rig, scn):
         from .armature import validBone
+        if not self.bones:
+            raise MocapError("Cannot verify after rig identification failed")
         print("Testing %s" % name)
         pbones = dict([(pb.name,pb) for pb in rig.pose.bones])
         for pb in rig.pose.bones:
@@ -161,11 +171,11 @@ class CRigInfo:
 
 class CSourceInfo(CArmature, CRigInfo):
     verboseString = "Read source file"
-    
+
     def __init__(self, scn, struct=None):
         CArmature.__init__(self, scn)
         CRigInfo.__init__(self, scn)
-                    
+
 #----------------------------------------------------------
 #   Global variables
 #----------------------------------------------------------
@@ -199,19 +209,17 @@ def ensureSourceInited(scn):
 
 def findSourceArmature(context, rig, auto):
     global _activeSrcInfo, _sourceInfos
-    from .t_pose import autoTPose, putInRestPose, getTPoseInfo, putInRightPose
+    from .t_pose import autoTPose, putInRestPose, getTPoseInfo
     scn = context.scene
 
     ensureSourceInited(scn)
     if auto:
         from .target import guessArmatureFromList
-        scn.McpSourceRig, scn.McpSourceTPose = guessArmatureFromList(rig, scn, _sourceInfos) 
-    
+        scn.McpSourceRig, scn.McpSourceTPose = guessArmatureFromList(rig, scn, _sourceInfos)
+
     if scn.McpSourceRig == "Automatic":
         info = CSourceInfo(scn)
-        tposed = putInRightPose(rig, scn.McpSourceTPose, context)
-        info.findArmature(rig)
-        info.addAutoBones(rig)
+        tposed = info.identifyRig(rig, context, scn.McpSourceTPose)
         if not tposed:
             autoTPose(rig, context)
             scn.McpSourceTPose = "Default"
@@ -242,7 +250,7 @@ def setSourceArmature(rig, scn):
         raise MocapError("No source armature set")
     _activeSrcInfo = _sourceInfos[name]
     print("Set source armature to %s" % name)
-    
+
 
 #----------------------------------------------------------
 #   Class
@@ -253,7 +261,7 @@ class Source:
         name = "Auto Source",
         description = "Find source rig automatically",
         default = True)
-        
+
     def draw(self, context):
         self.layout.prop(self, "useAutoSource")
         if not self.useAutoSource:
@@ -281,7 +289,7 @@ class MCP_OT_InitSources(bpy.types.Operator):
 
 
 def initSources(scn):
-    from .t_pose import initTPoses    
+    from .t_pose import initTPoses
     initTPoses(scn)
 
     global _sourceInfos
@@ -292,7 +300,7 @@ def initSources(scn):
         filepath = os.path.join(folder, fname)
         if os.path.splitext(fname)[-1] == ".json":
             info = CSourceInfo(scn)
-            info.readFile(filepath)            
+            info.readFile(filepath)
             _sourceInfos[info.name] = info
             keys.append(info.name)
     enums = []
@@ -423,9 +431,9 @@ class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
     def poll(self, context):
         return context.scene.McpSourceRig
 
-    def getBones(self, context): 
+    def getBones(self, context):
         from .t_pose import getTPoseInfo
-        scn = context.scene 
+        scn = context.scene
         info = getSourceArmature(scn.McpSourceRig)
         tinfo = getTPoseInfo(scn.McpSourceTPose)
         if info and tinfo:
@@ -441,14 +449,14 @@ class MCP_OT_VerifySourceRig(BvhOperator):
     bl_label = "Verify Source Rig"
     bl_description = "Verify the source rig type of the active armature"
     bl_options = {'UNDO'}
-        
+
     @classmethod
     def poll(self, context):
         ob = context.object
         return (context.scene.McpSourceRig and ob and ob.type == 'ARMATURE')
-                
-    def run(self, context):   
-        rigtype = context.scene.McpSourceRig     
+
+    def run(self, context):
+        rigtype = context.scene.McpSourceRig
         info = _sourceInfos[rigtype]
         info.testRig(rigtype, context.object, context.scene)
         raise MocapMessage("Source armature %s verified" % rigtype)
@@ -459,20 +467,21 @@ class MCP_OT_IdentifySourceRig(BvhOperator):
     bl_label = "Identify Source Rig"
     bl_description = "Identify the source rig type of the active armature"
     bl_options = {'UNDO'}
-        
+
     @classmethod
     def poll(self, context):
         ob = context.object
         return (ob and ob.type == 'ARMATURE')
 
-    def run(self, context):   
+    def run(self, context):
         from .target import guessArmatureFromList
         from .t_pose import getTPoseInfo
         scn = context.scene
         rig = context.object
-        scn.McpSourceRig,scn.McpSourceTPose = guessArmatureFromList(rig, scn, _sourceInfos)  
+        scn.McpSourceRig,scn.McpSourceTPose = guessArmatureFromList(rig, scn, _sourceInfos)
         info = _sourceInfos[scn.McpSourceRig]
         if scn.McpSourceRig == "Automatic":
+            info.identifyRig(rig, context, scn.McpSourceTPose)
             info.addAutoBones(rig)
         else:
             info.addManualBones(rig)
@@ -481,7 +490,7 @@ class MCP_OT_IdentifySourceRig(BvhOperator):
                 scn.McpSourceTPose = tinfo.name
                 tinfo.addTPose(rig)
         print("Identified rig %s" % scn.McpSourceRig)
-                      
+
 #----------------------------------------------------------
 #   Initialize
 #----------------------------------------------------------
@@ -497,12 +506,12 @@ def initialize():
     bpy.types.Scene.McpSourceRig = EnumProperty(
         items = [("Automatic", "Automatic", "Automatic")],
         name = "Source Rig",
-        default = "Automatic")  
-        
+        default = "Automatic")
+
     bpy.types.Scene.McpSourceTPose = EnumProperty(
         items = [("Default", "Default", "Default")],
         name = "TPose Source",
-        default = "Default")              
+        default = "Default")
 
     bpy.types.Object.McpArmature = StringProperty()
 
