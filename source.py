@@ -55,12 +55,11 @@ class CRigInfo:
 
 
     def readFile(self, filepath):
-        import json
+        from .io_json import loadJson
         if self.verbose:
             print(self.verboseString, filepath)
         self.filepath = filepath
-        with open(filepath, "r") as fp:
-            struct = json.load(fp)
+        struct = loadJson(filepath)
         if "name" in struct.keys():
             self.name = struct["name"]
         else:
