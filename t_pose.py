@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -62,15 +62,15 @@ class Rigger:
             else:
                 self.layout.prop(scn, "McpTargetRig")
                 self.layout.prop(scn, "McpTargetTPose")
-            
+
     def initRig(self, context):
         from .target import findTargetArmature
         from .source import findSourceArmature
         from .fkik import setRigifyFKIK, setRigify2FKIK
-    
+
         rig = context.object
         pose = [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
-    
+
         if self.isSourceRig:
             findSourceArmature(context, rig, self.autoRig)
         else:
@@ -131,10 +131,10 @@ class MCP_OT_RestCurrentPose(BvhOperator, IsArmature):
             bpy.ops.pose.armature_apply()
         except RuntimeError as err:
             raise MocapError("Error when applying armature:   \n%s" % err)
-        
+
         for pb in rig.pose.bones:
             pb.McpQuat = (1,0,0,0)
-                
+
         bpy.ops.object.mode_set(mode='OBJECT')
         for ob in children:
             name = ob.McpArmatureModifier
@@ -174,7 +174,12 @@ TPose = {
     "shin.R" :      (-90*D, 0, 0, 'XYZ'),
     #"foot.R" :      (None, 0, 0, 'XYZ'),
     #"toe.R" :       (pi, 0, 0, 'XYZ'),
-    
+
+    "f_carpal1.L": (0, 0, -105*D, 'XYZ'),
+    "f_carpal2.L": (0, 0, -90*D, 'XYZ'),
+    "f_carpal3.L": (0, 0, -75*D, 'XYZ'),
+    "f_carpal4.L": (0, 0, -60*D, 'XYZ'),
+
     "f_thumb.01.L": (0, 0, -120*D, 'XYZ'),
     "f_thumb.02.L": (0, 0, -120*D, 'XYZ'),
     "f_thumb.03.L": (0, 0, -120*D, 'XYZ'),
@@ -190,7 +195,12 @@ TPose = {
     "f_pinky.01.L": (0, 0, -60*D, 'XYZ'),
     "f_pinky.02.L": (0, 0, -60*D, 'XYZ'),
     "f_pinky.03.L": (0, 0, -60*D, 'XYZ'),
-    
+
+    "f_carpal1.R": (0, 0, 105*D, 'XYZ'),
+    "f_carpal2.R": (0, 0, 90*D, 'XYZ'),
+    "f_carpal3.R": (0, 0, 75*D, 'XYZ'),
+    "f_carpal4.R": (0, 0, 60*D, 'XYZ'),
+
     "f_thumb.01.R": (0, 0, 120*D, 'XYZ'),
     "f_thumb.02.R": (0, 0, 120*D, 'XYZ'),
     "f_thumb.03.R": (0, 0, 120*D, 'XYZ'),
@@ -206,7 +216,7 @@ TPose = {
     "f_pinky.01.R": (0, 0, 60*D, 'XYZ'),
     "f_pinky.02.R": (0, 0, 60*D, 'XYZ'),
     "f_pinky.03.R": (0, 0, 60*D, 'XYZ'),
-    
+
 }
 
 def autoTPose(rig, context):
@@ -252,45 +262,45 @@ def putInRestPose(rig, useSetKeys):
         pb.matrix_basis = Matrix()
         if useSetKeys:
             setKeys(pb)
-    updateScene()            
-        
+    updateScene()
 
-def putInRightPose(rig, tpose, context):      
+
+def putInRightPose(rig, tpose, context):
     if tpose != "Default":
         tinfo = getTPoseInfo(tpose)
         if tinfo:
-            tinfo.addTPose(rig)        
+            tinfo.addTPose(rig)
             putInTPose(rig, tpose, context)
             return True
     else:
         putInRestPose(rig, True)
     return False
-            
-                
+
+
 def getStoredTPose(rig, useSetKeys):
     for pb in rig.pose.bones:
         quat = Quaternion(pb.McpQuat)
         pb.matrix_basis = quat.to_matrix().to_4x4()
         if useSetKeys:
             setKeys(pb)
-    updateScene()            
+    updateScene()
 
 
-def setKeys(pb):        
+def setKeys(pb):
     if pb.rotation_mode == "QUATERNION":
         pb.keyframe_insert("rotation_quaternion", group=pb.name)
     elif pb.rotation_mode == "AXIS_ANGLE":
         pb.keyframe_insert("rotation_axis_angle", group=pb.name)
     else:
         pb.keyframe_insert("rotation_euler", group=pb.name)
-        
+
 
 def putInTPose(rig, name, context):
     scn = context.scene
     if False and rig.McpTPoseDefined:
         getStoredTPose(rig, True)
     elif name == "Default":
-        autoTPose(rig, context)    
+        autoTPose(rig, context)
         print("Put %s in automatic T-pose" % (rig.name))
     else:
         info = getTPoseInfo(name)
@@ -300,7 +310,7 @@ def putInTPose(rig, name, context):
         getStoredTPose(rig, True)
         print("Put %s in T-pose %s" % (rig.name, name))
     updateScene()
-    
+
 
 class MCP_OT_PutInSrcTPose(BvhPropsOperator, IsArmature, Rigger):
     bl_idname = "mcp.put_in_src_t_pose"
@@ -309,7 +319,7 @@ class MCP_OT_PutInSrcTPose(BvhPropsOperator, IsArmature, Rigger):
     bl_options = {'UNDO'}
 
     isSourceRig = True
-    
+
     def run(self, context):
         rig = self.initRig(context)
         putInTPose(rig, context.scene.McpSourceTPose, context)
@@ -318,7 +328,7 @@ class MCP_OT_PutInSrcTPose(BvhPropsOperator, IsArmature, Rigger):
     def invoke(self, context, event):
         from .source import ensureSourceInited
         ensureSourceInited(context.scene)
-        return BvhPropsOperator.invoke(self, context, event)    
+        return BvhPropsOperator.invoke(self, context, event)
 
 
 class MCP_OT_PutInTrgTPose(BvhPropsOperator, IsArmature, Rigger):
@@ -328,7 +338,7 @@ class MCP_OT_PutInTrgTPose(BvhPropsOperator, IsArmature, Rigger):
     bl_options = {'UNDO'}
 
     isSourceRig = False
-    
+
     def run(self, context):
         rig = self.initRig(context)
         putInTPose(rig, context.scene.McpTargetTPose, context)
@@ -337,7 +347,7 @@ class MCP_OT_PutInTrgTPose(BvhPropsOperator, IsArmature, Rigger):
     def invoke(self, context, event):
         from .target import ensureTargetInited
         ensureTargetInited(context.scene)
-        return BvhPropsOperator.invoke(self, context, event)    
+        return BvhPropsOperator.invoke(self, context, event)
 
 #------------------------------------------------------------------
 #   Define and undefine T-Pose
@@ -367,8 +377,8 @@ class MCP_OT_UndefineTPose(BvhOperator, IsArmature):
         rig = context.object
         rig.McpTPoseDefined = False
         quat = Quaternion()
-        for pb in rig.pose.bones:            
-            pb.McpQuat = quat    
+        for pb in rig.pose.bones:
+            pb.McpQuat = quat
         print("Undefined T-pose")
 
 #------------------------------------------------------------------
@@ -393,7 +403,7 @@ class MCP_OT_LoadTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
     bl_options = {'UNDO'}
 
     isSourceRig = True
-    
+
     def run(self, context):
         from .io_json import loadJson
         rig = context.object
@@ -433,10 +443,10 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
         name = "Only Mcp Bones",
         default = False,
     )
-    
+
     def draw(self, context):
         self.layout.prop(self, "onlyMcpBones")
-         
+
     def run(self, context):
         from collections import OrderedDict
         from .io_json import saveJson
@@ -444,7 +454,7 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
         tstruct = OrderedDict()
         struct = OrderedDict()
         fname = os.path.splitext(os.path.basename(self.filepath))[0]
-        words = [word.capitalize() for word in fname.split("_")]        
+        words = [word.capitalize() for word in fname.split("_")]
         struct["name"] = " ".join(words)
         struct["t-pose"] = tstruct
         for pb in rig.pose.bones:
@@ -464,7 +474,7 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
         if os.path.splitext(self.filepath)[-1] != ".json":
             filepath = self.filepath + ".json"
         else:
-            filepath = self.filepath            
+            filepath = self.filepath
         filepath = os.path.join(os.path.dirname(__file__), filepath)
         print("Saving %s" % filepath)
         saveJson(struct, filepath)
@@ -480,9 +490,9 @@ class MCP_OT_SaveTPose(BvhOperator, IsArmature, ExportHelper, JsonFile):
 
 from .source import CRigInfo
 
-class CTPoseInfo(CRigInfo):  
+class CTPoseInfo(CRigInfo):
     verboseString = "Read T-pose file"
-    
+
 _tposeInfos = {}
 _activeTPoseInfo = None
 
@@ -504,7 +514,7 @@ def initTPoses(scn):
         filepath = os.path.join(folder, fname)
         if os.path.splitext(fname)[-1] == ".json":
             info = CTPoseInfo(scn)
-            info.readFile(filepath)   
+            info.readFile(filepath)
             _tposeInfos[info.name] = info
             keys.append(info.name)
     enums = []

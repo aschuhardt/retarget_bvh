@@ -67,8 +67,11 @@ class CAnimation:
         self.scene = context.scene
         self.boneAnims = OrderedDict()
 
+        scn = context.scene
         for (trgName, srcName) in info.bones:
-            if (trgName in trgRig.pose.bones.keys() and
+            if not scn.McpIncludeFingers and srcName[0:2] == "f_":
+                continue
+            elif (trgName in trgRig.pose.bones.keys() and
                 srcName in srcRig.pose.bones.keys()):
                 trgBone = trgRig.pose.bones[trgName]
                 srcBone = srcRig.pose.bones[srcName]
@@ -108,6 +111,7 @@ class CAnimation:
         putInTPose(self.trgRig, scn.McpTargetTPose, context)
         for banim in self.boneAnims.values():
             banim.getTPoseMatrix()
+
 
     def retarget(self, frames, context, offset, nFrames):
         objects = hideObjects(context, self.srcRig)

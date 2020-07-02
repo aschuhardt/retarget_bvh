@@ -549,6 +549,8 @@ class BvhRenamer(Source, Target):
         default=True)
 
     def draw(self, context):
+        self.layout.prop(context.scene, "McpIncludeFingers")
+        self.layout.separator()
         Source.draw(self, context)
         Target.draw(self, context)
         self.layout.prop(self, "useAutoScale")

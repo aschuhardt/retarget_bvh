@@ -46,9 +46,9 @@ def loadJson(filepath):
                 struct = json.load(fp)
         msg = None
     except json.decoder.JSONDecodeError as err:
-        msg = ('JSON error while reading zipped file\n"%s"\n%s' % (filepath, err))
+        msg = ('JSON error while reading file\n"%s"\n%s' % (filepath, err))
     except UnicodeDecodeError as err:
-        msg = ('Unicode error while reading zipped file\n"%s"\n%s' % (filepath, err))
+        msg = ('Unicode error while reading file\n"%s"\n%s' % (filepath, err))
     except:
         msg = ("Could not load %s" % filepath)
 

@@ -31,6 +31,9 @@
         "rFoot" : "foot.R", 
         "rToe" : "toe.R",
 
+        "lCarpal1" : "f_carpal2.L",
+        "lCarpal2" : "f_carpal3.L",
+        
         "lThumb1" : "f_thumb.01.L",
         "lThumb2" : "f_thumb.02.L",
         "lThumb3" : "f_thumb.03.L",
@@ -50,6 +53,9 @@
         "lPinky1" : "f_pinky.01.L",
         "lPinky2" : "f_pinky.02.L",
         "lPinky3" : "f_pinky.03.L",	
+
+        "rCarpal1" : "f_carpal2.R",
+        "rCarpal2" : "f_carpal3.R",
         
         "rThumb1" : "f_thumb.01.R",
         "rThumb2" : "f_thumb.02.R",
