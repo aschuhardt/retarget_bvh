@@ -178,10 +178,10 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
 
 ########################################################################
 #
-#    class MCP_PT_MhxSourceBones(bpy.types.Panel):
+#    class MCP_PT_SourceRigs(bpy.types.Panel):
 #
 
-class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
+class MCP_PT_SourceRigs(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Source Armature"
     bl_space_type = "VIEW_3D"
@@ -195,9 +195,9 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
         rig = context.object
 
         if not isSourceInited(scn):
-            layout.operator("mcp.init_sources", text="Init Source Panel")
+            layout.operator("mcp.init_known_rigs")
             return
-        layout.operator("mcp.init_sources", text="Reinit Source Panel")
+        layout.operator("mcp.init_known_rigs", text="Reinit Known Rigs")
         layout.prop(scn, "McpSourceRig")
         layout.prop(scn, "McpSourceTPose")
         layout.prop(scn, "McpIncludeFingers")
@@ -209,10 +209,10 @@ class MCP_PT_MhxSourceBones(bpy.types.Panel, utils.IsArmature):
 
 ########################################################################
 #
-#    class MCP_PT_MhxTargetBones(bpy.types.Panel):
+#    class MCP_PT_TargetRigs(bpy.types.Panel):
 #
 
-class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
+class MCP_PT_TargetRigs(bpy.types.Panel, utils.IsArmature):
     bl_category = "BVH"
     bl_label = "Target Armature"
     bl_space_type = "VIEW_3D"
@@ -226,9 +226,9 @@ class MCP_PT_MhxTargetBones(bpy.types.Panel, utils.IsArmature):
         scn = context.scene
 
         if not isTargetInited(scn):
-            layout.operator("mcp.init_targets", text="Init Target Panel")
+            layout.operator("mcp.init_known_rigs")
             return
-        layout.operator("mcp.init_targets", text="Reinit Target Panel")
+        layout.operator("mcp.init_known_rigs", text="Reinit Known Rigs")
         layout.separator()
         layout.prop(scn, "McpTargetRig")
         layout.prop(scn, "McpTargetTPose")
@@ -301,8 +301,8 @@ classes = [
     MCP_PT_Main,
     MCP_PT_Options,
     MCP_PT_Edit,
-    MCP_PT_MhxSourceBones,
-    MCP_PT_MhxTargetBones,
+    MCP_PT_SourceRigs,
+    MCP_PT_TargetRigs,
     MCP_PT_TPose,
     MCP_PT_Actions,
 

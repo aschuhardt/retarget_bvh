@@ -276,14 +276,16 @@ class Source:
 #   Source initialization
 #----------------------------------------------------------
 
-class MCP_OT_InitSources(bpy.types.Operator):
-    bl_idname = "mcp.init_sources"
-    bl_label = "Init Source Panel"
-    bl_description = "(Re)load all json files in the source_rigs directory."
+class MCP_OT_InitKnownRigs(bpy.types.Operator):
+    bl_idname = "mcp.init_known_rigs"
+    bl_label = "Init Known Rigs"
+    bl_description = "(Re)load all json files in the known_rigs directory."
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        from .target import initTargets
         initSources(context.scene)
+        initTargets(context.scene)
         return{'FINISHED'}
 
 
@@ -307,9 +309,8 @@ def initSources(scn):
     from .t_pose import initTPoses
     initTPoses(scn)
     _sourceInfos = { "Automatic" : CSourceInfo(scn) }
-    skeys = readSourceFiles(scn, "source_rigs")
-    tkeys = readSourceFiles(scn, "target_rigs")
-    keys = ["Automatic"] + skeys + ["---------"] + tkeys
+    skeys = readSourceFiles(scn, "known_rigs")
+    keys = ["Automatic"] + skeys
     enums = [(key,key,key) for key in keys]
 
     bpy.types.Scene.McpSourceRig = EnumProperty(
@@ -499,7 +500,7 @@ class MCP_OT_IdentifySourceRig(BvhOperator):
 #----------------------------------------------------------
 
 classes = [
-    MCP_OT_InitSources,
+    MCP_OT_InitKnownRigs,
     MCP_OT_ListSourceRig,
     MCP_OT_VerifySourceRig,
     MCP_OT_IdentifySourceRig,

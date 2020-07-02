@@ -176,9 +176,8 @@ def initTargets(scn):
     from .t_pose import initTPoses
     initTPoses(scn)
     _targetInfos = { "Automatic" : CTargetInfo(scn, "Automatic") }
-    tkeys = readTargetFiles(scn, "target_rigs")
-    skeys = readTargetFiles(scn, "source_rigs")
-    keys = ["Automatic"] + tkeys + ["---------"] + skeys
+    tkeys = readTargetFiles(scn, "known_rigs")
+    keys = ["Automatic"] + tkeys
     enums = [(key,key,key) for key in keys]
 
     bpy.types.Scene.McpTargetRig = EnumProperty(
@@ -186,16 +185,6 @@ def initTargets(scn):
         name = "Target rig",
         default = 'Automatic')
     print("Defined McpTargetRig")
-
-
-class MCP_OT_InitTargets(BvhOperator):
-    bl_idname = "mcp.init_targets"
-    bl_label = "Init Target Panel"
-    bl_description = "(Re)load all json files in the target_rigs directory."
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        initTargets(context.scene)
 
 
 class MCP_OT_IdentifyTargetRig(BvhOperator, IsArmature):
@@ -217,7 +206,6 @@ class MCP_OT_IdentifyTargetRig(BvhOperator, IsArmature):
     def sequel(self, context, data):
         from .retarget import restoreTargetData
         restoreTargetData(data)
-
 
 #----------------------------------------------------------
 #   List Rig
@@ -276,7 +264,6 @@ class MCP_OT_VerifyTargetRig(BvhOperator):
 #----------------------------------------------------------
 
 classes = [
-    MCP_OT_InitTargets,
     MCP_OT_IdentifyTargetRig,
     MCP_OT_ListTargetRig,
     MCP_OT_VerifyTargetRig,
