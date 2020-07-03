@@ -328,6 +328,7 @@ def initSources(scn):
 #----------------------------------------------------------
 
 ListedBones = [
+    [
     ('hips',         'Root bone'),
     ('spine',        'Lower spine'),
     ('spine-1',      'Lower spine 2'),
@@ -357,6 +358,12 @@ ListedBones = [
     ('shin.R',       'R shin'),
     ('foot.R',       'R foot'),
     ('toe.R',        'R toes'),
+    ],
+    [
+    ("f_carpal1.L",   "L carpal 1"),
+    ("f_carpal2.L",   "L carpal 2"),
+    ("f_carpal3.L",   "L carpal 3"),
+    ("f_carpal4.L",   "L carpal 4"),
     None,
     ("f_thumb.01.L",   "L thumb 1"),
     ("f_thumb.02.L",   "L thumb 2"),
@@ -373,6 +380,12 @@ ListedBones = [
     ("f_pinky.01.L",   "L pinky 1"),
     ("f_pinky.02.L",   "L pinky 2"),
     ("f_pinky.03.L",   "L pinky 3"),
+    ],
+    [
+    ("f_carpal1.R",   "R carpal 1"),
+    ("f_carpal2.R",   "R carpal 2"),
+    ("f_carpal3.R",   "R carpal 3"),
+    ("f_carpal4.R",   "R carpal 4"),
     None,
     ("f_thumb.01.R",   "R thumb 1"),
     ("f_thumb.02.R",   "R thumb 2"),
@@ -389,33 +402,40 @@ ListedBones = [
     ("f_pinky.01.R",   "R pinky 1"),
     ("f_pinky.02.R",   "R pinky 2"),
     ("f_pinky.03.R",   "R pinky 3"),
+    ]
 ]
 
 class ListRig:
     def draw(self, context):
         bones, tpose = self.getBones(context)
+        nrows = max([len(ListedBones[n]) for n in range(3)])
         if bones:
             box = self.layout.box()
-            for boneText in ListedBones:
-                if not boneText:
-                    box.separator()
-                    continue
+            for m in range(nrows):
+                row = box.row()
+                for n in range(3):
+                    self.drawBone(m, ListedBones[n], bones, tpose, row)
+
+
+    def drawBone(self, m, boneCol, bones, tpose, row):
+        bname = ""
+        tname = ""
+        text = ""
+        if m < len(boneCol):
+            boneText = boneCol[m]
+            if boneText:
                 (mhx, text) = boneText
+                text += ":"
+                bname = "-"
+                tname = "-"
                 bnames = self.findKeys(mhx, bones)
                 if bnames:
-                    for bname in bnames:
-                        row = box.row()
-                        row.label(text=text)
-                        row.label(text=bname)
-                        if bname in tpose.keys():
-                            row.label(text=str(tpose[bname]))
-                        else:
-                            row.label(text="")
-                else:
-                    row = box.row()
-                    row.label(text=text)
-                    row.label(text="-")
-                    row.label(text="")
+                    bname = bnames[0]
+                    if bname in tpose.keys():
+                        tname = tpose[bname]
+        row.label(text=text)
+        row.label(text=bname)
+        row.label(text=tname)
 
 
     def findKeys(self, mhx, bones):
@@ -425,7 +445,13 @@ class ListRig:
         return []
 
 
-class MCP_OT_ListSourceRig(BvhPropsOperator, ListRig):
+    def invoke(self, context, event):
+        clearErrorMessage()
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=800)
+
+
+class MCP_OT_ListSourceRig(BvhOperator, ListRig):
     bl_idname = "mcp.list_source_rig"
     bl_label = "List Source Rig"
     bl_description = "List the bone associations of the active source rig"

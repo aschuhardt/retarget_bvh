@@ -213,7 +213,7 @@ class MCP_OT_IdentifyTargetRig(BvhOperator, IsArmature):
 
 from .source import ListRig
 
-class MCP_OT_ListTargetRig(BvhPropsOperator, ListRig):
+class MCP_OT_ListTargetRig(BvhOperator, ListRig):
     bl_idname = "mcp.list_target_rig"
     bl_label = "List Target Rig"
     bl_description = "List the bone associations of the active target rig"
