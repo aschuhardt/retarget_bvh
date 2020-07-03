@@ -19,10 +19,10 @@
         "rCollar" : "shoulder.R",
         "rShldr" : "upper_arm.R",
         "rForeArm" : "forearm.R",
-    	"rHand" : "hand.R",
+        "rHand" : "hand.R",
 
         "lThigh" : "thigh.L",
-    	"lShin" : "shin.L",
+        "lShin" : "shin.L",
         "lFoot" : "foot.L", 
         "lToe" : "toe.L",
 
@@ -52,7 +52,7 @@
         
         "lPinky1" : "f_pinky.01.L",
         "lPinky2" : "f_pinky.02.L",
-        "lPinky3" : "f_pinky.03.L",	
+        "lPinky3" : "f_pinky.03.L",    
 
         "rCarpal1" : "f_carpal2.R",
         "rCarpal2" : "f_carpal3.R",
