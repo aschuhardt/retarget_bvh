@@ -1,16 +1,16 @@
 {
     "name"  : "Rigify 2",
     "url"   : "",
-    "fingerprint" : ["MCH-forearm_ik.L"],
+    "fingerprint" : ["MCH-forearm_tweak.L.001"],
     
     "bones" : {
         "torso" : "hips",
-        "spine_fk.001" : "spine",
-        "spine_fk.002" : "spine-1",
-        "spine_fk.003" : "chest",
-        "spine_fk.004" : "chest-1",
-        "spine_fk.005" : "neck",
-        "spine_fk.007" : "head", 
+        "spine" : "spine",
+        "spine-1" : "spine-1",
+        "chest" : "chest",
+        "chest-1" : "chest-1",
+        "neck" : "neck",
+        "head" : "head", 
 
         "shoulder.L" : "shoulder.L",
         "upper_arm_fk.L" : "upper_arm.L", 
@@ -73,22 +73,23 @@
         "f_pinky.03.R" : "f_pinky.03.R"        
     },
 
+    "optional" : ["spine", "spine-1", "chest", "chest-1", "head"],    
 
     "parents" : {
         "torso" : "",
-        "spine_fk.001" : "torso",
-        "spine_fk.002" : "spine_fk.001",
-        "spine_fk.003" : "spine_fk.002",
-        "spine_fk.004" : "spine_fk.003",
-        "spine_fk.005" : "spine_fk.004",
-        "spine_fk.007" : "spine_fk.005", 
+        "spine" : "torso",
+        "spine-1" : "spine",
+        "chest" : "spine-1",
+        "chest-1" : "chest",
+        "neck" : "chest",
+        "head" : "neck", 
 
-        "shoulder.L" : "spine_fk.004",
+        "shoulder.L" : "chest-1",
         "upper_arm_fk.L" : "shoulder.L", 
         "forearm_fk.L" : "upper_arm_fk.L",
         "hand_fk.L" : "forearm_fk.L",
         
-        "shoulder.R" : "spine_fk.004",
+        "shoulder.R" : "chest-1",
         "upper_arm_fk.R" : "shoulder.R", 
         "forearm_fk.R" : "upper_arm_fk.R",
         "hand_fk.R" : "forearm_fk.R",

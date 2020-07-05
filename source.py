@@ -83,8 +83,15 @@ class CRigInfo:
         from .t_pose import putInRightPose
         tposed = putInRightPose(rig, tpose, context)
         self.findArmature(rig)
+        self.clearMcpBones(rig)
         self.addAutoBones(rig)
         return tposed
+
+
+    def clearMcpBones(self, rig):
+        for pb in rig.pose.bones:
+            pb.McpBone = ""
+            pb.McpParent = ""
 
 
     def addAutoBones(self, rig):
@@ -104,7 +111,7 @@ class CRigInfo:
                 pb = rig.pose.bones[bname]
                 pb.McpBone = mhx
             else:
-                print("  ", bname)
+                print("  Missing:", bname)
         rig.McpTPoseDefined = False
         self.addParents(rig)
 
@@ -116,6 +123,15 @@ class CRigInfo:
                 euler = Euler(Vector(self.t_pose[bname])*D)
                 pb.McpQuat = euler.to_quaternion()
         rig.McpTPoseDefined = True
+
+
+    def getParent(self, rig, bname, pname):
+        if pname in rig.pose.bones.keys():
+            return pname
+        elif pname in self.parents.keys():
+            return self.getParent(rig, pname, self.parents[pname])
+        else:
+            return ""
 
 
     def addParents(self, rig):
@@ -130,6 +146,7 @@ class CRigInfo:
                     par = par.parent
         for bname,pname in self.parents.items():
             if bname in rig.pose.bones.keys():
+                pname = self.getParent(rig, bname, pname)
                 pb = rig.pose.bones[bname]
                 pb.McpParent = pname
 
@@ -408,6 +425,9 @@ ListedBones = [
 class ListRig:
     def draw(self, context):
         bones, tpose = self.getBones(context)
+        bones1 = self.getMcpBones(context)
+        if bones1:
+            bones = bones1
         nrows = max([len(ListedBones[n]) for n in range(3)])
         if bones:
             box = self.layout.box()
@@ -415,6 +435,15 @@ class ListRig:
                 row = box.row()
                 for n in range(3):
                     self.drawBone(m, ListedBones[n], bones, tpose, row)
+
+
+    def getMcpBones(self, context):
+        rig = context.object
+        bones = []
+        for pb in rig.pose.bones:
+            if pb.McpBone:
+                bones.append((pb.name, pb.McpBone))
+        return bones
 
 
     def drawBone(self, m, boneCol, bones, tpose, row):

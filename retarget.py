@@ -84,7 +84,7 @@ class CAnimation:
 
     def getTargetParent(self, trgName, trgBone):
         parName = trgBone.McpParent
-        while parName and parName not in self.boneAnims.keys():
+        while (parName and parName not in self.boneAnims.keys()):
             print("Skipping", parName)
             parBone = self.trgRig.pose.bones[parName]
             parName = parBone.McpParent
