@@ -2,6 +2,7 @@
     "name"  : "Rigify",
     "url"   : "",
     "fingerprint" : ["MCH-spine.flex"],
+    "illegal" : ["upper_arm_fk.L"],
     
     "bones" : {
         "torso" : "hips",

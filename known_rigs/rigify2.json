@@ -2,6 +2,7 @@
     "name"  : "Rigify 2",
     "url"   : "",
     "fingerprint" : ["MCH-forearm_tweak.L.001"],
+    "illegal" : ["spine_fk.001"],
     
     "bones" : {
         "torso" : "hips",

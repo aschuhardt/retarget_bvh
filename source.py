@@ -49,6 +49,7 @@ class CRigInfo:
         self.parents = {}
         self.optional = []
         self.fingerprint = []
+        self.illegal = []
         self.t_pose = {}
         self.t_pose_file = None
         self.verbose = scn.McpVerbose
@@ -73,6 +74,8 @@ class CRigInfo:
             self.optional = struct["optional"]
         if "fingerprint" in struct.keys():
             self.fingerprint = struct["fingerprint"]
+        if "illegal" in struct.keys():
+            self.illegal = struct["illegal"]
         if "t-pose" in struct.keys():
             self.t_pose = struct["t-pose"]
         if "t-pose-file" in struct.keys():
@@ -162,6 +165,13 @@ class CRigInfo:
         if not self.bones:
             raise MocapError("Cannot verify after rig identification failed")
         print("Testing %s" % name)
+        bname = hasSomeBones(self.illegal, rig)
+        if bname:
+            raise MocapError(
+                    "Armature %s does not\n" % rig.name +
+                    "match armature %s.\n" % name +
+                    "Has illegal bone %s     " % bname)
+
         pbones = dict([(pb.name,pb) for pb in rig.pose.bones])
         for pb in rig.pose.bones:
             pbones[pb.name.lower()] = pb

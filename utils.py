@@ -75,6 +75,12 @@ def hasAllBones(blist, rig):
             return False
     return True
 
+def hasSomeBones(blist, rig):
+    for bname in blist:
+        if bname in rig.pose.bones.keys():
+            return bname
+    return None
+
 def isMhxRig(rig):
     return hasAllBones(["foot.rev.L"], rig)
 

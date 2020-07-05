@@ -138,6 +138,8 @@ def guessArmatureFromList(rig, scn, infos):
 def matchAllBones(rig, info, scn):
     if not hasAllBones(info.fingerprint, rig):
         return False
+    if hasSomeBones(info.illegal, rig):
+        return False
     for bname,mhx in info.bones:
         if bname in info.optional:
             continue
