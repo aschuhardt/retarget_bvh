@@ -53,6 +53,7 @@ from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
 from .utils import *
+from .armature import HideOperator
 from .target import Target
 from .simplify import Simplifier, TimeScaler
 from .load import BvhFile, MultiFile, BvhLoader, BvhRenamer
@@ -518,7 +519,7 @@ class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, BvhRenamer, 
         return BvhPropsOperator.invoke(self, context, event)
 
 
-class MCP_OT_LoadAndRetarget(BvhOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender):
+class MCP_OT_LoadAndRetarget(HideOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
     bl_description = "Load animation from bvh file to the active armature"

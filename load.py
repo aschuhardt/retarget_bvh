@@ -33,6 +33,7 @@ from mathutils import *
 from bpy.props import *
 
 from .utils import *
+from .armature import HideOperator
 from .source import Source
 from .target import Target
 from .simplify import TimeScaler
@@ -636,7 +637,7 @@ def checkObjectProblems(context):
 #   class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile):
 #
 
-class MCP_OT_LoadBvh(BvhOperator, MultiFile, BvhFile, BvhLoader):
+class MCP_OT_LoadBvh(HideOperator, MultiFile, BvhFile, BvhLoader):
     bl_idname = "mcp.load_bvh"
     bl_label = "Load BVH File"
     bl_description = "Load an armature from a bvh file"
@@ -690,10 +691,10 @@ class MCP_OT_RenameActiveToSelected(BvhPropsOperator, IsArmature, TimeScaler, Bv
         return BvhPropsOperator.invoke(self, context, event)
 
 #
-#   class MCP_OT_LoadAndRenameBvh(BvhOperator, ImportHelper, BvhFile):
+#   class MCP_OT_LoadAndRenameBvh(HideOperator, ImportHelper, BvhFile):
 #
 
-class MCP_OT_LoadAndRenameBvh(BvhOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, BvhRenamer, TimeScaler):
+class MCP_OT_LoadAndRenameBvh(HideOperator, IsArmature, ImportHelper, BvhFile, BvhLoader, BvhRenamer, TimeScaler):
     bl_idname = "mcp.load_and_rename_bvh"
     bl_label = "Load And Rename BVH File"
     bl_description = "Load armature from bvh file and rename bones"
