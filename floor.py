@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -106,7 +106,7 @@ def addOffset(pb, offset, ez):
 #   Toe below ball
 #-------------------------------------------------------------
 
-class MCP_OT_OffsetToes(BvhOperator, IsMhx, Target):
+class MCP_OT_OffsetToes(HideOperator, IsMhx, Target):
     bl_idname = "mcp.offset_toes"
     bl_label = "Offset Toes"
     bl_description = "Keep toes below the ball of the feet"
@@ -217,7 +217,7 @@ def getFkFeetBones(rig, suffix):
     except KeyError:
         mBall = mToe = mHeel = None
     return foot,toe,mBall,mToe,mHeel
-      
+
 
 class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
     bl_idname = "mcp.floor_foot"
@@ -257,14 +257,14 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
         else:
             self.floorFkFoot(rig, plane, scn, frames)
         raise MocapMessage("Feet kept above floor")
-    
-    
+
+
     def floorFkFoot(self, rig, plane, scn, frames):
         hips = getTrgBone("hips", rig)
         lFoot,lToe,lmBall,lmToe,lmHeel = getFkFeetBones(rig, ".L")
         rFoot,rToe,rmBall,rmToe,rmHeel = getFkFeetBones(rig, ".R")
         ez,origin,rot = getPlaneInfo(plane)
-    
+
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
@@ -279,8 +279,8 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
             showProgress(n, frame, nFrames)
             if offset > 0:
                 addOffset(hips, offset, ez)
-    
-    
+
+
     def getFkOffset(self, rig, ez, origin, foot, toe, mBall, mToe, mHeel):
         if mBall:
             offset = toeOffset = getHeadOffset(mToe, ez, origin)
@@ -303,26 +303,26 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
                 offset = heelOffset
         else:
             offset = 0
-    
+
         return offset
-    
-    
+
+
     def floorIkFoot(self, rig, plane, scn, frames):
         root = rig.pose.bones["root"]
         lleg = rig.pose.bones["foot.ik.L"]
         rleg = rig.pose.bones["foot.ik.R"]
         ez,origin,rot = getPlaneInfo(plane)
-    
+
         self.fillKeyFrames(lleg, rig, frames, 3, mode='location')
         self.fillKeyFrames(rleg, rig, frames, 3, mode='location')
         if self.useHips:
             self.fillKeyFrames(root, rig, frames, 3, mode='location')
-    
+
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
             showProgress(n, frame, nFrames)
-    
+
             if self.useLeft:
                 lOffset = self.getIkOffset(rig, ez, origin, lleg)
                 if lOffset > 0:
@@ -335,12 +335,12 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
                     addOffset(rleg, rOffset, ez)
             else:
                 rOffset = 0
-    
+
             hOffset = min(lOffset,rOffset)
             if hOffset > 0 and self.useHips:
                 addOffset(root, hOffset, ez)
-    
-    
+
+
     def fillKeyFrames(self, pb, rig, frames, nIndices, mode='rotation'):
         for index in range(nIndices):
             fcu = findBoneFCurve(pb, rig, index, mode)
@@ -349,29 +349,29 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
             for frame in frames:
                 y = fcu.evaluate(frame)
                 fcu.keyframe_points.insert(frame, y, options={'FAST'})
-    
-    
+
+
     def getIkOffset(self, rig, ez, origin, leg):
         offset = getHeadOffset(leg, ez, origin)
         tailOffset = getTailOffset(leg, ez, origin)
         if tailOffset > offset:
             offset = tailOffset
-        return offset    
-    
+        return offset
+
         foot = rig.pose.bones["foot.rev" + suffix]
         toe = rig.pose.bones["toe.rev" + suffix]
-    
+
         ballOffset = getTailOffset(toe, ez, origin)
         if ballOffset > offset:
             offset = ballOffset
-    
+
         ball = foot.matrix.col[3]
         y = toe.matrix.col[1]
         heel = ball + y*foot.length
         heelOffset = getOffset(heel, ez, origin)
         if heelOffset > offset:
             offset = heelOffset
-    
+
         return offset
 
 
@@ -383,15 +383,15 @@ def findBoneFCurve(pb, rig, index, mode='rotation'):
         else:
             mode = "rotation_euler"
     path = 'pose.bones["%s"].%s' % (pb.name, mode)
-    
+
     if rig.animation_data is None:
         return None
     action = rig.animation_data.action
     if action is None:
         return None
     return findFCurve(path, index, action.fcurves)
-    
-    
+
+
 
 #----------------------------------------------------------
 #   Initialize

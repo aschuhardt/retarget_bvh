@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -55,7 +55,7 @@ class Bender:
     def draw(self, context):
         self.layout.prop(self, "useElbows")
         self.layout.prop(self, "useKnees")
-        
+
     def limbsBendPositive(self, rig, frames):
         limbs = {}
         if self.useElbows:
@@ -97,7 +97,7 @@ class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, Target):
     def prequel(self, context):
         rig = context.object
         return (rig, list(rig.data.layers))
-        
+
     def run(self, context):
         from .loop import getActiveFramesBetweenMarkers
 
@@ -113,7 +113,7 @@ class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, Target):
         rig.data.layers = layers
 
 #-------------------------------------------------------------
-#   
+#
 #-------------------------------------------------------------
 
 def getPoseMatrix(gmat, pb):
@@ -355,11 +355,11 @@ class Transferer(Bender, Target):
         self.layout.prop(self, "useLegs")
         Target.draw(self, context)
 
-        
+
     def clearAnimation(self, rig, context, act, type, snapBones):
         scn = context.scene
         self.findTarget(context, rig)
-    
+
         ikBones = []
         if self.useArms:
             for bname in snapBones["Arm" + type]:
@@ -369,27 +369,27 @@ class Transferer(Bender, Target):
             for bname in snapBones["Leg" + type]:
                 if bname is not None:
                     ikBones += [bname+".L", bname+".R"]
-    
+
         ikFCurves = []
         for fcu in act.fcurves:
             words = fcu.data_path.split('"')
             if (words[0] == "pose.bones[" and
                 words[1] in ikBones):
                 ikFCurves.append(fcu)
-    
+
         if ikFCurves == []:
             raise MocapError("%s bones have no animation" % type)
-    
+
         for fcu in ikFCurves:
             act.fcurves.remove(fcu)
-    
-    
+
+
     def transferMhxToFk(self, rig, context):
         from .loop import getActiveFramesBetweenMarkers
-    
+
         scn = context.scene
         self.findTarget(context, rig)
-    
+
         lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
         lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
         rArmSnapIk,rArmCnsIk = getSnapBones(rig, "ArmIK", "_R")
@@ -398,21 +398,21 @@ class Transferer(Bender, Target):
         lLegSnapFk,lLegCnsFk = getSnapBones(rig, "LegFK", "_L")
         rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
         rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
-    
+
         #muteAllConstraints(rig, True)
-    
+
         oldLayers = list(rig.data.layers)
         setMhxIk(rig, self.useArms, self.useLegs, 1.0)
         rig.data.layers = MhxLayers
-    
+
         lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
         rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
-    
+
         frames = getActiveFramesBetweenMarkers(rig, scn)
         nFrames = len(frames)
         self.useKnees = self.useElbows = True
         self.limbsBendPositive(rig, frames)
-    
+
         for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
             scn.frame_set(frame)
@@ -423,19 +423,19 @@ class Transferer(Bender, Target):
             if self.useLegs:
                 snapFkLeg(rig, lLegSnapIk, lLegSnapFk, frame, lLegIkToAnkle)
                 snapFkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
-    
+
         rig.data.layers = oldLayers
         setMhxIk(rig, self.useArms, self.useLegs, 0.0)
         setInterpolation(rig)
         #muteAllConstraints(rig, False)
-    
-    
+
+
     def transferMhxToIk(self, rig, context):
         from .loop import getActiveFramesBetweenMarkers
-    
+
         scn = context.scene
         self.findTarget(context, rig)
-    
+
         lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
         lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
         rArmSnapIk,rArmCnsIk = getSnapBones(rig, "ArmIK", "_R")
@@ -444,16 +444,16 @@ class Transferer(Bender, Target):
         lLegSnapFk,lLegCnsFk = getSnapBones(rig, "LegFK", "_L")
         rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
         rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
-    
+
         #muteAllConstraints(rig, True)
-    
+
         oldLayers = list(rig.data.layers)
         setMhxIk(rig, self.useArms, self.useLegs, 0.0)
         rig.data.layers = MhxLayers
-    
+
         lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
         rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
-    
+
         frames = getActiveFramesBetweenMarkers(rig, scn)
         #frames = range(scn.frame_start, scn.frame_end+1)
         nFrames = len(frames)
@@ -467,14 +467,14 @@ class Transferer(Bender, Target):
             if self.useLegs:
                 snapIkLeg(rig, lLegSnapIk, lLegSnapFk, frame, lLegIkToAnkle)
                 snapIkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
-    
+
         rig.data.layers = oldLayers
         setMhxIk(rig, self.useArms, self.useLegs, 1.0)
         setInterpolation(rig)
         #muteAllConstraints(rig, False)
 
 
-    
+
 def muteAllConstraints(rig, value):
     lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
     lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
@@ -495,7 +495,7 @@ def muteAllConstraints(rig, value):
     muteConstraints(rLegCnsFk, value)
 
 #------------------------------------------------------------------------
-#   
+#
 #------------------------------------------------------------------------
 
 def setLocation(bname, rig):
@@ -535,7 +535,7 @@ def setMhxIk(rig, useArms, useLegs, value):
             rig["MhaLegIk_R"] = value
             ikLayers += [4,20]
             fkLayers += [5,21]
-    
+
         if value:
             first = ikLayers
             second = fkLayers
@@ -546,8 +546,8 @@ def setMhxIk(rig, useArms, useLegs, value):
             rig.data.layers[n] = True
         for n in second:
             rig.data.layers[n] = False
-    
-    
+
+
 def setRigifyFKIK(rig, value):
     rig.pose.bones["hand.ik.L"]["ikfk_switch"] = value
     rig.pose.bones["hand.ik.R"]["ikfk_switch"] = value
@@ -575,7 +575,7 @@ def setRigify2FKIK(rig, value):
     torso["neck_follow"] = 1.0
 
 
-def setRigToFK(rig):    
+def setRigToFK(rig):
     setMhxIk(rig, True, True, 0.0)
     if isRigify(rig):
         setRigifyFKIK(rig, 0.0)
@@ -606,7 +606,7 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsMhx, Transferer):
 
     def prequel(self, context):
         return disableGlobalUndo(context)
-        
+
     def run(self, context):
         startProgress("Transfer to FK")
         rig = context.object
@@ -619,7 +619,7 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsMhx, Transferer):
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)
-        
+
 
 
 class MCP_OT_TransferToIk(BvhPropsOperator, IsMhx, Transferer):
@@ -630,7 +630,7 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsMhx, Transferer):
 
     def prequel(self, context):
         return disableGlobalUndo(context)
-        
+
     def run(self, context):
         startProgress("Transfer to IK")
         rig = context.object
@@ -647,19 +647,19 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsMhx, Transferer):
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)
-        
 
-class MCP_OT_ClearAnimation(BvhOperator, IsMhx, Transferer):
+
+class MCP_OT_ClearAnimation(HideOperator, IsMhx, Transferer):
     bl_idname = "mcp.clear_animation"
     bl_label = "Clear Animation"
     bl_description = "Clear Animation For FK or IK Bones"
     bl_options = {'UNDO'}
 
     type : StringProperty()
-    
+
     def prequel(self, context):
         return disableGlobalUndo(context)
-        
+
     def run(self, context):
         startProgress("Clear animation")
         rig = context.object
@@ -685,7 +685,7 @@ class MCP_OT_ClearAnimation(BvhOperator, IsMhx, Transferer):
 
     def sequel(self, context, undo):
         return restoreGlobalUndo(context, undo)
-        
+
 #------------------------------------------------------------------------
 #   Debug
 #------------------------------------------------------------------------

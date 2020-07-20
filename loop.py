@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -67,11 +67,11 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
         name="Loop In Place",
         description="Remove Location F-curves",
         default=False)
-        
+
     deleteOutside : BoolProperty(
         name="Delete Outside Keyframes",
         description="Delete all keyframes outside the looped region",
-        default = False)        
+        default = False)
 
     def draw(self, context):
         self.layout.prop(self, "blendRange")
@@ -82,7 +82,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
 
     def run(self, context):
         startProgress("Loop F-curves")
-        from .action import getObjectAction        
+        from .action import getObjectAction
         scn = context.scene
         rig = context.object
         act = getObjectAction(rig)
@@ -92,17 +92,17 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
         (fcurves, minTime, maxTime) = self.getActionFCurves(act, rig, scn)
         if not fcurves:
             return
-    
+
         frames = getActiveFrames(rig, minTime, maxTime)
         nFrames = len(frames)
         self.normalizeRotCurves(scn, rig, fcurves, frames)
-    
+
         hasLocation = {}
         for n,fcu in enumerate(fcurves):
             (name, mode) = fCurveIdentity(fcu)
             if isRotation(mode):
                 self.loopFCurve(fcu, minTime, maxTime, scn)
-    
+
         if self.loopInPlace:
             iknames = [pb.name for pb in self.getIkBoneList(rig)]
             ikbones = {}
@@ -110,7 +110,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                 (name, mode) = fCurveIdentity(fcu)
                 if isLocation(mode) and name in iknames:
                     ikbones[name] = rig.pose.bones[name]
-    
+
             for pb in ikbones.values():
                 print("IK bone %s" % pb.name)
                 scn.frame_set(minTime)
@@ -118,16 +118,16 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                 scn.frame_set(maxTime)
                 head1 = pb.head.copy()
                 offs = (head1-head0)/(maxTime-minTime)
-    
+
                 restMat = pb.bone.matrix_local.to_3x3()
                 restInv = restMat.inverted()
-    
+
                 heads = {}
                 for n,frame in enumerate(frames):
                     scn.frame_set(frame)
                     showProgress(n, frame, nFrames)
                     heads[frame] = pb.head.copy()
-    
+
                 for n,frame in enumerate(frames):
                     showProgress(n, frame, nFrames)
                     scn.frame_set(frame)
@@ -135,7 +135,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                     diff = head - pb.bone.head_local
                     pb.location = restInv @ diff
                     pb.keyframe_insert("location", group=pb.name)
-    
+
         if self.deleteOutside:
             for fcu in fcurves:
                 kpts = list(fcu.keyframe_points)
@@ -144,14 +144,14 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                     t = kp.co[0]
                     if t < minTime or t > maxTime:
                         fcu.keyframe_points.remove(kp)
-            
+
         raise MocapMessage("F-curves looped")
 
 
     def loopFCurve(self, fcu, t0, tn, scn):
         from .simplify import getFCurveLimits
         delta = self.blendRange
-    
+
         v0 = fcu.evaluate(t0)
         vn = fcu.evaluate(tn)
         fcu.keyframe_points.insert(frame=t0, value=v0)
@@ -161,11 +161,11 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
             dv = vn-v0
         else:
             dv = 0.0
-    
+
         newpoints = []
         for dt in range(delta):
             eps = 0.5*(1-dt/delta)
-    
+
             t1 = t0+dt
             v1 = fcu.evaluate(t1)
             tm = tn+dt
@@ -175,7 +175,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
             elif (v1 < lower) and (vm > upper):
                 vm -= diff
             pt1 = (t1, (eps*vm + (1-eps)*v1))
-    
+
             t1 = t0-dt
             v1 = fcu.evaluate(t1) + dv
             tm = tn-dt
@@ -185,9 +185,9 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
             elif (v1 < lower) and (vm > upper):
                 v1 += diff
             ptm = (tm, eps*v1 + (1-eps)*vm)
-    
+
             newpoints.extend([pt1,ptm])
-    
+
         newpoints.sort()
         for (t,v) in newpoints:
             fcu.keyframe_points.insert(frame=t, value=v)
@@ -199,14 +199,14 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
             (name, mode) = fCurveIdentity(fcu)
             if mode == 'rotation_quaternion':
                 hasQuat[name] = rig.pose.bones[name]
-    
+
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
             showProgress(n, frame, nFrames)
             for (name, pb) in hasQuat.items():
                 pb.rotation_quaternion.normalize()
-                pb.keyframe_insert("rotation_quaternion", group=name)    
+                pb.keyframe_insert("rotation_quaternion", group=name)
 
 
     def getIkBoneList(self, rig):
@@ -230,7 +230,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
             except KeyError:
                 pass
         return blist
-    
+
 
 
 #
@@ -250,9 +250,9 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
 
     def draw(self, context):
         self.layout.prop(self, "repeatNumber")
-        FCurvesGetter.draw(self, context)        
+        FCurvesGetter.draw(self, context)
         self.layout.separator()
-        
+
     def run(self, context):
         from .action import getObjectAction
         startProgress("Repeat F-curves %d times" % self.repeatNumber)
@@ -263,7 +263,7 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
         (fcurves, minTime, maxTime) = self.getActionFCurves(act, context.object, context.scene)
         if not fcurves:
             return
-    
+
         dt0 = maxTime-minTime
         for fcu in fcurves:
             (name, mode) = fCurveIdentity(fcu)
@@ -278,7 +278,7 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
                 dy = n*dy0
                 for (t,y) in points:
                     fcu.keyframe_points.insert(t+dt, y+dy, options={'FAST'})
-    
+
         raise MocapMessage("F-curves repeated %d times" % self.repeatNumber)
 
 
@@ -288,7 +288,7 @@ class MCP_OT_RepeatFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
 
 def getActionItems(self, context):
     return [(act.name, act.name, act.name) for act in bpy.data.actions]
-            
+
 
 class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
     bl_idname = "mcp.stitch_actions"
@@ -330,7 +330,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
 
     def run(self, context):
         from .retarget import getLocks, correctMatrixForLocks
-    
+
         startProgress("Stitch actions")
         scn = context.scene
         rig = context.object
@@ -341,10 +341,10 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
         delta = self.blendRange
         factor = 1.0/delta
         shift = frame1 - frame2 - delta
-    
+
         if rig.animation_data:
             rig.animation_data.action = None
-    
+
         first1,last1 = self.getActionExtent(act1)
         first2,last2 = self.getActionExtent(act2)
         frames1 = range(first1, frame1)
@@ -352,7 +352,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
         frames = range(first1, last2+shift+1)
         bmats1,_ = getBaseMatrices(act1, frames1, rig, True)
         bmats2,useLoc = getBaseMatrices(act2, frames2, rig, True)
-    
+
         deletes = []
         for bname in bmats2.keys():
             try:
@@ -361,18 +361,18 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
                 deletes.append(bname)
         for bname in deletes:
             del bmats2[bname]
-    
+
         orders = {}
         locks = {}
         for bname in bmats2.keys():
             pb = rig.pose.bones[bname]
             orders[bname],locks[bname] = getLocks(pb, context)
-    
+
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
             showProgress(n, frame, nFrames)
-    
+
             if frame <= frame1-delta:
                 n1 = frame - first1
                 for bname,mats in bmats1.items():
@@ -381,7 +381,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
                     if useLoc[bname]:
                         insertLocation(pb, mat)
                     insertRotation(pb, mat)
-    
+
             elif frame >= frame1:
                 n2 = frame - frame1
                 for bname,mats in bmats2.items():
@@ -390,7 +390,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
                     if useLoc[bname]:
                         insertLocation(pb, mat)
                     insertRotation(pb, mat)
-    
+
             else:
                 n1 = frame - first1
                 n2 = frame - frame1 + delta
@@ -405,13 +405,13 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
                     if useLoc[bname]:
                         insertLocation(pb, mat)
                     insertRotation(pb, mat)
-    
+
         setInterpolation(rig)
         act = rig.animation_data.action
         act.name = self.outputActionName
         raise MocapMessage("Actions stitched")
 
-    
+
     def getActionExtent(self, act):
         first = 10000
         last = -10000
@@ -423,11 +423,11 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
             if t1 > last:
                 last = t1
         return first,last
-    
+
 
 #
 #   shiftBoneFCurves(rig, context):
-#   class MCP_OT_ShiftBoneFCurves(BvhOperator):
+#   class MCP_OT_ShiftBoneFCurves(HideOperator):
 #
 
 def getBaseMatrices(act, frames, rig, useAll):
@@ -506,7 +506,7 @@ def printmat(mat):
     print("   (%.4f %.4f %.4f %.4f)" % tuple(mat.to_quaternion()))
 
 
-class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature):
+class MCP_OT_ShiftBoneFCurves(HideOperator, IsArmature):
     bl_idname = "mcp.shift_animation"
     bl_label = "Shift Animation"
     bl_description = "Shift the animation globally for selected boens"
@@ -545,11 +545,11 @@ class MCP_OT_ShiftBoneFCurves(BvhOperator, IsArmature):
                 if useLoc[bname]:
                     insertLocation(pb, mat)
                 insertRotation(pb, mat)
-        
+
         raise MocapMessage("Animation shifted")
 
 
-class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature):
+class MCP_OT_FixateBoneFCurves(HideOperator, IsArmature):
     bl_idname = "mcp.fixate_bone"
     bl_label = "Fixate Bone Location"
     bl_description = "Keep bone location fixed (local coordinates)"
@@ -587,7 +587,7 @@ class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature):
         from .action import getObjectAction
         startProgress("Fixate bone locations")
         rig = context.object
-        scn = context.scene   
+        scn = context.scene
         act = getObjectAction(rig)
         if not act:
             return
@@ -604,7 +604,7 @@ class MCP_OT_FixateBoneFCurves(BvhOperator, IsArmature):
             fixArray[1] = True
         if self.fixZ:
             fixArray[2] = True
-    
+
         for fcu in act.fcurves:
             (bname, mode) = fCurveIdentity(fcu)
             pb = rig.pose.bones[bname]

@@ -367,3 +367,44 @@ class BvhPropsOperator(BvhOperator):
         clearErrorMessage()
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
+
+#-------------------------------------------------------------
+#   HideOperator class
+#-------------------------------------------------------------
+
+class HideOperator(BvhOperator):
+    def prequel(self, context):
+        BvhOperator.prequel(self, context)
+        self.layerColls = []
+        rig = context.object
+        self.hideLayerColls(rig, context.view_layer.layer_collection)
+        return None
+
+
+    def hideLayerColls(self, rig, layer):
+        if layer.exclude:
+            return True
+        ok = True
+        for ob in layer.collection.objects:
+            if ob == rig:
+                ok = False
+        for child in layer.children:
+            ok = (self.hideLayerColls(rig, child) and ok)
+        if ok:
+            self.layerColls.append(layer)
+            layer.exclude = True
+            print("HIDE", layer)
+        return ok
+
+
+    def sequel(self, context, _data):
+        BvhOperator.prequel(self, context)
+        for layer in self.layerColls:
+            layer.exclude = False
+
+
+class HidePropsOperator(HideOperator):
+    def invoke(self, context, event):
+        clearErrorMessage()
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)

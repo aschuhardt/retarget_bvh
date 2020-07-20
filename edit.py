@@ -1,19 +1,19 @@
 # ------------------------------------------------------------------------------
 #   BSD 2-Clause License
-#   
+#
 #   Copyright (c) 2019-2020, Thomas Larsson
 #   All rights reserved.
-#   
+#
 #   Redistribution and use in source and binary forms, with or without
 #   modification, are permitted provided that the following conditions are met:
-#   
+#
 #   1. Redistributions of source code must retain the above copyright notice, this
 #      list of conditions and the following disclaimer.
-#   
+#
 #   2. Redistributions in binary form must reproduce the above copyright notice,
 #      this list of conditions and the following disclaimer in the documentation
 #      and/or other materials provided with the distribution.
-#   
+#
 #   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 #   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 #   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -73,7 +73,7 @@ def removeMarker(scn, frame):
 ########################################################################
 #
 #   startEdit(context):
-#   class MCP_OT_StartEdit(BvhOperator):
+#   class MCP_OT_StartEdit(HideOperator):
 #
 
 def getUndoAction(rig):
@@ -118,7 +118,7 @@ def startEdit(context):
     return nact
 
 
-class MCP_OT_StartEdit(BvhOperator, IsArmature):
+class MCP_OT_StartEdit(HideOperator, IsArmature):
     bl_idname = "mcp.start_edit"
     bl_label = "Start Edit"
     bl_description = "Start local F-curve editing"
@@ -147,12 +147,12 @@ def setKeyMap(context, idname, doAdd):
 
 #
 #   undoEdit(context):
-#   class MCP_OT_UndoEdit(BvhOperator):
+#   class MCP_OT_UndoEdit(HideOperator):
 #
 
 def undoEdit(context):
     from .action import deleteAction
-    global _EditLoc, _EditRot    
+    global _EditLoc, _EditRot
 
     rig = context.object
     restoreMarkers(context.scene)
@@ -170,7 +170,7 @@ def undoEdit(context):
     return
 
 
-class MCP_OT_UndoEdit(BvhOperator):
+class MCP_OT_UndoEdit(HideOperator):
     bl_idname = "mcp.undo_edit"
     bl_label = "Undo Edit"
     bl_description = "Quit local editing and discard changes"
@@ -227,7 +227,7 @@ def getActionPair(context):
 
 #
 #   confirmEdit(context):
-#   class MCP_OT_ConfirmEdit(BvhOperator):
+#   class MCP_OT_ConfirmEdit(HideOperator):
 #
 
 def confirmEdit(context):
@@ -269,7 +269,7 @@ def confirmEdit(context):
     return
 
 
-class MCP_OT_ConfirmEdit(BvhOperator):
+class MCP_OT_ConfirmEdit(HideOperator):
     bl_idname = "mcp.confirm_edit"
     bl_label = "Confirm Edit"
     bl_description = "Quit local editing and keep changes"
@@ -538,7 +538,7 @@ def initialize():
 
     bpy.types.Object.McpActionName = StringProperty(
         default="")
-        
+
     for cls in classes:
         bpy.utils.register_class(cls)
 

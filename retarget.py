@@ -53,7 +53,6 @@ from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
 from .utils import *
-from .armature import HideOperator
 from .target import Target
 from .simplify import Simplifier, TimeScaler
 from .load import BvhFile, MultiFile, BvhLoader, BvhRenamer
@@ -461,7 +460,7 @@ def getOtherRig(context, rig):
     return None
 
 
-class MCP_OT_RetargetRenamedToActive(BvhPropsOperator, IsArmature, Target, Retargeter):
+class MCP_OT_RetargetRenamedToActive(HidePropsOperator, IsArmature, Target, Retargeter):
     bl_idname = "mcp.retarget_renamed_to_active"
     bl_label = "Retarget Renamed To Active"
     bl_description = "Retarget animation from the renamed source armature (selected) to the target (active) armature."
@@ -480,10 +479,10 @@ class MCP_OT_RetargetRenamedToActive(BvhPropsOperator, IsArmature, Target, Retar
 
     def invoke(self, context, event):
         ensureInited(context.scene)
-        return BvhPropsOperator.invoke(self, context, event)
+        return HidePropsOperator.invoke(self, context, event)
 
 
-class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, BvhRenamer, Retargeter):
+class MCP_OT_RetargetSelectedToActive(HidePropsOperator, IsArmature, BvhRenamer, Retargeter):
     bl_idname = "mcp.retarget_selected_to_active"
     bl_label = "Retarget Selected To Active"
     bl_description = "Retarget animation to the active (target) armature from the other selected (source) armatures"
@@ -516,7 +515,7 @@ class MCP_OT_RetargetSelectedToActive(BvhPropsOperator, IsArmature, BvhRenamer, 
 
     def invoke(self, context, event):
         ensureInited(context.scene)
-        return BvhPropsOperator.invoke(self, context, event)
+        return HidePropsOperator.invoke(self, context, event)
 
 
 class MCP_OT_LoadAndRetarget(HideOperator, IsArmature, MultiFile, BvhFile, BvhLoader, BvhRenamer, Retargeter, TimeScaler, Simplifier, Bender):

@@ -33,7 +33,6 @@ from mathutils import *
 from bpy.props import *
 
 from .utils import *
-from .armature import HideOperator
 from .source import Source
 from .target import Target
 from .simplify import TimeScaler
