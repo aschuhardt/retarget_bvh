@@ -126,14 +126,14 @@ class CArmature:
         rightLegTail = hiptail
 
         limbs = []
-        for pb in hipsChildren:
+        for n,pb in enumerate(hipsChildren):
             _,terminal = self.chainEnd(pb)
             _,tail,_ = getHeadTailDir(terminal)
-            limbs.append((tail[0], pb))
+            limbs.append((tail[0], n, pb))
         limbs.sort()
-        _,rightLeg = limbs[0]
-        _,spine = limbs[1]
-        _,leftLeg = limbs[2]
+        rightLeg = limbs[0][2]
+        spine = limbs[1][2]
+        leftLeg = limbs[2][2]
 
         if self.verbose:
             print("  spine:", spine.name)
