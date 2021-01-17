@@ -188,9 +188,6 @@ def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel):
     y.normalize()
     x -= x.dot(y)*y
     x.normalize()
-    if abs(x[2]) < 0.7:
-        x[2] = 0
-        x.normalize()
     z = x.cross(y)
     head = tail - y * legIk.bone.length
 
@@ -207,16 +204,20 @@ def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel):
 
 
 def matchPoleTarget(pb, above, below):
-    x = Vector(above.matrix.col[1][:3])
-    y = Vector(below.matrix.col[1][:3])
+    ay = Vector(above.matrix.col[1][:3])
+    by = Vector(below.matrix.col[1][:3])
+    az = Vector(above.matrix.col[2][:3])
+    bz = Vector(below.matrix.col[2][:3])
     p0 = Vector(below.matrix.col[3][:3])
-    n = x.cross(y)
+    n = ay.cross(by)
     if abs(n.length) > 1e-4:
-        z = x - y
+        d = ay - by
         n.normalize()
-        z -= z.dot(n)*n
-        z.normalize()
-        p = p0 + 6*pb.length*z
+        d -= d.dot(n)*n
+        d.normalize()
+        if d.dot(az) > 0:
+            d = -d
+        p = p0 + 6*pb.bone.length*d
     else:
         p = p0
     gmat = Matrix.Translation(p)
@@ -246,8 +247,9 @@ def snapFkArm(rig, snapIk, snapFk, frame):
     (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
 
     matchPoseRotation(uparmFk, uparmIk)
+    matchPoseScale(uparmFk, uparmIk)
     matchPoseRotation(loarmFk, loarmIk)
-    matchPoseRotation(handFk, handIk)
+    matchPoseScale(loarmFk, loarmIk)
 
 
 def snapIkArm(rig, snapIk, snapFk, frame):
@@ -257,17 +259,14 @@ def snapIkArm(rig, snapIk, snapFk, frame):
 
     matchPoseTranslation(handIk, handFk)
     matchPoseRotation(handIk, handFk)
-    updateScene()
-
     matchPoleTarget(elbowPt, uparmFk, loarmFk)
-
     #matchPoseRotation(uparmIk, uparmFk)
     #matchPoseRotation(loarmIk, loarmFk)
 
 
 def snapFkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
-    (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+    (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
     (uplegFk, lolegFk, footFk, toeFk) = snapFk
 
     matchPoseRotation(uplegFk, uplegIk)
@@ -279,26 +278,15 @@ def snapFkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
 def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
-    (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+    (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
     (uplegFk, lolegFk, footFk, toeFk) = snapFk
 
-    if legIkToAnkle:
-        matchPoseTranslation(ankleIk, footFk)
-    else:
-        matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
-
-    matchPoseTwist(lolegIk, lolegFk)
-    updateScene()
-
+    matchPoseTranslation(ankle, footFk)
+    matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
     matchPoseReverse(toeRev, toeFk)
-    updateScene()
     matchPoseReverse(footRev, footFk)
-    updateScene()
-
+    matchPoseTranslation(ankleIk, footFk)
     matchPoleTarget(kneePt, uplegFk, lolegFk)
-
-    if not legIkToAnkle:
-        matchPoseTranslation(ankleIk, footFk)
 
 
 SnapBonesAlpha8 = {
@@ -307,7 +295,7 @@ SnapBonesAlpha8 = {
     "ArmIK" : ["upper_arm.ik", "forearm.ik", None, "elbow.pt.ik", "hand.ik"],
     "Leg"   : ["thigh", "shin", "foot", "toe"],
     "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
-    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
+    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
 }
 
 def getSnapBones(rig, key, suffix):
@@ -399,8 +387,6 @@ class Transferer(Bender, Target):
         rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
         rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
 
-        #muteAllConstraints(rig, True)
-
         oldLayers = list(rig.data.layers)
         setMhxIk(rig, self.useArms, self.useLegs, 1.0)
         rig.data.layers = MhxLayers
@@ -427,7 +413,6 @@ class Transferer(Bender, Target):
         rig.data.layers = oldLayers
         setMhxIk(rig, self.useArms, self.useLegs, 0.0)
         setInterpolation(rig)
-        #muteAllConstraints(rig, False)
 
 
     def transferMhxToIk(self, rig, context):
@@ -444,8 +429,6 @@ class Transferer(Bender, Target):
         lLegSnapFk,lLegCnsFk = getSnapBones(rig, "LegFK", "_L")
         rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
         rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
-
-        #muteAllConstraints(rig, True)
 
         oldLayers = list(rig.data.layers)
         setMhxIk(rig, self.useArms, self.useLegs, 0.0)
@@ -471,8 +454,6 @@ class Transferer(Bender, Target):
         rig.data.layers = oldLayers
         setMhxIk(rig, self.useArms, self.useLegs, 1.0)
         setInterpolation(rig)
-        #muteAllConstraints(rig, False)
-
 
 
 def muteAllConstraints(rig, value):
@@ -605,6 +586,7 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsMhx, Transferer):
     bl_options = {'UNDO'}
 
     def prequel(self, context):
+        muteAllConstraints(context.object, True)
         return disableGlobalUndo(context)
 
     def run(self, context):
@@ -618,6 +600,7 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsMhx, Transferer):
         raise MocapMessage("Transfer to FK completed")
 
     def sequel(self, context, undo):
+        muteAllConstraints(context.object, False)
         return restoreGlobalUndo(context, undo)
 
 
@@ -629,6 +612,7 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsMhx, Transferer):
     bl_options = {'UNDO'}
 
     def prequel(self, context):
+        muteAllConstraints(context.object, True)
         return disableGlobalUndo(context)
 
     def run(self, context):
@@ -646,6 +630,7 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsMhx, Transferer):
         raise MocapMessage("Transfer to IK completed")
 
     def sequel(self, context, undo):
+        muteAllConstraints(context.object, False)
         return restoreGlobalUndo(context, undo)
 
 
