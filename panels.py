@@ -107,6 +107,7 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
             layout.operator("mcp.offset_toes")
             layout.operator("mcp.transfer_to_ik")
             layout.operator("mcp.transfer_to_fk")
+            layout.operator("mcp.clear_pole_targets")
             layout.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
             layout.operator("mcp.clear_animation", text="Clear FK Animation").type = "FK"
             layout.separator()

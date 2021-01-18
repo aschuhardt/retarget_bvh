@@ -150,6 +150,19 @@ def getGlobalMatrix(mat, pb):
         return gmat
 
 
+def matchPoseTransform(pb, src):
+    pmat = getPoseMatrix(src.matrix, pb)
+    insertRotation(pb, pmat)
+    #pb.scale = pmat.to_scale()
+    #pb.keyframe_insert("scale", group=pb.name)
+
+
+def matchPoseLocRot(pb, src):
+    pmat = getPoseMatrix(src.matrix, pb)
+    insertLocation(pb, pmat)
+    insertRotation(pb, pmat)
+
+
 def matchPoseTranslation(pb, src):
     pmat = getPoseMatrix(src.matrix, pb)
     insertLocation(pb, pmat)
@@ -251,23 +264,16 @@ def matchPoseReverse(pb, src):
     insertRotation(pb, pmat)
 
 
-def matchPoseScale(pb, src):
-    pmat = getPoseMatrix(src.matrix, pb)
-    pb.scale = pmat.to_scale()
-    pb.keyframe_insert("scale", group=pb.name)
-
-
 def snapFkArm(rig, snapIk, snapFk, frame):
 
     (uparmFk, loarmFk, handFk) = snapFk
     (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
 
-    matchPoseRotation(uparmFk, uparmIk)
-    matchPoseScale(uparmFk, uparmIk)
+    matchPoseTransform(uparmFk, uparmIk)
     updatePose()
-    matchPoseRotation(loarmFk, loarmIk)
-    matchPoseScale(loarmFk, loarmIk)
+    matchPoseTransform(loarmFk, loarmIk)
     updatePose()
+    matchPoseTransform(handFk, handIk)
 
 
 def snapIkArm(rig, snapIk, snapFk, frame):
@@ -275,28 +281,23 @@ def snapIkArm(rig, snapIk, snapFk, frame):
     (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
     (uparmFk, loarmFk, handFk) = snapFk
 
-    matchPoseTranslation(handIk, handFk)
-    matchPoseRotation(handIk, handFk)
+    matchPoseLocRot(handIk, handFk)
     updatePose()
     matchPoleTarget(elbowPt, uparmFk, loarmFk)
-    updatePose()
-    #matchPoseRotation(uparmIk, uparmFk)
-    #matchPoseRotation(loarmIk, loarmFk)
 
 
 def snapFkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
     (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
     (uplegFk, lolegFk, footFk, toeFk) = snapFk
 
-    matchPoseRotation(uplegFk, uplegIk)
+    matchPoseTransform(uplegFk, uplegIk)
     updatePose()
-    matchPoseRotation(lolegFk, lolegIk)
-    updatePose()
+    matchPoseTransform(lolegFk, lolegIk)
     if not legIkToAnkle:
+        updatePose()
         matchPoseReverse(footFk, footRev)
         updatePose()
         matchPoseReverse(toeFk, toeRev)
-        updatePose()
 
 
 def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
@@ -314,7 +315,6 @@ def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
     matchPoseTranslation(ankleIk, footFk)
     updatePose()
     matchPoleTarget(kneePt, uplegFk, lolegFk)
-    updatePose()
 
 
 SnapBonesAlpha8 = {
@@ -382,31 +382,40 @@ class Transferer(Target):
         theUseAccurate = self.accurate
 
 
+    def getCurrentAction(self, rig):
+        if not rig.animation_data:
+            raise MocapError("Rig has no animation data")
+        act = rig.animation_data.action
+        if not act:
+            raise MocapError("Rig has no action")
+        return act
+
+
     def clearAnimation(self, rig, context, act, type, snapBones):
         scn = context.scene
         self.findTarget(context, rig)
-
-        ikBones = []
+        bnames = []
         if self.useArms:
             for bname in snapBones["Arm" + type]:
                 if bname is not None:
-                    ikBones += [bname+".L", bname+".R"]
+                    bnames += [bname+".L", bname+".R"]
         if self.useLegs:
             for bname in snapBones["Leg" + type]:
                 if bname is not None:
-                    ikBones += [bname+".L", bname+".R"]
+                    bnames += [bname+".L", bname+".R"]
+        self.removeFcurves(act, type, bnames)
 
-        ikFCurves = []
+
+    def removeFcurves(self, act, type, bnames):
+        fcus = []
         for fcu in act.fcurves:
             words = fcu.data_path.split('"')
             if (words[0] == "pose.bones[" and
-                words[1] in ikBones):
-                ikFCurves.append(fcu)
-
-        if ikFCurves == []:
+                words[1] in bnames):
+                fcus.append(fcu)
+        if not fcus:
             raise MocapError("%s bones have no animation" % type)
-
-        for fcu in ikFCurves:
+        for fcu in fcus:
             act.fcurves.remove(fcu)
 
 
@@ -709,12 +718,7 @@ class MCP_OT_ClearAnimation(BvhPropsOperator, IsMhx, Transferer):
         self.setAccuracy()
         rig = context.object
         scn = context.scene
-        if not rig.animation_data:
-            raise MocapError("Rig has no animation data")
-        act = rig.animation_data.action
-        if not act:
-            raise MocapError("Rig has no action")
-
+        act = self.getCurrentAction(rig)
         if isMhxRig(rig):
             self.clearAnimation(rig, context, act, self.type, SnapBonesAlpha8)
             if self.type == "FK":
@@ -728,43 +732,30 @@ class MCP_OT_ClearAnimation(BvhPropsOperator, IsMhx, Transferer):
             raise MocapError("Can not clear %s animation with this rig" % self.type)
         raise MocapMessage("Animation cleared")
 
-#------------------------------------------------------------------------
-#   Debug
-#------------------------------------------------------------------------
+#----------------------------------------------------------
+#   Clear pole targets
+#----------------------------------------------------------
 
-def printHand(context):
-        rig = context.object
-        '''
-        handFk = rig.pose.bones["hand.fk.L"]
-        handIk = rig.pose.bones["hand.ik.L"]
-        print(handFk)
-        print(handFk.matrix)
-        print(handIk)
-        print(handIk.matrix)
-        '''
-        footIk = rig.pose.bones["foot.ik.L"]
-        print(footIk)
-        print(footIk.matrix)
-
-
-class MCP_OT_PrintHands(BvhOperator, IsArmature):
-    bl_idname = "mcp.print_hands"
-    bl_label = "Print Hands"
-    bl_options = {'UNDO'}
-
-    def run(self, context):
-        printHand(context)
-
-
-class MCP_OT_Test(BvhOperator, IsArmature):
-    bl_idname = "mcp.test"
-    bl_label = "Test"
+class MCP_OT_ClearPoleTargets(BvhPropsOperator, IsMhx, Transferer):
+    bl_idname = "mcp.clear_pole_targets"
+    bl_label = "Clear Pole Targets"
+    bl_description = "Clear animation for pole targets"
     bl_options = {'UNDO'}
 
     def run(self, context):
         rig = context.object
-        print("TRIK", rig)
-        print(rig.data.rigify_rig_ui)
+        scn = context.scene
+        act = self.getCurrentAction(rig)
+        self.findTarget(context, rig)
+        bnames = []
+        if self.useArms:
+            bnames += ["elbow.pt.ik.L", "elbow.pt.ik.R"]
+        if self.useLegs:
+            bnames += ["knee.pt.ik.L", "knee.pt.ik.R"]
+        self.removeFcurves(act, "Pole target", bnames)
+        for bname in bnames:
+            pb = rig.pose.bones[bname]
+            pb.matrix_basis = Matrix()
 
 #----------------------------------------------------------
 #   Initialize
@@ -776,8 +767,7 @@ classes = [
     MCP_OT_TransferToIk,
     MCP_OT_MhxToggleFkIk,
     MCP_OT_ClearAnimation,
-    MCP_OT_PrintHands,
-    MCP_OT_Test,
+    MCP_OT_ClearPoleTargets,
 ]
 
 def initialize():
