@@ -30,6 +30,7 @@ import bpy
 from mathutils import Vector, Matrix
 from bpy.props import *
 from .utils import *
+from .load import FrameRange
 from .target import Target
 
 #-------------------------------------------------------------
@@ -88,23 +89,26 @@ class Bender:
                     kp.co[1] = y0
 
 
-class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, Target):
+class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, FrameRange, Target):
     bl_idname = "mcp.limbs_bend_positive"
     bl_label = "Bend Limbs Positive"
     bl_description = "Ensure that limbs' X rotation is positive."
     bl_options = {'UNDO'}
+
+    def draw(self, context):
+        Bender.draw(self, context)
+        FrameRange.draw(self, context)
 
     def prequel(self, context):
         rig = context.object
         return (rig, list(rig.data.layers))
 
     def run(self, context):
-        from .loop import getActiveFramesBetweenMarkers
-
+        from .loop import getActiveFrames
         scn = context.scene
         rig = context.object
         self.findTarget(context, rig)
-        frames = getActiveFramesBetweenMarkers(rig, scn)
+        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
         self.limbsBendPositive(rig, frames)
         print("Limbs bent positive")
 
@@ -115,6 +119,11 @@ class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, Target):
 #-------------------------------------------------------------
 #
 #-------------------------------------------------------------
+
+def updatePose():
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode='POSE')
+
 
 def getPoseMatrix(gmat, pb):
     restInv = pb.bone.matrix_local.inverted()
@@ -230,6 +239,8 @@ def matchPoseReverse(pb, src):
     tail = gmat.col[3] + src.length * gmat.col[1]
     rmat = Matrix((gmat.col[0], -gmat.col[1], -gmat.col[2], tail))
     rmat.transpose()
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode='POSE')
     pmat = getPoseMatrix(rmat, pb)
     pb.matrix_basis = pmat
     insertRotation(pb, pmat)
@@ -248,8 +259,10 @@ def snapFkArm(rig, snapIk, snapFk, frame):
 
     matchPoseRotation(uparmFk, uparmIk)
     matchPoseScale(uparmFk, uparmIk)
+    updatePose()
     matchPoseRotation(loarmFk, loarmIk)
     matchPoseScale(loarmFk, loarmIk)
+    updatePose()
 
 
 def snapIkArm(rig, snapIk, snapFk, frame):
@@ -259,34 +272,44 @@ def snapIkArm(rig, snapIk, snapFk, frame):
 
     matchPoseTranslation(handIk, handFk)
     matchPoseRotation(handIk, handFk)
+    updatePose()
     matchPoleTarget(elbowPt, uparmFk, loarmFk)
+    updatePose()
     #matchPoseRotation(uparmIk, uparmFk)
     #matchPoseRotation(loarmIk, loarmFk)
 
 
 def snapFkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
-
     (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
     (uplegFk, lolegFk, footFk, toeFk) = snapFk
 
     matchPoseRotation(uplegFk, uplegIk)
+    updatePose()
     matchPoseRotation(lolegFk, lolegIk)
+    updatePose()
     if not legIkToAnkle:
         matchPoseReverse(footFk, footRev)
+        updatePose()
         matchPoseReverse(toeFk, toeRev)
+        updatePose()
 
 
 def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
-
     (uplegIk, lolegIk, kneePt, ankle, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
     (uplegFk, lolegFk, footFk, toeFk) = snapFk
 
     matchPoseTranslation(ankle, footFk)
+    updatePose()
     matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
+    updatePose()
     matchPoseReverse(toeRev, toeFk)
+    updatePose()
     matchPoseReverse(footRev, footFk)
+    updatePose()
     matchPoseTranslation(ankleIk, footFk)
+    updatePose()
     matchPoleTarget(kneePt, uplegFk, lolegFk)
+    updatePose()
 
 
 SnapBonesAlpha8 = {
@@ -341,7 +364,6 @@ class Transferer(Bender, Target):
     def draw(self, context):
         self.layout.prop(self, "useArms")
         self.layout.prop(self, "useLegs")
-        Target.draw(self, context)
 
 
     def clearAnimation(self, rig, context, act, type, snapBones):
@@ -373,7 +395,7 @@ class Transferer(Bender, Target):
 
 
     def transferMhxToFk(self, rig, context):
-        from .loop import getActiveFramesBetweenMarkers
+        from .loop import getActiveFrames
 
         scn = context.scene
         self.findTarget(context, rig)
@@ -394,7 +416,7 @@ class Transferer(Bender, Target):
         lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
         rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
 
-        frames = getActiveFramesBetweenMarkers(rig, scn)
+        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
         nFrames = len(frames)
         self.useKnees = self.useElbows = True
         self.limbsBendPositive(rig, frames)
@@ -416,7 +438,7 @@ class Transferer(Bender, Target):
 
 
     def transferMhxToIk(self, rig, context):
-        from .loop import getActiveFramesBetweenMarkers
+        from .loop import getActiveFrames
 
         scn = context.scene
         self.findTarget(context, rig)
@@ -437,8 +459,7 @@ class Transferer(Bender, Target):
         lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
         rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
 
-        frames = getActiveFramesBetweenMarkers(rig, scn)
-        #frames = range(scn.frame_start, scn.frame_end+1)
+        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
         nFrames = len(frames)
         for n,frame in enumerate(frames):
             showProgress(n, frame, nFrames)
@@ -579,11 +600,15 @@ def restoreGlobalUndo(context, undo):
     context.user_preferences.edit.use_global_undo = undo
 
 
-class MCP_OT_TransferToFk(BvhPropsOperator, IsMhx, Transferer):
+class MCP_OT_TransferToFk(HidePropsOperator, IsMhx, Transferer, FrameRange):
     bl_idname = "mcp.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
     bl_options = {'UNDO'}
+
+    def draw(self, context):
+        Transferer.draw(self, context)
+        FrameRange.draw(self, context)
 
     def prequel(self, context):
         muteAllConstraints(context.object, True)
@@ -604,12 +629,15 @@ class MCP_OT_TransferToFk(BvhPropsOperator, IsMhx, Transferer):
         return restoreGlobalUndo(context, undo)
 
 
-
-class MCP_OT_TransferToIk(BvhPropsOperator, IsMhx, Transferer):
+class MCP_OT_TransferToIk(HidePropsOperator, IsMhx, Transferer, FrameRange):
     bl_idname = "mcp.transfer_to_ik"
     bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
     bl_options = {'UNDO'}
+
+    def draw(self, context):
+        Transferer.draw(self, context)
+        FrameRange.draw(self, context)
 
     def prequel(self, context):
         muteAllConstraints(context.object, True)
@@ -634,7 +662,31 @@ class MCP_OT_TransferToIk(BvhPropsOperator, IsMhx, Transferer):
         return restoreGlobalUndo(context, undo)
 
 
-class MCP_OT_ClearAnimation(HideOperator, IsMhx, Transferer):
+class MCP_OT_MhxToggleFkIk(BvhOperator):
+    bl_idname = "mcp.toggle_fk_ik"
+    bl_label = "FK - IK"
+    bl_options = {'UNDO'}
+
+    toggle : StringProperty()
+
+    def run(self, context):
+        words = self.toggle.split()
+        rig = context.object
+        scn = context.scene
+        prop = words[0]
+        value = float(words[1])
+        onLayer = int(words[2])
+        offLayer = int(words[3])
+        rig.data.layers[onLayer] = True
+        rig.data.layers[offLayer] = False
+        setattr(rig, prop, value)
+        path = ('["%s"]' % prop)
+        #if self.isKeyed(None, path):
+        #    rig.keyframe_insert(path, frame=scn.frame_current)
+        updateScene()
+
+
+class MCP_OT_ClearAnimation(BvhPropsOperator, IsMhx, Transferer):
     bl_idname = "mcp.clear_animation"
     bl_label = "Clear Animation"
     bl_description = "Clear Animation For FK or IK Bones"
@@ -717,6 +769,7 @@ classes = [
     MCP_OT_LimbsBendPositive,
     MCP_OT_TransferToFk,
     MCP_OT_TransferToIk,
+    MCP_OT_MhxToggleFkIk,
     MCP_OT_ClearAnimation,
     MCP_OT_PrintHands,
     MCP_OT_Test,

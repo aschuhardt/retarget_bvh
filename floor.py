@@ -31,6 +31,7 @@ from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
 from .utils import *
 from .target import Target
+from .load import FrameRange
 
 #-------------------------------------------------------------
 #  Plane
@@ -106,18 +107,22 @@ def addOffset(pb, offset, ez):
 #   Toe below ball
 #-------------------------------------------------------------
 
-class MCP_OT_OffsetToes(HideOperator, IsMhx, Target):
+class MCP_OT_OffsetToes(HidePropsOperator, IsMhx, FrameRange, Target):
     bl_idname = "mcp.offset_toes"
     bl_label = "Offset Toes"
     bl_description = "Keep toes below the ball of the feet"
     bl_options = {'UNDO'}
+
+    def draw(self, context):
+        FrameRange.draw(self, context)
+
 
     def run(self, context):
         rig = context.object
         if not isMhxRig(rig):
             raise MocapError("Can not offset toes with this rig")
         self.findTarget(context, rig)
-        from .loop import getActiveFramesBetweenMarkers
+        from .loop import getActiveFrames
         scn = context.scene
         rig,plane = getRigAndPlane(context)
         try:
@@ -129,7 +134,7 @@ class MCP_OT_OffsetToes(HideOperator, IsMhx, Target):
 
         layers = list(rig.data.layers)
         startProgress("Keep toes down")
-        frames = getActiveFramesBetweenMarkers(rig, scn)
+        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
         print("Left toe")
         self.toeBelowBall(context, frames, rig, plane, ".L")
         print("Right toe")
@@ -219,7 +224,7 @@ def getFkFeetBones(rig, suffix):
     return foot,toe,mBall,mToe,mHeel
 
 
-class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
+class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, FrameRange, Target):
     bl_idname = "mcp.floor_foot"
     bl_label = "Keep Feet Above Floor"
     bl_description = "Keep Feet Above Plane"
@@ -240,9 +245,15 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
         description="Also adjust character COM when keeping feet above floor",
         default=True)
 
+    def draw(self, context):
+        self.layout.prop(self, "useLeft")
+        self.layout.prop(self, "useRight")
+        self.layout.prop(self, "useHips")
+        FrameRange.draw(self, context)
+
 
     def run(self, context):
-        from .loop import getActiveFramesBetweenMarkers
+        from .loop import getActiveFrames
         startProgress("Keep feet above floor")
         self.findTarget(context, context.object)
         scn = context.scene
@@ -251,7 +262,7 @@ class MCP_OT_FloorFoot(BvhPropsOperator, IsArmature, Target):
             useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
         except KeyError:
             useIk = False
-        frames = getActiveFramesBetweenMarkers(rig, scn)
+        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
         if useIk:
             self.floorIkFoot(rig, plane, scn, frames)
         else:

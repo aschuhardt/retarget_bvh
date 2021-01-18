@@ -647,19 +647,6 @@ def getActiveFrames(ob, minTime=None, maxTime=None):
     return frames
 
 
-def getActiveFramesBetweenMarkers(ob, scn):
-    minTime,maxTime = getMarkedTime(scn)
-    if minTime is None:
-        return getActiveFrames(ob)
-    active = getActiveFrames0(ob)
-    frames = []
-    for time in active.keys():
-        if time >= minTime and time <= maxTime:
-            frames.append(time)
-    frames.sort()
-    return frames
-
-
 def getMarkedTime(scn):
     markers = []
     for mrk in scn.timeline_markers:

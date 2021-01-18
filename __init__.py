@@ -57,6 +57,7 @@ if "bpy" in locals():
     imp.reload(loop)
     imp.reload(edit)
     imp.reload(floor)
+    imp.reload(layers)
     imp.reload(panels)
 else:
     print("Loading BVH Retargeter")
@@ -75,6 +76,7 @@ else:
     from . import loop
     from . import edit
     from . import floor
+    from . import layers
     from . import panels
 
 #----------------------------------------------------------
@@ -101,6 +103,7 @@ def register():
     source.initialize()
     t_pose.initialize()
     target.initialize()
+    layers.initialize()
     panels.initialize()
 
 
@@ -116,6 +119,7 @@ def unregister():
     source.uninitialize()
     t_pose.uninitialize()
     target.uninitialize()
+    layers.uninitialize()
     panels.uninitialize()
 
 

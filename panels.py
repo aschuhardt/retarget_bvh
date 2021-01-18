@@ -269,6 +269,71 @@ class MCP_PT_TPose(bpy.types.Panel, utils.IsArmature):
         layout.operator("mcp.save_t_pose")
         layout.operator("mcp.rest_current_pose")
 
+#------------------------------------------------------------------------
+#    Mhx Layers Panel
+#------------------------------------------------------------------------
+
+class MCP_PT_Mhx(bpy.types.Panel):
+    bl_label = "MHX"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "BVH"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.object
+        return (ob and utils.isMhxRig(ob))
+
+
+    def draw(self, context):
+        from .layers import MhxLayers
+        layout = self.layout
+        layout.operator("mcp.enable_all_layers")
+        layout.operator("mcp.disable_all_layers")
+        rig = context.object
+        for (left,right) in MhxLayers:
+            row = layout.row()
+            if type(left) == str:
+                row.label(text=left)
+                row.label(text=right)
+            else:
+                for (n, name, prop) in [left,right]:
+                    row.prop(rig.data, "layers", index=n, toggle=True, text=name)
+
+        row = layout.row()
+        row.label(text = "")
+        row.label(text = "Left")
+        row.label(text = "Right")
+
+        layout.label(text = "FK/IK switch")
+        row = layout.row()
+        row.label(text = "Arm")
+        self.toggle(row, rig, "MhaArmIk_L", " 3", " 2")
+        self.toggle(row, rig, "MhaArmIk_R", " 19", " 18")
+        row = layout.row()
+        row.label(text = "Leg")
+        self.toggle(row, rig, "MhaLegIk_L", " 5", " 4")
+        self.toggle(row, rig, "MhaLegIk_R", " 21", " 20")
+
+        layout.label(text = "IK Influence")
+        row = layout.row()
+        row.label(text = "Arm")
+        row.prop(rig, '["MhaArmIk_L"]', text="")
+        row.prop(rig, '["MhaArmIk_R"]', text="")
+        row = layout.row()
+        row.label(text = "Leg")
+        row.prop(rig, '["MhaLegIk_L"]', text="")
+        row.prop(rig, '["MhaLegIk_R"]', text="")
+
+
+    def toggle(self, row, rig, prop, fk, ik):
+        if getattr(rig, prop) > 0.5:
+            row.operator("mcp.toggle_fk_ik", text="IK").toggle = prop + " 0" + fk + ik
+        else:
+            row.operator("mcp.toggle_fk_ik", text="FK").toggle = prop + " 1" + ik + fk
+
+
 ########################################################################
 #
 #   class MCP_PT_Actions(bpy.types.Panel):
@@ -304,6 +369,7 @@ classes = [
     MCP_PT_SourceRigs,
     MCP_PT_TargetRigs,
     MCP_PT_TPose,
+    MCP_PT_Mhx,
     MCP_PT_Actions,
 
     utils.ErrorOperator,

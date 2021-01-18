@@ -146,7 +146,7 @@ Frames = 3
 
 Epsilon = 1e-5
 
-class BvhLoader:
+class FrameRange:
     startFrame : IntProperty(
         name = "Start Frame",
         description = "Starting frame for the animation",
@@ -157,6 +157,12 @@ class BvhLoader:
         description = "Last frame for the animation",
         default = 250)
 
+    def draw(self, context):
+        self.layout.prop(self, "startFrame")
+        self.layout.prop(self, "endFrame")
+
+
+class BvhLoader(FrameRange):
     scale : FloatProperty(
         name="Scale",
         description="Scale the BVH by this value",
@@ -194,8 +200,7 @@ class BvhLoader:
         default=True)
 
     def draw(self, context):
-        self.layout.prop(self, "startFrame")
-        self.layout.prop(self, "endFrame")
+        FrameRange.draw(self, context)
         self.layout.separator()
         self.layout.label(text="Source Rig Orientation:")
         row = self.layout.row()
