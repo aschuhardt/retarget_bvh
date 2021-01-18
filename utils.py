@@ -47,8 +47,6 @@ def setActiveObject(context, ob):
 def updateScene():
     deps = bpy.context.evaluated_depsgraph_get()
     deps.update()
-    #scn = bpy.context.scene
-    #scn.frame_current = scn.frame_current
 
 #
 #  quadDict():
@@ -393,7 +391,6 @@ class HideOperator(BvhOperator):
         if ok:
             self.layerColls.append(layer)
             layer.exclude = True
-            print("HIDE", layer)
         return ok
 
 

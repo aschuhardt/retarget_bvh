@@ -27,6 +27,7 @@
 # ------------------------------------------------------------------------------
 
 import bpy
+import time
 from mathutils import Vector, Matrix
 from bpy.props import *
 from .utils import *
@@ -89,7 +90,7 @@ class Bender:
                     kp.co[1] = y0
 
 
-class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, FrameRange, Target):
+class MCP_OT_LimbsBendPositive(HidePropsOperator, IsArmature, Bender, FrameRange, Target):
     bl_idname = "mcp.limbs_bend_positive"
     bl_label = "Bend Limbs Positive"
     bl_description = "Ensure that limbs' X rotation is positive."
@@ -101,6 +102,7 @@ class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, FrameRange,
 
     def prequel(self, context):
         rig = context.object
+        HidePropsOperator.prequel(self, context)
         return (rig, list(rig.data.layers))
 
     def run(self, context):
@@ -115,14 +117,17 @@ class MCP_OT_LimbsBendPositive(BvhPropsOperator, IsArmature, Bender, FrameRange,
     def sequel(self, context, data):
         rig,layers = data
         rig.data.layers = layers
+        return HidePropsOperator.sequel(self, context, data)
 
 #-------------------------------------------------------------
 #
 #-------------------------------------------------------------
 
+theUseAccurate = True
+
 def updatePose():
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
+    if theUseAccurate:
+        updateScene()
 
 
 def getPoseMatrix(gmat, pb):
@@ -350,7 +355,7 @@ def muteConstraints(constraints, value):
         cns.mute = value
 
 
-class Transferer(Bender, Target):
+class Transferer(Target):
     useArms : BoolProperty(
         name="Include Arms",
         description="Include arms in FK/IK snapping",
@@ -361,9 +366,20 @@ class Transferer(Bender, Target):
         description="Include legs in FK/IK snapping",
         default=True)
 
+    accurate : BoolProperty(
+        name="Accurate",
+        description="Update pose before transfer each bone.\nMore accurate but much slower",
+        default=True)
+
     def draw(self, context):
         self.layout.prop(self, "useArms")
         self.layout.prop(self, "useLegs")
+        self.layout.prop(self, "accurate")
+
+
+    def setAccuracy(self):
+        global theUseAccurate
+        theUseAccurate = self.accurate
 
 
     def clearAnimation(self, rig, context, act, type, snapBones):
@@ -588,19 +604,7 @@ def setRigToFK(rig):
 #   Buttons
 #------------------------------------------------------------------------
 
-def disableGlobalUndo(context):
-    return None
-    undo = context.user_preferences.edit.use_global_undo
-    context.user_preferences.edit.use_global_undo = False
-    return undo
-
-
-def restoreGlobalUndo(context, undo):
-    return
-    context.user_preferences.edit.use_global_undo = undo
-
-
-class MCP_OT_TransferToFk(HidePropsOperator, IsMhx, Transferer, FrameRange):
+class MCP_OT_TransferToFk(HidePropsOperator, IsMhx, Transferer, Bender, FrameRange):
     bl_idname = "mcp.transfer_to_fk"
     bl_label = "Transfer IK => FK"
     bl_description = "Transfer IK animation to FK bones"
@@ -612,21 +616,24 @@ class MCP_OT_TransferToFk(HidePropsOperator, IsMhx, Transferer, FrameRange):
 
     def prequel(self, context):
         muteAllConstraints(context.object, True)
-        return disableGlobalUndo(context)
+        return HidePropsOperator.prequel(self, context)
 
     def run(self, context):
         startProgress("Transfer to FK")
+        time1 = time.perf_counter()
+        self.setAccuracy()
         rig = context.object
         scn = context.scene
         if isMhxRig(rig):
             self.transferMhxToFk(rig, context)
         else:
             raise MocapError("Can not transfer to FK with this rig")
-        raise MocapMessage("Transfer to FK completed")
+        time2 = time.perf_counter()
+        raise MocapMessage("Transfer to FK completed\nin %1f seconds" % (time2-time1))
 
-    def sequel(self, context, undo):
+    def sequel(self, context, data):
         muteAllConstraints(context.object, False)
-        return restoreGlobalUndo(context, undo)
+        return HidePropsOperator.sequel(self, context, data)
 
 
 class MCP_OT_TransferToIk(HidePropsOperator, IsMhx, Transferer, FrameRange):
@@ -641,10 +648,12 @@ class MCP_OT_TransferToIk(HidePropsOperator, IsMhx, Transferer, FrameRange):
 
     def prequel(self, context):
         muteAllConstraints(context.object, True)
-        return disableGlobalUndo(context)
+        return HidePropsOperator.prequel(self, context)
 
     def run(self, context):
         startProgress("Transfer to IK")
+        time1 = time.perf_counter()
+        self.setAccuracy()
         rig = context.object
         scn = context.scene
         if isMhxRig(rig):
@@ -655,11 +664,12 @@ class MCP_OT_TransferToIk(HidePropsOperator, IsMhx, Transferer, FrameRange):
             self.transferRigifyToIk(rig, context, "_")
         else:
             raise MocapError("Can not transfer to IK with this rig")
-        raise MocapMessage("Transfer to IK completed")
+        time2 = time.perf_counter()
+        raise MocapMessage("Transfer to IK completed\nin %1f seconds" % (time2-time1))
 
-    def sequel(self, context, undo):
+    def sequel(self, context, data):
         muteAllConstraints(context.object, False)
-        return restoreGlobalUndo(context, undo)
+        return HidePropsOperator.sequel(self, context, data)
 
 
 class MCP_OT_MhxToggleFkIk(BvhOperator):
@@ -694,11 +704,9 @@ class MCP_OT_ClearAnimation(BvhPropsOperator, IsMhx, Transferer):
 
     type : StringProperty()
 
-    def prequel(self, context):
-        return disableGlobalUndo(context)
-
     def run(self, context):
         startProgress("Clear animation")
+        self.setAccuracy()
         rig = context.object
         scn = context.scene
         if not rig.animation_data:
@@ -719,9 +727,6 @@ class MCP_OT_ClearAnimation(BvhPropsOperator, IsMhx, Transferer):
         else:
             raise MocapError("Can not clear %s animation with this rig" % self.type)
         raise MocapMessage("Animation cleared")
-
-    def sequel(self, context, undo):
-        return restoreGlobalUndo(context, undo)
 
 #------------------------------------------------------------------------
 #   Debug
