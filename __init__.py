@@ -35,7 +35,7 @@ bl_info = {
     "description": "Mocap retargeting tool",
     "warning": "",
     'wiki_url': "https://diffeomorphic.blogspot.com/p/bvh-retargeter.html",
-    "tracker_url": "https://bitbucket.org/Diffeomorphic/retarget_bvh/issues?status=new&status=open",
+    "tracker_url": "https://bitbucket.org/Diffeomorphic/import_daz/issues?status=new&status=open",
     "category": "Animation"}
 
 
@@ -51,12 +51,10 @@ if "bpy" in locals():
     imp.reload(t_pose)
     imp.reload(simplify)
     imp.reload(load)
-    imp.reload(fkik)
     imp.reload(retarget)
     imp.reload(action)
     imp.reload(loop)
     imp.reload(edit)
-    imp.reload(floor)
     imp.reload(layers)
     imp.reload(panels)
 else:
@@ -70,12 +68,10 @@ else:
     from . import t_pose
     from . import simplify
     from . import load
-    from . import fkik
     from . import retarget
     from . import action
     from . import loop
     from . import edit
-    from . import floor
     from . import layers
     from . import panels
 
@@ -94,8 +90,6 @@ def register():
 
     action.initialize()
     edit.initialize()
-    fkik.initialize()
-    floor.initialize()
     load.initialize()
     loop.initialize()
     retarget.initialize()
@@ -110,8 +104,6 @@ def register():
 def unregister():
     action.uninitialize()
     edit.uninitialize()
-    fkik.uninitialize()
-    floor.uninitialize()
     load.uninitialize()
     loop.uninitialize()
     retarget.uninitialize()

@@ -66,7 +66,6 @@ class Rigger:
     def initRig(self, context):
         from .target import findTargetArmature
         from .source import findSourceArmature
-        from .fkik import setRigifyFKIK, setRigify2FKIK
 
         rig = context.object
         pose = [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
@@ -85,6 +84,71 @@ class Rigger:
             setRigify2FKIK(rig, 1.0)
 
         return rig
+
+#------------------------------------------------------------------
+#   Set FK/IK
+#------------------------------------------------------------------
+
+def setMhxIk(rig, useArms, useLegs, value):
+    if isMhxRig(rig):
+        ikLayers = []
+        fkLayers = []
+        if useArms:
+            rig["MhaArmIk_L"] = value
+            rig["MhaArmIk_R"] = value
+            ikLayers += [2,18]
+            fkLayers += [3,19]
+        if useLegs:
+            rig["MhaLegIk_L"] = value
+            rig["MhaLegIk_R"] = value
+            ikLayers += [4,20]
+            fkLayers += [5,21]
+
+        if value:
+            first = ikLayers
+            second = fkLayers
+        else:
+            first = fkLayers
+            second = ikLayers
+        for n in first:
+            rig.data.layers[n] = True
+        for n in second:
+            rig.data.layers[n] = False
+
+
+def setRigifyFKIK(rig, value):
+    rig.pose.bones["hand.ik.L"]["ikfk_switch"] = value
+    rig.pose.bones["hand.ik.R"]["ikfk_switch"] = value
+    rig.pose.bones["foot.ik.L"]["ikfk_switch"] = value
+    rig.pose.bones["foot.ik.R"]["ikfk_switch"] = value
+    on = (value < 0.5)
+    for n in [6, 9, 12, 15]:
+        rig.data.layers[n] = on
+    for n in [7, 10, 13, 16]:
+        rig.data.layers[n] = not on
+
+
+def setRigify2FKIK(rig, value):
+    rig.pose.bones["upper_arm_parent.L"]["IK_FK"] = value
+    rig.pose.bones["upper_arm_parent.R"]["IK_FK"] = value
+    rig.pose.bones["thigh_parent.L"]["IK_FK"] = value
+    rig.pose.bones["thigh_parent.R"]["IK_FK"] = value
+    on = (value > 0.5)
+    for n in [8, 11, 14, 17]:
+        rig.data.layers[n] = on
+    for n in [7, 10, 13, 16]:
+        rig.data.layers[n] = not on
+    torso = rig.pose.bones["torso"]
+    torso["head_follow"] = 1.0
+    torso["neck_follow"] = 1.0
+
+
+def setRigToFK(rig):
+    setMhxIk(rig, True, True, 0.0)
+    if isRigify(rig):
+        setRigifyFKIK(rig, 0.0)
+    elif isRigify2(rig):
+        setRigify2FKIK(rig, 1.0)
 
 #------------------------------------------------------------------
 #   Define current pose as rest pose
@@ -119,7 +183,10 @@ class MCP_OT_RestCurrentPose(BvhOperator, IsArmature):
                     if (mod.type == 'ARMATURE' and
                         mod.object == rig):
                         children.append(ob)
-                        bpy.ops.object.modifier_apply(apply_as='SHAPE', modifier=mod.name)
+                        if bpy.app.version < (2,90,0):
+                            bpy.ops.object.modifier_apply(apply_as='SHAPE', modifier=mod.name)
+                        else:
+                            bpy.ops.object.modifier_apply_as_shapekey(modifier=mod.name)
                         ob.data.shape_keys.key_blocks[mod.name].value = 1.0
                         ob.McpArmatureName = rig.name
                         ob.McpArmatureModifier = mod.name

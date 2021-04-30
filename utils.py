@@ -80,7 +80,7 @@ def hasSomeBones(blist, rig):
     return None
 
 def isMhxRig(rig):
-    return hasAllBones(["foot.rev.L"], rig)
+    return (rig.type == 'ARMATURE' and hasAllBones(["foot.rev.L"], rig))
 
 def isMakeHuman(rig):
     return hasAllBones(["risorius03.R"], rig)

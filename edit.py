@@ -425,6 +425,22 @@ def findFCurve(path, index, fcurves):
     print('F-curve "%s" not found.' % path)
     return None
 
+
+def findBoneFCurve(pb, rig, index, mode='rotation'):
+    if mode == 'rotation':
+        if pb.rotation_mode == 'QUATERNION':
+            mode = "rotation_quaternion"
+        else:
+            mode = "rotation_euler"
+    path = 'pose.bones["%s"].%s' % (pb.name, mode)
+
+    if rig.animation_data is None:
+        return None
+    action = rig.animation_data.action
+    if action is None:
+        return None
+    return findFCurve(path, index, action.fcurves)
+
 #
 #   displaceFCurve(fcu, ofcu, edits):
 #   setupCatmullRom(kpoints, modified):

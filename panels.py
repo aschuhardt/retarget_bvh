@@ -29,6 +29,7 @@
 import bpy
 from bpy.props import BoolProperty
 from . import utils
+from .buildnumber import BUILD
 
 
 def inset(layout):
@@ -43,7 +44,7 @@ def inset(layout):
 
 class MCP_PT_Main(bpy.types.Panel):
     bl_category = "BVH"
-    bl_label = "Retarget BVH v 2.0.1: Main"
+    bl_label = "Retarget BVH (version 2.1.0.%04d)" % BUILD
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
 
@@ -117,7 +118,6 @@ class MCP_PT_Edit(bpy.types.Panel, utils.IsArmature):
         else:
             layout.prop(scn, "McpShowGlobal", icon="DOWNARROW_HLT", emboss=False)
             layout.operator("mcp.shift_animation")
-            layout.operator("mcp.floor_foot")
             #layout.operator("mcp.limbs_bend_positive")
             layout.operator("mcp.fixate_bone")
             layout.operator("mcp.simplify_fcurves")
@@ -370,7 +370,7 @@ classes = [
     MCP_PT_SourceRigs,
     MCP_PT_TargetRigs,
     MCP_PT_TPose,
-    MCP_PT_Mhx,
+    #MCP_PT_Mhx,
     MCP_PT_Actions,
 
     utils.ErrorOperator,

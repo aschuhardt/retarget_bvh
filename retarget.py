@@ -55,8 +55,92 @@ from bpy_extras.io_utils import ImportHelper
 from .utils import *
 from .target import Target
 from .simplify import Simplifier, TimeScaler
-from .load import BvhFile, MultiFile, BvhLoader, BvhRenamer
-from .fkik import Bender
+from .load import BvhFile, MultiFile, BvhLoader, BvhRenamer, FrameRange
+
+#-------------------------------------------------------------
+#   Limbs bend positive
+#-------------------------------------------------------------
+
+class Bender:
+    useElbows : BoolProperty(
+        name="Elbows",
+        description="Keep elbow bending positive",
+        default=True)
+
+    useKnees : BoolProperty(
+        name="Knees",
+        description="Keep knee bending positive",
+        default=True)
+
+    useBendPositive : BoolProperty(
+        name="Bend Positive",
+        description="Ensure that elbow and knee bending is positive",
+        default=True)
+
+    def draw(self, context):
+        self.layout.prop(self, "useElbows")
+        self.layout.prop(self, "useKnees")
+
+    def limbsBendPositive(self, rig, frames):
+        limbs = {}
+        if self.useElbows:
+            pb = getTrgBone("forearm.L", rig)
+            self.minimizeFCurve(pb, rig, 0, frames)
+            pb = getTrgBone("forearm.R", rig)
+            self.minimizeFCurve(pb, rig, 0, frames)
+        if self.useKnees:
+            pb = getTrgBone("shin.L", rig)
+            self.minimizeFCurve(pb, rig, 0, frames)
+            pb = getTrgBone("shin.R", rig)
+            self.minimizeFCurve(pb, rig, 0, frames)
+
+
+    def minimizeFCurve(self, pb, rig, index, frames):
+        from .edit import findBoneFCurve
+        if pb is None:
+            return
+        fcu = findBoneFCurve(pb, rig, index)
+        if fcu is None:
+            return
+        y0 = fcu.evaluate(0)
+        t0 = frames[0]
+        t1 = frames[-1]
+        for kp in fcu.keyframe_points:
+            t = kp.co[0]
+            if t >= t0 and t <= t1:
+                y = kp.co[1]
+                if y < y0:
+                    kp.co[1] = y0
+
+
+class MCP_OT_LimbsBendPositive(HidePropsOperator, IsArmature, Bender, FrameRange, Target):
+    bl_idname = "mcp.limbs_bend_positive"
+    bl_label = "Bend Limbs Positive"
+    bl_description = "Ensure that limbs' X rotation is positive."
+    bl_options = {'UNDO'}
+
+    def draw(self, context):
+        Bender.draw(self, context)
+        FrameRange.draw(self, context)
+
+    def prequel(self, context):
+        rig = context.object
+        HidePropsOperator.prequel(self, context)
+        return (rig, list(rig.data.layers))
+
+    def run(self, context):
+        from .loop import getActiveFrames
+        scn = context.scene
+        rig = context.object
+        self.findTarget(context, rig)
+        frames = getActiveFrames(rig, self.startFrame, self.endFrame)
+        self.limbsBendPositive(rig, frames)
+        print("Limbs bent positive")
+
+    def sequel(self, context, data):
+        rig,layers = data
+        rig.data.layers = layers
+        return HidePropsOperator.sequel(self, context, data)
 
 
 class CAnimation:
@@ -313,7 +397,7 @@ class Retargeter:
     def retargetAnimation(self, context, srcRig, trgRig):
         from .source import setSourceArmature
         from .target import findTargetArmature
-        from .fkik import setRigToFK
+        from .t_pose import setRigToFK
         from .loop import getActiveFrames
 
         startProgress("Retargeting %s => %s" % (srcRig.name, trgRig.name))
