@@ -84,14 +84,14 @@ class Bender:
     def limbsBendPositive(self, rig, frames):
         limbs = {}
         if self.useElbows:
-            pb = getTrgBone("forearm.L", rig)
+            pb = getTrgBone("forearm.L", rig, force=True)
             self.minimizeFCurve(pb, rig, 0, frames)
-            pb = getTrgBone("forearm.R", rig)
+            pb = getTrgBone("forearm.R", rig, force=True)
             self.minimizeFCurve(pb, rig, 0, frames)
         if self.useKnees:
-            pb = getTrgBone("shin.L", rig)
+            pb = getTrgBone("shin.L", rig, force=True)
             self.minimizeFCurve(pb, rig, 0, frames)
-            pb = getTrgBone("shin.R", rig)
+            pb = getTrgBone("shin.R", rig, force=True)
             self.minimizeFCurve(pb, rig, 0, frames)
 
 

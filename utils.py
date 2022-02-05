@@ -130,10 +130,12 @@ def getRollMat(mat):
 #   getTrgBone(b):
 #
 
-def getTrgBone(bname, rig):
+def getTrgBone(bname, rig, force=False):
     for pb in rig.pose.bones:
         if pb.McpBone == bname:
             return pb
+    if force:
+        raise MocapError("No %s bone found" % bname)
     return None
 
 #

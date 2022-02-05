@@ -567,7 +567,7 @@ class BvhRenamer(Source, Target):
     def rescaleRig(self, trgRig, srcRig):
         if not self.useAutoScale:
             return
-        upleg1 = getTrgBone("thigh.L", trgRig)
+        upleg1 = getTrgBone("thigh.L", trgRig, force=True)
         upleg2 = getTrgBone("thigh_twist.L", trgRig)
         if upleg2:
             trgScale = upleg1.length + upleg2.length
