@@ -48,6 +48,13 @@ def updateScene():
     deps = bpy.context.evaluated_depsgraph_get()
     deps.update()
 
+
+def setFrame(scn, frame):
+    scn.frame_set(int(frame))
+
+def setCurrentFrame(scn, frame):
+    scn.frame_current = int(frame)
+
 #
 #  quadDict():
 #

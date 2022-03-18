@@ -179,7 +179,7 @@ class CAnimation:
 
 
     def printResult(self, scn, frame):
-        scn.frame_set(frame)
+        setFrame(scn, frame)
         for name in ["LeftHip"]:
             banim = self.boneAnims[name]
             banim.printResult(frame)
@@ -188,7 +188,7 @@ class CAnimation:
     def putInTPoses(self, context):
         from .t_pose import putInTPose, putInRestPose
         scn = context.scene
-        scn.frame_set(0)
+        setFrame(scn, 0)
         putInRestPose(self.srcRig, True)
         putInTPose(self.srcRig, scn.McpSourceTPose, context)
         putInRestPose(self.trgRig, True)
@@ -202,7 +202,7 @@ class CAnimation:
         scn = context.scene
         try:
             for n,frame in enumerate(frames):
-                scn.frame_set(frame)
+                setFrame(scn, frame)
                 showProgress(n+offset, frames[n], nFrames)
                 for banim in self.boneAnims.values():
                     banim.retarget(frame)
@@ -412,7 +412,7 @@ class Retargeter:
         setRigToFK(trgRig)
 
         if frames:
-            scn.frame_current = frames[0]
+            setCurrentFrame(scn, frames[0])
         else:
             raise MocapError("No frames found.")
         oldData = changeTargetData(trgRig, scn)
@@ -432,7 +432,7 @@ class Retargeter:
                 index += 100
                 frameBlock = frames[index:index+100]
 
-            scn.frame_current = frames[0]
+            setCurrentFrame(scn, frames[0])
         finally:
             restoreTargetData(oldData)
 

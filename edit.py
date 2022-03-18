@@ -380,20 +380,20 @@ def move2marker(context, left, last):
         return
     if last:
         if left:
-            scn.frame_current = frames[0]
+            setCurrentFrame(scn, frames[0])
         else:
-            scn.frame_current = frames[-1]
+            setCurrentFrame(scn, frames[-1])
     else:
         if left:
             frames.reverse()
             for frame in frames:
                 if frame < scn.frame_current:
-                    scn.frame_current = frame
+                    setCurrentFrame(scn, frame)
                     break
         else:
             for frame in frames:
                 if frame > scn.frame_current:
-                    scn.frame_current = frame
+                    setCurrentFrame(scn, frame)
                     break
 
 

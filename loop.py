@@ -113,9 +113,9 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
 
             for pb in ikbones.values():
                 print("IK bone %s" % pb.name)
-                scn.frame_set(minTime)
+                setFrame(scn, minTime)
                 head0 = pb.head.copy()
-                scn.frame_set(maxTime)
+                setFrame(scn, maxTime)
                 head1 = pb.head.copy()
                 offs = (head1-head0)/(maxTime-minTime)
 
@@ -124,13 +124,13 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
 
                 heads = {}
                 for n,frame in enumerate(frames):
-                    scn.frame_set(frame)
+                    setFrame(scn, frame)
                     showProgress(n, frame, nFrames)
                     heads[frame] = pb.head.copy()
 
                 for n,frame in enumerate(frames):
                     showProgress(n, frame, nFrames)
-                    scn.frame_set(frame)
+                    setFrame(scn, frame)
                     head = heads[frame] - (frame-minTime)*offs
                     diff = head - pb.bone.head_local
                     pb.location = restInv @ diff
@@ -202,7 +202,7 @@ class MCP_OT_LoopFCurves(BvhPropsOperator, IsArmature, FCurvesGetter):
 
         nFrames = len(frames)
         for n,frame in enumerate(frames):
-            scn.frame_set(frame)
+            setFrame(scn, frame)
             showProgress(n, frame, nFrames)
             for (name, pb) in hasQuat.items():
                 pb.rotation_quaternion.normalize()
@@ -370,7 +370,7 @@ class MCP_OT_StitchActions(BvhPropsOperator, IsArmature):
 
         nFrames = len(frames)
         for n,frame in enumerate(frames):
-            scn.frame_set(frame)
+            setFrame(scn, frame)
             showProgress(n, frame, nFrames)
 
             if frame <= frame1-delta:
@@ -536,7 +536,7 @@ class MCP_OT_ShiftBoneFCurves(HideOperator, IsArmature):
             orders[pb.name], locks[pb.name] = getLocks(pb, context)
 
         for n,frame in enumerate(frames[1:]):
-            scn.frame_set(frame)
+            setFrame(scn, frame)
             showProgress(n, frame, nFrames)
             for bname,bmats in basemats.items():
                 pb = rig.pose.bones[bname]
