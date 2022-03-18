@@ -50,10 +50,16 @@ def updateScene():
 
 
 def setFrame(scn, frame):
-    scn.frame_set(int(frame))
+    try:
+        scn.frame_set(frame)
+    except TypeError:
+        scn.frame_set(int(frame))
 
 def setCurrentFrame(scn, frame):
-    scn.frame_current = int(frame)
+    try:
+        scn.frame_current = frame
+    except TypeError:
+        scn.frame_current = int(frame)
 
 #
 #  quadDict():
