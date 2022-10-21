@@ -173,6 +173,7 @@ class CRigInfo:
                     "Has illegal bone %s     " % bname)
 
         pbones = dict([(pb.name,pb) for pb in rig.pose.bones])
+        print('rig.pose.bones: %s' % (pbones.keys()))
         for pb in rig.pose.bones:
             pbones[pb.name.lower()] = pb
         for (bname, mhxname) in self.bones:
@@ -181,11 +182,13 @@ class CRigInfo:
             if bname[0:2] == "f_" and not scn.McpIncludeFingers:
                 continue
             if bname in pbones.keys():
+                print(" found bone %s" % (bname))
                 pb = pbones[bname]
             else:
+                print(" could not find bone %s" % (bname))
                 pb = None
             if pb is None or not validBone(pb):
-                print("  Did not find bone %s (%s)" % (bname, mhxname))
+                print("  Did not find bone %s (%s) because %s" % (bname, mhxname, pb is None and 'bone is missing' or 'bone not valid'))
                 print("Bones:")
                 for pair in self.bones:
                     print("  %s : %s" % pair)

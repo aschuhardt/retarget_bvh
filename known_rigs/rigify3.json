@@ -25,12 +25,12 @@
         "thigh_fk.L" : "thigh.L",
         "shin_fk.L" : "shin.L",
         "foot_fk.L" : "foot.L", 
-        "toe.L" : "toe.L",
+        "toe_fk.L" : "toe.L",
 
         "thigh_fk.R" : "thigh.R",
         "shin_fk.R" : "shin.R",
         "foot_fk.R" : "foot.R", 
-        "toe.R" : "toe.R",
+        "toe_fk.R" : "toe.R",
         
         "thumb.01.L" : "f_thumb.01.L",
         "thumb.02.L" : "f_thumb.02.L",
@@ -97,12 +97,12 @@
         "thigh_fk.L" : "torso",
         "shin_fk.L" : "thigh_fk.L",
         "foot_fk.L" : "shin_fk.L", 
-        "toe.L" : "foot_fk.L",
+        "toe_fk.L" : "foot_fk.L",
 
         "thigh_fk.R" : "torso",
         "shin_fk.R" : "thigh_fk.R",
         "foot_fk.R" : "shin_fk.R", 
-        "toe.R" : "foot_fk.R",
+        "toe_fk.R" : "foot_fk.R",
         
         "thumb.01.L" : "hand_fk.L",
         "thumb.02.L" : "thumb.01.L",

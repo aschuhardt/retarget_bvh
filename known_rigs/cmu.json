@@ -4,35 +4,32 @@
     
     "bones" : {
         "Hips" : "hips",
-        "LowerBack" : "spine",
-        "Spine" : "spine-1",
-        "Neck" : "chest",
-        "Neck1" : "neck",
+        "lowerback" : "spine",
+        "Chest" : "spine-1",
+        "Chest2": "chest",
+        "lowerneck" : "chest-1",
+        "Neck" : "neck",
         "Head" : "head", 
 
-        "LeftShoulder" : "shoulder.L",
-        "LeftArm" : "upper_arm.L", 
-        "LeftForeArm" : "forearm.L",
-        "LeftHand" : "hand.L",
-        "LThumb" : "f_thumb.01.L",
-        "LeftHandIndex1" : "f_index.01.L",
+        "LeftCollar": "shoulder.L",
+        "LeftShoulder" : "upper_arm.L",
+        "LeftElbow": "forearm.L",
+        "LeftWrist": "hand.L",
 
-        "RightShoulder" : "shoulder.R",
-        "RightArm" : "upper_arm.R",
-        "RightForeArm" : "forearm.R",
-        "RightHand" : "hand.R",
-        "RThumb" : "f_thumb.01.R",
-        "RightHandIndex1" : "f_index.01.R",
+        "RightCollar": "shoulder.R",
+        "RightShoulder" : "upper_arm.R",
+        "RightElbow": "forearm.R",
+        "RightWrist": "hand.R",
 
-        "LeftUpLeg" : "thigh.L",
-        "LeftLeg" : "shin.L",
-        "LeftFoot" : "foot.L", 
-        "LeftToeBase" : "toe.L",
+        "LeftHip" : "thigh.L",
+        "LeftKnee" : "shin.L",
+        "LeftAnkle" : "foot.L", 
+        "LeftToe" : "toe.L",
 
-        "RightUpLeg" : "thigh.R",
-        "RightLeg" : "shin.R",
-        "RightFoot" : "foot.R", 
-        "RightToeBase" : "toe.R"
+        "RightHip" : "thigh.R",
+        "RightKnee" : "shin.R",
+        "RightAnkle" : "foot.R", 
+        "RightToe" : "toe.R"
     }
 
 }

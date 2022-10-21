@@ -74,7 +74,7 @@
         "f_pinky.03.R" : "f_pinky.03.R"            
     },
 
-    "optional" : ["spine", "spine-1", "chest", "chest-1", "head"],    
+    "optional" : ["spine", "spine-1", "chest", "chest-1", "head", "breast.R", "breast.L"],    
 
     "parents" : {
         "torso" : "",
