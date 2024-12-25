@@ -237,7 +237,7 @@ class BvhLoader(FrameRange):
         coll = context.scene.collection
         rig = None
 
-        fp = open(fileName, "rU")
+        fp = open(fileName, "r")
         print( "Reading skeleton" )
         lineNo = 0
         for line in fp:
